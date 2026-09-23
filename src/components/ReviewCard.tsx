@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { ReviewCard as ReviewCardData } from "../../convex/reviews";
-import { AxisScores, Avatar, DeleteReview, MatchChip, Snippet, Stars, UserLink } from "./bits";
+import { AxisChips, Avatar, DeleteReview, MatchChip, Snippet, Stars, UserLink } from "./bits";
 import { Reactions } from "./Reactions";
 import { timeAgo } from "../lib/format";
 import ui from "./ui.module.css";
@@ -19,7 +19,7 @@ export function ReviewCard({ r }: { r: ReviewCardData }) {
           </div>
         </div>
         <MatchChip match={r.match} />
-        <AxisScores scores={r.scores} stacked />
+        <AxisChips scores={r.scores} />
       </div>
       <div className={s.reviewBody}>
         <div className={s.reviewTop}>

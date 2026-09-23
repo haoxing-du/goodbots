@@ -63,34 +63,6 @@ img.avatar {
   }
 }
 
-.axisInline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2) var(--s-7);
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.axisStack {
-  display: grid;
-  grid-template-columns: repeat(2, max-content);
-  gap: var(--s-1) var(--s-6);
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.axisItem {
-  white-space: nowrap;
-}
-.axisLabel {
-  color: var(--muted-3);
-}
-.axisValue {
-  color: var(--ink);
-}
-
 .chips {
   display: flex;
   flex-wrap: wrap;

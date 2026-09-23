@@ -79,19 +79,6 @@ export function UserLink({
 }
 
 /** Mono "SMARTS 5  TASTE 4 …" line; only axes the reviewer rated. */
-export function AxisScores({ scores, stacked }: { scores: AxisScore[]; stacked?: boolean }) {
-  if (!scores.length) return null;
-  return (
-    <div className={stacked ? s.axisStack : s.axisInline}>
-      {scores.map((a) => (
-        <span key={a._id} className={s.axisItem}>
-          <span className={s.axisLabel}>{a.name}</span> <span className={s.axisValue}>{a.score}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
 const AXIS_COLORS: Record<string, string> = {
   smarts: s.axisSmarts,
   taste: s.axisTaste,
