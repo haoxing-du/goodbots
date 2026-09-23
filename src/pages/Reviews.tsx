@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Pills } from "../components/Pills";
-import { AxisScores, Avatar, DeleteReview, MatchChip, Stars, UserLink } from "../components/bits";
+import { AxisScores, Avatar, DeleteReview, LoadMore, MatchChip, Stars, UserLink } from "../components/bits";
 import { Reactions } from "../components/Reactions";
 import { fmtAvg, timeAgo } from "../lib/format";
 import ui from "../components/ui.module.css";
@@ -12,7 +12,13 @@ import { versionPath } from "../lib/paths";
 
 export function Reviews() {
   const [tab, setTab] = useState<"latest" | "top">("latest");
-  const feed = useQuery(api.reviews.feed, { tab });
+  const latest = usePaginatedQuery(
+    api.reviews.feedLatest,
+    tab === "latest" ? {} : "skip",
+    { initialNumItems: 20 },
+  );
+  const top = useQuery(api.reviews.feedTop, tab === "top" ? {} : "skip");
+  const feed = tab === "latest" ? (latest.status === "LoadingFirstPage" ? undefined : latest.results) : top;
   const summary = useQuery(api.reviews.feedSummary);
 
   return (
@@ -68,6 +74,7 @@ export function Reviews() {
               <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} />
             </article>
           ))}
+          {tab === "latest" && <LoadMore status={latest.status} loadMore={latest.loadMore} />}
         </div>
       </div>
 

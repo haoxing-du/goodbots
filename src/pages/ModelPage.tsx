@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -9,6 +9,7 @@ import {
   AxisScores,
   Avatar,
   DeleteReview,
+  LoadMore,
   MatchChip,
   Snippet,
   Stars,
@@ -324,7 +325,15 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
 
 function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
   const [stars, setStars] = useState(0);
-  const reviews = useQuery(api.reviews.byVersion, { versionId, stars: stars || undefined });
+  const {
+    results: reviews,
+    status,
+    loadMore,
+  } = usePaginatedQuery(
+    api.reviews.byVersion,
+    { versionId, stars: stars || undefined },
+    { initialNumItems: 20 },
+  );
 
   return (
     <section>
@@ -338,12 +347,12 @@ function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
         />
       </div>
       <div className={s.reviewCards}>
-        {reviews && reviews.length === 0 && (
+        {status !== "LoadingFirstPage" && reviews.length === 0 && (
           <div className={`${ui.card} ${ui.empty}`}>
             {stars ? `No ${stars}★ reviews yet.` : "No reviews yet. Write the first one."}
           </div>
         )}
-        {reviews?.map((r) => (
+        {reviews.map((r) => (
           <article key={r._id} className={`${ui.card} ${s.review}`}>
             <div className={s.reviewer}>
               <div className={s.who}>
@@ -370,6 +379,7 @@ function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
             </div>
           </article>
         ))}
+        <LoadMore status={status} loadMore={loadMore} label="More reviews" />
       </div>
     </section>
   );

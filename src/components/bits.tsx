@@ -139,3 +139,28 @@ export function ConfirmDelete({
     </button>
   );
 }
+
+/** "Load more" for a paginated list; hidden when everything is loaded. */
+export function LoadMore({
+  status,
+  loadMore,
+  label = "Load more",
+}: {
+  status: "LoadingFirstPage" | "CanLoadMore" | "LoadingMore" | "Exhausted";
+  loadMore: (n: number) => void;
+  label?: string;
+}) {
+  if (status === "Exhausted" || status === "LoadingFirstPage") return null;
+  return (
+    <div className={s.loadMore}>
+      <button
+        type="button"
+        className={s.loadMoreBtn}
+        disabled={status === "LoadingMore"}
+        onClick={() => loadMore(20)}
+      >
+        {status === "LoadingMore" ? "Loading…" : label}
+      </button>
+    </div>
+  );
+}

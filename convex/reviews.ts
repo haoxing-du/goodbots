@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query, QueryCtx } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 import { Doc, Id } from "./_generated/dataModel";
 import {
   applyOverallToStats,
@@ -181,52 +182,65 @@ export const remove = mutation({
 
 // ---------- queries ----------
 
+/** A version's reviews, most reactions first, optionally only one star rating. Paginated. */
 export const byVersion = query({
-  args: { versionId: v.id("versions"), stars: v.optional(v.number()) },
-  handler: async (ctx, { versionId, stars }) => {
+  args: {
+    versionId: v.id("versions"),
+    stars: v.optional(v.number()),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { versionId, stars, paginationOpts }) => {
     const viewerId = await getAuthUserId(ctx);
     const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
-    let reviews = await ctx.db
+    let q = ctx.db
       .query("reviews")
       .withIndex("by_version_reactions", (q) => q.eq("versionId", versionId))
-      .order("desc")
-      .take(200);
-    if (stars) reviews = reviews.filter((r) => r.overall === stars);
-    return await Promise.all(
-      reviews.slice(0, 50).map((r) => hydrateReview(ctx, r, viewerId, match, axes)),
-    );
+      .order("desc");
+    if (stars) q = q.filter((f) => f.eq(f.field("overall"), stars));
+    const result = await q.paginate(paginationOpts);
+    return {
+      ...result,
+      page: await Promise.all(result.page.map((r) => hydrateReview(ctx, r, viewerId, match, axes))),
+    };
   },
 });
 
-export const feed = query({
-  args: { tab: v.union(v.literal("latest"), v.literal("top")) },
-  handler: async (ctx, { tab }) => {
+/** Latest reviews (new or updated), newest first. Paginated. */
+export const feedLatest = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, { paginationOpts }) => {
     const viewerId = await getAuthUserId(ctx);
     const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
-    let reviews: Doc<"reviews">[];
-    if (tab === "latest") {
-      reviews = await ctx.db
-        .query("reviews")
-        .withIndex("by_updatedAt")
-        .order("desc")
-        .take(30);
-    } else {
-      // Most reactions received in the last 7 days.
-      const since = Date.now() - WEEK;
-      const recent = await ctx.db
-        .query("reactions")
-        .withIndex("by_createdAt", (q) => q.gte("createdAt", since))
-        .collect();
-      const tally = new Map<Id<"reviews">, number>();
-      for (const r of recent) tally.set(r.reviewId, (tally.get(r.reviewId) ?? 0) + 1);
-      const top = [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30);
-      reviews = (await Promise.all(top.map(([id]) => ctx.db.get(id)))).filter(
-        (r): r is Doc<"reviews"> => r !== null,
-      );
-    }
-    return await Promise.all(
-      reviews.map((r) => hydrateReview(ctx, r, viewerId, match, axes)),
+    const result = await ctx.db
+      .query("reviews")
+      .withIndex("by_updatedAt")
+      .order("desc")
+      .paginate(paginationOpts);
+    return {
+      ...result,
+      page: await Promise.all(result.page.map((r) => hydrateReview(ctx, r, viewerId, match, axes))),
+    };
+  },
+});
+
+/** The 50 reviews with the most reactions in the last 7 days. */
+export const feedTop = query({
+  args: {},
+  handler: async (ctx) => {
+    const viewerId = await getAuthUserId(ctx);
+    const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
+    const since = Date.now() - WEEK;
+    const recent = await ctx.db
+      .query("reactions")
+      .withIndex("by_createdAt", (q) => q.gte("createdAt", since))
+      .collect();
+    const tally = new Map<Id<"reviews">, number>();
+    for (const r of recent) tally.set(r.reviewId, (tally.get(r.reviewId) ?? 0) + 1);
+    const top = [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 50);
+    const reviews = (await Promise.all(top.map(([id]) => ctx.db.get(id)))).filter(
+      (r): r is Doc<"reviews"> => r !== null,
     );
+    return await Promise.all(reviews.map((r) => hydrateReview(ctx, r, viewerId, match, axes)));
   },
 });
 

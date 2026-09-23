@@ -118,3 +118,25 @@
 .deleteLink:hover {
   color: var(--rust-text);
 }
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+}
+.loadMoreBtn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 9px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-1);
+  transition: border-color 120ms;
+}
+.loadMoreBtn:hover:not(:disabled) {
+  border-color: var(--ink);
+  color: var(--ink);
+}
