@@ -115,7 +115,7 @@ export function Profile() {
 
       <section>
         <h2 className={ui.sectionLabel}>Ratings</h2>
-        <div className={`${ui.card} ${s.tableWrap}`}>
+        <div className={`${ui.card} ${s.tableWrap}`} role="region" aria-label="Ratings" tabIndex={0}>
           <table className={s.table}>
             <thead>
               <tr>
@@ -151,13 +151,15 @@ export function Profile() {
                       </span>
                     )}
                   </td>
-                  <td>{r.overall ? <Stars value={r.overall} size={13} /> : <span className={s.num}>—</span>}</td>
+                  <td data-label="Overall">{r.overall ? <Stars value={r.overall} size={13} /> : <span className={s.num}>—</span>}</td>
                   {data.coreAxes.map((a) => (
-                    <td key={a._id} className={s.num}>
+                    <td key={a._id} className={s.num} data-label={a.name}>
                       {r.scores.find((x) => x._id === a._id)?.score ?? "—"}
                     </td>
                   ))}
-                  <td className={s.num}>{shortDate(r.updatedAt)}</td>
+                  <td className={s.num} data-label="Updated">
+                    {shortDate(r.updatedAt)}
+                  </td>
                 </tr>
               ))}
             </tbody>

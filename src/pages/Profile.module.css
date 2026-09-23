@@ -209,6 +209,53 @@
   }
 }
 
+/* Narrow screens: each rating becomes a stacked row instead of a
+   760px table that scrolls sideways with no cue. */
+@media (max-width: 820px) {
+  .table {
+    min-width: 0;
+  }
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .table tbody {
+    display: block;
+  }
+  .table tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 16px;
+    padding: 14px 16px;
+    border-top: 1px solid var(--divider);
+  }
+  .table tr:first-child {
+    border-top: 0;
+  }
+  .table td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+  .table td:first-child {
+    flex-basis: 100%;
+  }
+  .table td[data-label]::before {
+    content: attr(data-label);
+    margin-right: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted-3);
+  }
+}
+
 .nudge {
   display: flex;
   justify-content: space-between;
