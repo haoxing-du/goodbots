@@ -447,6 +447,7 @@ function HomepageModels() {
                   onClick={() =>
                     edit(models.filter((x) => x.versionId !== m.versionId))
                   }
+                  aria-label={`Remove ${m.displayName}`}
                 >
                   Remove
                 </button>
