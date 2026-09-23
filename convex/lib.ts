@@ -272,14 +272,19 @@ export async function replaceReviewScores(
   }
 }
 
-/** Deletes a review with its entries, scores and reactions, keeping every stat in sync. */
-export async function deleteReviewCascade(ctx: MutationCtx, review: Doc<"reviews">) {
-  await replaceReviewScores(ctx, review, new Map());
+/** Takes a review out of its version's review count and overall-star stats. */
+export async function removeFromVersionStats(ctx: MutationCtx, review: Doc<"reviews">) {
   const stats = await getOrCreateStats(ctx, review.versionId);
   await ctx.db.patch(stats._id, {
     reviewCount: Math.max(0, stats.reviewCount - 1),
     overall: review.overall ? bump(stats.overall, review.overall, -1) : stats.overall,
   });
+}
+
+/** Deletes a review with its entries, scores and reactions, keeping every stat in sync. */
+export async function deleteReviewCascade(ctx: MutationCtx, review: Doc<"reviews">) {
+  await replaceReviewScores(ctx, review, new Map());
+  await removeFromVersionStats(ctx, review);
   for (const e of await ctx.db
     .query("reviewEntries")
     .withIndex("by_review", (q) => q.eq("reviewId", review._id))
@@ -486,6 +491,7 @@ export async function findOrActivateVersion(ctx: MutationCtx, versionId: string)
     .query("versions")
     .withIndex("by_versionId", (q) => q.eq("versionId", versionId))
     .unique();
+  if (existing?.mergedInto) return await findOrActivateVersion(ctx, existing.mergedInto);
   if (existing) return existing.status === "active" ? existing : null;
   const entry = await ctx.db
     .query("catalog")

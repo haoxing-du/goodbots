@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
@@ -25,6 +25,7 @@ export function ModelPage() {
 
   if (data === undefined) return <div className={ui.page} />;
   if (data === null) return <NotFound what="model" />;
+  if (data.kind === "redirect") return <Navigate to={versionPath(data.to)} replace />;
   if (data.kind === "catalog") return <UnreviewedModel entry={data.entry} />;
   const { version } = data;
   const overall = data.overall;

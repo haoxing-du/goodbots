@@ -1,13 +1,19 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import {
+  applyOverallToStats,
   bumpAxis,
+  bumpTakeCount,
   compareAxes,
   createVersion,
+  deleteReviewCascade,
   normalizeVersionId,
   publicUser,
+  removeFromVersionStats,
+  replaceReviewScores,
   requireAdmin,
 } from "./lib";
+import { Doc } from "./_generated/dataModel";
 
 /** Adds a model page by hand (for models not in the OpenRouter catalog). */
 export const addVersion = mutation({
@@ -28,6 +34,86 @@ export const addVersion = mutation({
       releasedAt: Date.now(),
       source: "manual",
     });
+  },
+});
+
+/**
+ * Merge one model page into another (duplicates, e.g. a hand-added model that
+ * later appears in the catalog). Reviews, scores and takes move over; where
+ * someone reviewed both, their newer review wins. The old page redirects.
+ */
+export const mergeVersion = mutation({
+  args: { from: v.string(), into: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    if (args.from === args.into) throw new ConvexError("Pick two different models.");
+    const byId = (id: string) =>
+      ctx.db
+        .query("versions")
+        .withIndex("by_versionId", (q) => q.eq("versionId", id))
+        .unique();
+    const [from, into] = await Promise.all([byId(args.from), byId(args.into)]);
+    if (!from || !into || from.status !== "active" || into.status !== "active") {
+      throw new ConvexError("Both models need to have active pages.");
+    }
+
+    const move = async (review: Doc<"reviews">) => {
+      const scores = await ctx.db
+        .query("reviewScores")
+        .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+        .collect();
+      const kept = new Map(scores.map((r) => [r.axisId, r.score]));
+      await replaceReviewScores(ctx, review, new Map()); // out of `from`'s axis stats
+      await removeFromVersionStats(ctx, review);
+      await ctx.db.patch(review._id, { versionId: into._id });
+      await applyOverallToStats(ctx, into._id, null, review.overall);
+      await replaceReviewScores(ctx, { ...review, versionId: into._id }, kept);
+    };
+
+    let moved = 0;
+    let dropped = 0;
+    for (const review of await ctx.db
+      .query("reviews")
+      .withIndex("by_version", (q) => q.eq("versionId", from._id))
+      .collect()) {
+      const existing = await ctx.db
+        .query("reviews")
+        .withIndex("by_user_version", (q) => q.eq("userId", review.userId).eq("versionId", into._id))
+        .unique();
+      if (existing && existing.updatedAt >= review.updatedAt) {
+        await deleteReviewCascade(ctx, review);
+        dropped++;
+        continue;
+      }
+      if (existing) {
+        await deleteReviewCascade(ctx, existing);
+        dropped++;
+      }
+      await move(review);
+      moved++;
+    }
+
+    for (const field of ["winnerVersionId", "loserVersionId"] as const) {
+      const takes = await ctx.db
+        .query("takes")
+        .withIndex(field === "winnerVersionId" ? "by_winner" : "by_loser", (q) => q.eq(field, from._id))
+        .collect();
+      for (const take of takes) {
+        await bumpTakeCount(ctx, from._id, -1);
+        const other = field === "winnerVersionId" ? take.loserVersionId : take.winnerVersionId;
+        if (other === into._id) {
+          // "into > into" makes no sense; drop it.
+          await bumpTakeCount(ctx, into._id, -1);
+          await ctx.db.delete(take._id);
+        } else {
+          await ctx.db.patch(take._id, { [field]: into._id });
+          await bumpTakeCount(ctx, into._id, 1);
+        }
+      }
+    }
+
+    await ctx.db.patch(from._id, { status: "hidden", mergedInto: into.versionId });
+    return { moved, dropped };
   },
 });
 

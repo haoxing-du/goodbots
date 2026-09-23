@@ -72,6 +72,7 @@ export default defineSchema({
     releasedAt: v.optional(v.number()),
     status: v.union(v.literal("active"), v.literal("hidden")),
     source: v.union(v.literal("catalog"), v.literal("manual")),
+    mergedInto: v.optional(v.string()), // set when an admin merged this model into another
   })
     .index("by_provider", ["providerId"])
     .index("by_versionId", ["versionId"]),

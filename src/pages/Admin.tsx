@@ -31,6 +31,7 @@ export function Admin() {
       <h1 className={ui.serifTitle}>Admin</h1>
       <Requests />
       <AddVersion />
+      <MergeModels />
       <Axes />
     </div>
   );
@@ -248,6 +249,67 @@ function Axes() {
         ))}
       </div>
       {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
+    </section>
+  );
+}
+
+function MergeModels() {
+  const versions = useQuery(api.models.allVersions);
+  const merge = useMutation(api.admin.mergeVersion);
+  const [from, setFrom] = useState("");
+  const [into, setInto] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const name = (id: string) => versions?.find((v) => v.versionId === id)?.displayName ?? id;
+
+  const select = (value: string, set: (v: string) => void, label: string) => (
+    <select className={ui.input} value={value} aria-label={label} onChange={(e) => set(e.target.value)}>
+      <option value="">{label}…</option>
+      {versions?.map((v) => (
+        <option key={v._id} value={v.versionId}>
+          {v.displayName} · {v.versionId}
+        </option>
+      ))}
+    </select>
+  );
+
+  return (
+    <section>
+      <h2 className={ui.sectionLabel}>Merge models</h2>
+      <div className={`${ui.card} ${f.cardPad} ${f.form}`}>
+        <p className={f.hint}>
+          For duplicates (e.g. a hand-added model that later appeared in the catalog). Reviews, scores and
+          takes move to the second model; if someone reviewed both, their newer review is kept. The first
+          model's page redirects.
+        </p>
+        <div className={s.mergeRow}>
+          {select(from, setFrom, "Merge")}
+          <span className={ui.meta}>into</span>
+          {select(into, setInto, "Into")}
+          <button
+            type="button"
+            className={ui.btn}
+            disabled={!from || !into || from === into}
+            onClick={async () => {
+              if (!window.confirm(`Merge ${name(from)} into ${name(into)}? This can't be undone.`)) return;
+              setMsg(null);
+              try {
+                const r = await merge({ from, into });
+                setMsg({
+                  ok: true,
+                  text: `Merged ${name(from)} into ${name(into)}: ${r.moved} reviews moved, ${r.dropped} older duplicates dropped.`,
+                });
+                setFrom("");
+                setInto("");
+              } catch (e) {
+                setMsg({ ok: false, text: errText(e, "Couldn't merge those models.") });
+              }
+            }}
+          >
+            Merge
+          </button>
+        </div>
+        {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
+      </div>
     </section>
   );
 }

@@ -34,3 +34,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+.mergeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mergeRow select {
+  flex: 1;
+  min-width: 220px;
+}

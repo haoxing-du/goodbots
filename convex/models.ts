@@ -72,6 +72,7 @@ export const page = query({
       .query("versions")
       .withIndex("by_versionId", (q) => q.eq("versionId", id))
       .unique();
+    if (version?.mergedInto) return { kind: "redirect", to: version.mergedInto } as const;
     if (!version || version.status !== "active") {
       const entry = await ctx.db
         .query("catalog")
