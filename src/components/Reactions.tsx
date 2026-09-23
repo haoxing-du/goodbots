@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { REACTIONS, ReactionKind } from "../lib/axes";
@@ -22,7 +23,7 @@ export function Reactions({
   const { requireAuth } = useSignIn();
   // Optimistic copy of the server state; resyncs whenever the server state changes.
   const [local, setLocal] = useState({ counts, mine });
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
   const serverKey = JSON.stringify([counts, mine]);
   useEffect(() => setLocal({ counts, mine }), [serverKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -33,10 +34,10 @@ export function Reactions({
         counts: { ...prev.counts, [kind]: prev.counts[kind] + (on ? -1 : 1) },
         mine: on ? prev.mine.filter((k) => k !== kind) : [...prev.mine, kind],
       }));
-      setFailed(false);
-      toggle({ reviewId, kind }).catch(() => {
+      setFailed(null);
+      toggle({ reviewId, kind }).catch((e) => {
         setLocal({ counts, mine });
-        setFailed(true);
+        setFailed(e instanceof ConvexError ? String(e.data) : "Couldn’t save your reaction. Try again.");
       });
     }, "Sign in to react to reviews.");
 
@@ -63,7 +64,7 @@ export function Reactions({
         );
       })}
       <span className={s.failed} role="status">
-        {failed && "Couldn’t save your reaction. Try again."}
+        {failed}
       </span>
     </div>
   );

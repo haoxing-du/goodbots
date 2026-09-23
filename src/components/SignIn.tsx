@@ -17,6 +17,11 @@ const SignInContext = createContext<Ctx | null>(null);
 
 export function SignInProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useConvexAuth();
+  // Signed in means a session *and* a user record, matching what the header
+  // shows. A session can outlive its user (deleted account, reset dev data);
+  // treat that as signed out so actions ask to sign in instead of failing.
+  const me = useQuery(api.users.me);
+  const signedIn = isAuthenticated && !!me;
   const [reason, setReason] = useState<string | null>(null);
   const [redirectTo, setRedirectTo] = useState<string | undefined>();
 
@@ -26,10 +31,10 @@ export function SignInProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const requireAuth = useCallback(
     (fn: () => void, why?: string, to?: string) => {
-      if (isAuthenticated) fn();
+      if (signedIn) fn();
       else open(why, to);
     },
-    [isAuthenticated, open],
+    [signedIn, open],
   );
 
   useEffect(() => {
