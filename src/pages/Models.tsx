@@ -80,7 +80,7 @@ export function Models() {
         ) : (
           // Provider blocks share rows: each spans as many columns as it has models.
           <div className={s.families}>
-            {families(versions).map((f) => (
+            {packRows(families(versions), 3).map((f) => (
               <section
                 key={f.slug}
                 className={s[`span${Math.min(f.versions.length, 3)}`]}
@@ -120,6 +120,28 @@ function families(versions: Version[]) {
       versions: [...f.versions].sort((a, b) => b.releasedAt - a.releasedAt),
     }))
     .sort((a, b) => best(b) - best(a));
+}
+
+/**
+ * Order families so each 3-column row fills before the next starts, pulling
+ * a later (smaller) family forward only to fill a gap. Doing this in the DOM
+ * rather than with grid-auto-flow: dense keeps tab and reading order the
+ * same as what's on screen.
+ */
+function packRows<T extends { versions: unknown[] }>(items: T[], cols: number) {
+  const span = (f: T) => Math.min(f.versions.length, cols);
+  const left = [...items];
+  const out: T[] = [];
+  let free = cols;
+  while (left.length) {
+    const i = left.findIndex((f) => span(f) <= free);
+    const [f] = left.splice(i === -1 ? 0 : i, 1);
+    if (i === -1) free = cols; // nothing fits: start a new row
+    out.push(f);
+    free -= span(f);
+    if (free === 0) free = cols;
+  }
+  return out;
 }
 
 function Grid({ versions }: { versions: Version[] }) {
