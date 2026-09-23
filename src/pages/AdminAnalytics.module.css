@@ -244,3 +244,56 @@ button.tileOn:hover {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- top lists ---------- */
+
+.trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-7);
+}
+@media (max-width: 900px) {
+  .trio {
+    grid-template-columns: 1fr;
+  }
+}
+.trio .chartTitle {
+  margin-bottom: var(--s-5);
+}
+.top {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: top;
+}
+.top li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--divider);
+  font-size: var(--text-sm);
+  counter-increment: top;
+}
+.top li:first-child {
+  border-top: 0;
+}
+.top li::before {
+  content: counter(top);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--muted-3);
+  min-width: 1ch;
+}
+.top a {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+}
+.topCount {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-2);
+  white-space: nowrap;
+}

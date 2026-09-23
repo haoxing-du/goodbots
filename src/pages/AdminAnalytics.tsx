@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { FunctionReturnType } from "convex/server";
 import { Pills } from "../components/Pills";
+import { UserLink } from "../components/bits";
 import { REACTIONS } from "../lib/axes";
 import { fmtCount } from "../lib/format";
 import ui from "../components/ui.module.css";
@@ -59,6 +61,7 @@ export function Analytics() {
           <Tiles data={data} days={days} metric={metric} onPick={setMetric} />
           <Trend data={data} metric={metric} />
           <Reactions totals={data.totals} />
+          <TopLists top={data.top} />
           <p className={ui.meta}>
             Counts are by UTC day and refresh hourly. Changes compare with the {days} days before.
           </p>
@@ -311,5 +314,58 @@ function Reactions({ totals }: { totals: Counts }) {
         </dl>
       </div>
     </div>
+  );
+}
+
+function TopList({ title, empty, children }: { title: string; empty: string; children: React.ReactNode[] }) {
+  return (
+    <div className={`${ui.card} ${s.chartCard}`}>
+      <h3 className={s.chartTitle}>{title}</h3>
+      {children.length ? <ol className={s.top}>{children}</ol> : <p className={ui.meta}>{empty}</p>}
+    </div>
+  );
+}
+
+function TopLists({ top }: { top: Overview["top"] }) {
+  return (
+    <>
+      <div className={s.trio}>
+        <TopList title="Most reviewed models" empty="No new reviews.">
+          {top.models.map((m) => (
+            <li key={m.versionId}>
+              <Link to={`/m/${m.versionId}`}>{m.displayName}</Link>
+              <span className={s.topCount}>
+                {fmtCount(m.count)} {m.count === 1 ? "review" : "reviews"}
+              </span>
+            </li>
+          ))}
+        </TopList>
+        <TopList title="Most active reviewers" empty="No new reviews.">
+          {top.reviewers.map((r) => (
+            <li key={r.user._id}>
+              <UserLink user={r.user} />
+              <span className={s.topCount}>
+                {fmtCount(r.count)} {r.count === 1 ? "review" : "reviews"}
+              </span>
+            </li>
+          ))}
+        </TopList>
+        <TopList title="Most-reacted reviews" empty="No reactions on new reviews yet.">
+          {top.reviews.map((r) => (
+            <li key={r.reviewId}>
+              <Link to={`/r/${r.reviewId}`}>
+                {r.user?.name ?? "Unknown"} on {r.model}
+              </Link>
+              <span className={s.topCount}>
+                {fmtCount(r.reactionCount)} {r.reactionCount === 1 ? "reaction" : "reactions"}
+              </span>
+            </li>
+          ))}
+        </TopList>
+      </div>
+      {top.capped && (
+        <p className={ui.meta}>Top lists count only the most recent 2,000 reviews in this period.</p>
+      )}
+    </>
   );
 }
