@@ -19,6 +19,22 @@
   font-weight: 400;
   text-decoration: none;
   color: var(--ink);
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+/* Logo stars: sized in px on purpose. If the word size changes, scale them:
+   star 0.5x, gap 0.16x, margin-top 0.17x of the word size. */
+.wordStars {
+  font-family: var(--font-sans); /* Geist renders ★ consistently */
+  font-size: 11px;
+  letter-spacing: 1px;
+  line-height: 1;
+  margin-top: 4px; /* top of the stars = cap height at 22px */
+  white-space: nowrap;
 }
 @media (hover: hover) {
   .wordmark:hover {

@@ -15,7 +15,8 @@ GoodBots is a review site for LLMs (Goodreads/Yelp for models). Users rate speci
 
 Global chrome (4a, 4b, 4d):
 - Top bar, background `#fbfaf7`, bottom border `1px #e4e2da`, padding `16px 48px`, gap 28px.
-- Wordmark "GoodBots": Newsreader 22px, weight 400.
+- Wordmark "GoodBots": Newsreader 22px, weight 400, letter-spacing -.01em, followed by five 11px ★ (Geist, letter-spacing 1px) with a 4px gap. The tops of the stars line up with the tops of the capitals (margin-top 4px). The stars use the `-star` axis colors in hue order: vibes red, overall gold, aligned green, smarts blue, taste violet. They keep their colors on hover and never wrap. At other sizes: stars 0.5×, gap 0.16× and margin-top 0.17× of the word size. Email and the social image use the hex fallbacks.
+- Favicon: `public/favicon.svg`, a single star with a diagonal gradient through the five star hues (lighter hues in dark mode). `public/apple-touch-icon.png` is the same star, 120px, on a 180px `#f5f4ef` square.
 - Nav "Home" and "Models": Geist Mono 12px, uppercase, letter-spacing .06em. Active `#171715`, inactive `#8a877d`.
 - Search input 260px: white, border `1px #e4e2da`, radius 6, padding `8px 12px`, placeholder "Search models or reviewers".
 - "Write a review" button: `#171715` background, white Geist 14/500 text, radius 4, padding `9px 16px`, hover `#3a3935`.
@@ -157,6 +158,15 @@ See SPEC.md for the Convex tables (users, models, versions, reviews, reviewEntri
 - Ink `#171715`. Ink-2 `#2f2e2a`. Muted `#4a4943`, `#5f5d56`, `#8a877d`. Disabled / empty star `#dcdad2`.
 - Olive: text `#6b6b12` / `#5c5c10`, fill `#8f8f24`, tint bg `#f6f7e6`, tint border `#d9dcae`.
 - Rust (negative delta, low match only): text `#a3441a`, tint bg `#fcf1ea`, tint border `#efc9b3`.
+- Axes (Prism): one hue per core axis plus overall. Each hue has `--axis-X` for text and fills (oklch 0.5 0.13, at least 4.5:1 on white), `-bg` (0.965 0.022), `-border` (0.86 0.05) and `-star` (0.66 0.15). The `-star` step is for logo stars and graphics only, never for body text.
+
+  | axis | hue | text | star (light bg) | star (dark bg) |
+  |---|---|---|---|---|
+  | overall | 70 gold | `#915200` | `#cb7f00` | `#df9b44` |
+  | smarts | 235 blue | `#006ca2` | `#009ee0` | `#47b7f1` |
+  | taste | 305 violet | `#754d9e` | `#a878db` | `#be95ec` |
+  | vibes | 25 red | `#a03f3c` | `#df6862` | `#f28881` |
+  | aligned | 150 green | `#137738` | `#3eab5e` | `#69c27e` |
 
 **Type**:
 - Newsreader 400 for headlines (52 / 44 / 22) and review body (19 / 1.5; 17 for take reasons).

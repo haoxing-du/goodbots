@@ -32,20 +32,30 @@
   --rust-bg: #fcf1ea;
   --rust-border: #efc9b3;
 
-  /* core axes: one distinct hue each, so chips read at a glance. Names are
-     always shown too, so color is never the only cue. */
-  --axis-smarts: oklch(0.45 0.09 250);
-  --axis-smarts-bg: oklch(0.965 0.015 250);
-  --axis-smarts-border: oklch(0.86 0.05 250);
-  --axis-taste: oklch(0.45 0.09 310);
-  --axis-taste-bg: oklch(0.965 0.022 310);
-  --axis-taste-border: oklch(0.86 0.05 310);
-  --axis-vibes: oklch(0.45 0.075 185);
-  --axis-vibes-bg: oklch(0.965 0.022 185);
-  --axis-vibes-border: oklch(0.86 0.05 185);
-  --axis-aligned: oklch(0.45 0.09 150);
+  /* Prism: one hue per core axis plus overall, so chips read at a glance.
+     Names are always shown too, so color is never the only cue. The -star
+     steps are brighter, for logo stars and graphics only (not body text);
+     the logo uses them in hue order. */
+  --axis-overall: oklch(0.5 0.13 70);
+  --axis-overall-bg: oklch(0.965 0.022 70);
+  --axis-overall-border: oklch(0.86 0.05 70);
+  --axis-overall-star: oklch(0.66 0.15 70);
+  --axis-smarts: oklch(0.5 0.13 235);
+  --axis-smarts-bg: oklch(0.965 0.022 235);
+  --axis-smarts-border: oklch(0.86 0.05 235);
+  --axis-smarts-star: oklch(0.66 0.15 235);
+  --axis-taste: oklch(0.5 0.13 305);
+  --axis-taste-bg: oklch(0.965 0.022 305);
+  --axis-taste-border: oklch(0.86 0.05 305);
+  --axis-taste-star: oklch(0.66 0.15 305);
+  --axis-vibes: oklch(0.5 0.13 25);
+  --axis-vibes-bg: oklch(0.965 0.022 25);
+  --axis-vibes-border: oklch(0.86 0.05 25);
+  --axis-vibes-star: oklch(0.66 0.15 25);
+  --axis-aligned: oklch(0.5 0.13 150);
   --axis-aligned-bg: oklch(0.965 0.022 150);
   --axis-aligned-border: oklch(0.86 0.05 150);
+  --axis-aligned-star: oklch(0.66 0.15 150);
 
   /* depth: only for surfaces floating over content (menus, popovers) */
   --shadow-float: 0 8px 24px color-mix(in srgb, var(--ink) 8%, transparent);

@@ -46,6 +46,27 @@ function stars(n: number, size: number): Node {
   };
 }
 
+// Logo stars in hue order (red, gold, green, blue, violet); hex twins of the --axis-*-star tokens.
+const LOGO_STARS = ["#df6862", "#cb7f00", "#3eab5e", "#009ee0", "#a878db"];
+function wordmark(size: number): Node {
+  const star = size * 0.5;
+  return h(
+    "div",
+    { alignItems: "flex-start", gap: size * 0.16, lineHeight: 1 },
+    h("div", { fontFamily: "Newsreader", fontSize: size, letterSpacing: size * -0.01 }, "GoodBots"),
+    {
+      type: "div",
+      props: {
+        style: { display: "flex", gap: star * 0.1, marginTop: size * 0.17 },
+        children: LOGO_STARS.map((fill) => ({
+          type: "svg",
+          props: { width: star, height: star, viewBox: "0 0 24 24", children: [{ type: "path", props: { d: STAR, fill } }] },
+        })),
+      },
+    },
+  );
+}
+
 const LABEL: Record<string, string> = { site: "", model: "Model", user: "Reviewer", review: "Review" };
 
 /** Builds the image tree from the query string (kind, title, sub, stat, stars, quote). */
@@ -72,7 +93,7 @@ export function ogTree(p: URLSearchParams): Node {
     h(
       "div",
       { justifyContent: "space-between", alignItems: "baseline" },
-      h("div", { fontFamily: "Newsreader", fontSize: 40 }, "GoodBots"),
+      wordmark(40),
       h("div", { fontFamily: "Geist Mono", fontSize: 22, letterSpacing: 2, color: C.faint, textTransform: "uppercase" }, LABEL[kind] ?? ""),
     ),
     h(

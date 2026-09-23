@@ -33,9 +33,7 @@ export function TopBar() {
 
   return (
     <header className={isHome ? s.barPlain : s.bar}>
-      <Link to="/" className={s.wordmark}>
-        GoodBots
-      </Link>
+      <Wordmark />
       <div className={s.spacer} />
       <nav className={s.nav} aria-label="Main">
         <NavLink to="/models" className={({ isActive }) => (isActive ? s.active : s.link)}>
@@ -103,14 +101,28 @@ export function TopBar() {
   );
 }
 
+/** "GoodBots" with five stars in hue order (red, gold, green, blue, violet). */
+function Wordmark() {
+  return (
+    <Link to="/" className={s.wordmark} aria-label="GoodBots home">
+      GoodBots
+      <span className={s.wordStars} aria-hidden>
+        <span style={{ color: "var(--axis-vibes-star)" }}>★</span>
+        <span style={{ color: "var(--axis-overall-star)" }}>★</span>
+        <span style={{ color: "var(--axis-aligned-star)" }}>★</span>
+        <span style={{ color: "var(--axis-smarts-star)" }}>★</span>
+        <span style={{ color: "var(--axis-taste-star)" }}>★</span>
+      </span>
+    </Link>
+  );
+}
+
 /** Minimal bar for the write screen: wordmark + Cancel. */
 export function MinimalBar() {
   const navigate = useNavigate();
   return (
     <header className={s.bar}>
-      <Link to="/" className={s.wordmark}>
-        GoodBots
-      </Link>
+      <Wordmark />
       <div className={s.spacer} />
       <button
         type="button"

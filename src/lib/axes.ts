@@ -20,8 +20,8 @@ export const REACTIONS = [
 
 export type ReactionKind = (typeof REACTIONS)[number]["kind"];
 
-// Core axes with their own hue (--axis-<slug> tokens in theme.css).
-const COLORED_AXES = new Set(["smarts", "taste", "vibes", "aligned"]);
+// Core axes (plus "overall") with their own hue (--axis-<slug> tokens in theme.css).
+const COLORED_AXES = new Set(["overall", "smarts", "taste", "vibes", "aligned"]);
 
 /**
  * CSS variables that color an element for one axis: --axis (text/fill),
