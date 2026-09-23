@@ -5,6 +5,7 @@ import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { MinimalBar } from "../components/TopBar";
+import { ModelPicker } from "../components/ModelPicker";
 import { useSignIn } from "../components/SignIn";
 import { Draft, EMPTY_DRAFT, loadDraft, saveDraft } from "../lib/draft";
 import { proseDate } from "../lib/format";
@@ -29,6 +30,7 @@ export function WriteReview() {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [draftFor, setDraftFor] = useState<string | null>(null);
   const [posted, setPosted] = useState<string | null>(null); // versionId just posted
+  const [changing, setChanging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -135,22 +137,31 @@ export function WriteReview() {
         <div className={s.main}>
           <h1 className={ui.serifTitle}>Review a model</h1>
 
-          <select
-            className={`${ui.input} ${s.versionSelect}`}
-            value={selected.versionId}
-            disabled={done}
-            aria-label="Model version"
-            onChange={(e) => {
-              setPosted(null);
-              setParams({ v: e.target.value }, { replace: true });
-            }}
-          >
-            {data.options.map((o) => (
-              <option key={o.versionId} value={o.versionId}>
-                {o.displayName} · {o.versionId}
-              </option>
-            ))}
-          </select>
+          <div className={s.modelRow}>
+            <div className={s.chosen} aria-live="polite">
+              <span className={s.chosenName}>{selected.displayName}</span>
+              <span className={ui.meta}>
+                {selected.provider} · {selected.versionId}
+                {!selected.onSite && " · first review"}
+              </span>
+            </div>
+            {!done &&
+              (changing ? (
+                <ModelPicker
+                  autoFocus
+                  label="Choose a model to review"
+                  onPick={(m) => {
+                    setChanging(false);
+                    setPosted(null);
+                    setParams({ v: m.versionId }, { replace: true });
+                  }}
+                />
+              ) : (
+                <button type="button" className={ui.linkBtn} onClick={() => setChanging(true)}>
+                  Change model
+                </button>
+              ))}
+          </div>
 
           {prior && !done && (
             <div className={s.notice}>

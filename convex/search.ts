@@ -7,6 +7,7 @@ export type ModelHit = {
   displayName: string;
   provider: string;
   reviewCount: number; // 0 = in the catalog, nobody has reviewed it yet
+  releasedAt?: number;
 };
 
 /**
@@ -19,6 +20,12 @@ export async function searchModels(ctx: QueryCtx, q: string, limit: number): Pro
   const startsWord = (s: string) =>
     s.toLowerCase().startsWith(term) ||
     s.toLowerCase().split(/[\s\-_./]+/).some((w) => w.startsWith(term));
+  // Every typed word is the start of some word in the name/provider ("gemini 3" → Gemini 3.x).
+  const terms = term.split(/\s+/).filter(Boolean);
+  const matchesAll = (h: { displayName: string; provider: string }) => {
+    const words = `${h.displayName} ${h.provider}`.toLowerCase().split(/[\s\-_/]+/);
+    return terms.every((t) => words.some((w) => w.startsWith(t)));
+  };
 
   const [versions, providers, catalogHits] = await Promise.all([
     ctx.db.query("versions").collect(),
@@ -41,6 +48,7 @@ export async function searchModels(ctx: QueryCtx, q: string, limit: number): Pro
       displayName: ver.displayName,
       provider,
       reviewCount: stats?.reviewCount ?? 0,
+      releasedAt: ver.releasedAt,
     });
   }
   for (const c of catalogHits) {
@@ -52,12 +60,19 @@ export async function searchModels(ctx: QueryCtx, q: string, limit: number): Pro
       displayName: c.name,
       provider: c.provider,
       reviewCount: stats?.reviewCount ?? 0,
+      releasedAt: c.releasedAt,
     });
   }
-  // Reviewed first (most reviews first); the rest keep search relevance order.
+  // Close matches first (all typed words match): reviewed ones by review count, then
+  // unreviewed newest first. Looser full-text matches after, in relevance order.
   const all = [...hits.values()];
-  const reviewed = all.filter((h) => h.reviewCount > 0).sort((a, b) => b.reviewCount - a.reviewCount);
-  return [...reviewed, ...all.filter((h) => h.reviewCount === 0)].slice(0, limit);
+  const close = all.filter(matchesAll);
+  const loose = all.filter((h) => !matchesAll(h));
+  const reviewed = close.filter((h) => h.reviewCount > 0).sort((a, b) => b.reviewCount - a.reviewCount);
+  const fresh = close
+    .filter((h) => h.reviewCount === 0)
+    .sort((a, b) => (b.releasedAt ?? 0) - (a.releasedAt ?? 0));
+  return [...reviewed, ...fresh, ...loose].slice(0, limit);
 }
 
 /** Model picker search (write page, homepage, request form). */

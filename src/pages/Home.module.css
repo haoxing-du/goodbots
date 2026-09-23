@@ -79,6 +79,26 @@
   color: var(--muted-3);
   font-style: italic;
 }
+.otherModel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(560px, 100%);
+  margin-top: -12px;
+}
+.cancelSearch {
+  background: none;
+  border: 0;
+  padding: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-3);
+}
+.cancelSearch:hover {
+  color: var(--ink);
+}
 .action {
   display: flex;
   align-items: center;

@@ -3,11 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSignIn } from "../components/SignIn";
+import { ModelPicker, PickedModel } from "../components/ModelPicker";
 import { mergeIntoDraft } from "../lib/draft";
 import { fmtCount } from "../lib/format";
 import s from "./Home.module.css";
 import { versionPath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
+
+const OTHER = "__other__";
 
 export function Home() {
   useTitle(null);
@@ -33,9 +36,19 @@ export function Home() {
     setAxisIndex((axisIndex + step) % axes.length);
   };
 
-  const versionId = picked ?? data?.versions[0]?.versionId ?? "";
+  // The select lists reviewed models; "Something else…" opens a search over the
+  // whole catalog, and the pick joins the list.
+  const [extra, setExtra] = useState<PickedModel | null>(null);
+  const [searching, setSearching] = useState(false);
+  const options = [
+    ...(extra && !data?.versions.some((v) => v.versionId === extra.versionId)
+      ? [extra]
+      : []),
+    ...(data?.versions ?? []),
+  ];
+  const versionId = picked ?? options[0]?.versionId ?? "";
   const selectedName =
-    data?.versions.find((v) => v.versionId === versionId)?.displayName ?? "";
+    options.find((v) => v.versionId === versionId)?.displayName ?? "";
 
   const started = Object.keys(ratings).length > 0 || text.trim().length > 0;
 
@@ -65,19 +78,45 @@ export function Home() {
               <select
                 className={s.select}
                 value={versionId}
-                onChange={(e) => setPicked(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value === OTHER) setSearching(true);
+                  else setPicked(e.target.value);
+                }}
                 aria-label="Model"
               >
-                {data?.versions.map((v) => (
-                  <option key={v._id} value={v.versionId}>
+                {options.map((v) => (
+                  <option key={v.versionId} value={v.versionId}>
                     {v.displayName}
                   </option>
                 ))}
+                <option value={OTHER}>Something else…</option>
               </select>
             </span>
             <span>?</span>
           </span>
         </h1>
+
+        {searching && (
+          <div className={s.otherModel}>
+            <ModelPicker
+              autoFocus
+              label="Find another model"
+              placeholder="Which model? Search 300+ models…"
+              onPick={(m) => {
+                setExtra(m);
+                setPicked(m.versionId);
+                setSearching(false);
+              }}
+            />
+            <button
+              type="button"
+              className={s.cancelSearch}
+              onClick={() => setSearching(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
 
         <textarea
           className={s.text}

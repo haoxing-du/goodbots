@@ -12,6 +12,22 @@
   gap: 24px;
   min-width: 0;
 }
+.modelRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.chosen {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chosenName {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  line-height: 1.15;
+}
 .versionSelect {
   min-width: 360px;
   align-self: flex-start;
