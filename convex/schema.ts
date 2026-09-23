@@ -123,6 +123,11 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_status", ["status"]),
 
+  // Singleton row of site-wide counters.
+  siteStats: defineTable({
+    reviewerCount: v.number(), // users with at least one review
+  }),
+
   versionStats: defineTable({
     versionId: v.id("versions"),
     reviewCount: v.number(),

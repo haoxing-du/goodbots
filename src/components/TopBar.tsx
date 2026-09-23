@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../convex/_generated/api";
@@ -14,41 +14,47 @@ export function TopBar() {
   const me = useQuery(api.users.me);
   const { open } = useSignIn();
   const { signOut } = useAuthActions();
+  // The homepage has its own call to action, so it drops search and "Write a review".
+  const isHome = useLocation().pathname === "/";
 
   return (
-    <header className={s.bar}>
+    <header className={isHome ? s.barPlain : s.bar}>
       <Link to="/" className={s.wordmark}>
         GoodBots
       </Link>
+      <div className={s.spacer} />
       <nav className={s.nav} aria-label="Main">
-        <NavLink to="/" end className={({ isActive }) => (isActive ? s.active : s.link)}>
-          Home
-        </NavLink>
         <NavLink to="/models" className={({ isActive }) => (isActive ? s.active : s.link)}>
           Models
         </NavLink>
+        <NavLink to="/reviews" className={({ isActive }) => (isActive ? s.active : s.link)}>
+          Reviews
+        </NavLink>
       </nav>
-      <div className={s.spacer} />
-      <form
-        role="search"
-        className={s.searchForm}
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
-        }}
-      >
-        <input
-          className={s.search}
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search models or reviewers"
-          aria-label="Search models or reviewers"
-        />
-      </form>
-      <Link to="/write" className={s.write}>
-        Write a review
-      </Link>
+      {!isHome && (
+        <>
+          <form
+            role="search"
+            className={s.searchForm}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+            }}
+          >
+            <input
+              className={s.search}
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search models or reviewers"
+              aria-label="Search models or reviewers"
+            />
+          </form>
+          <Link to="/write" className={s.write}>
+            Write a review
+          </Link>
+        </>
+      )}
       {me === undefined ? (
         <span className={s.userSlot} />
       ) : me ? (

@@ -1,123 +1,130 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Pills } from "../components/Pills";
-import { AxisScores, Avatar, MatchChip, Stars, UserLink } from "../components/bits";
-import { Reactions } from "../components/Reactions";
-import { fmtAvg, timeAgo } from "../lib/format";
-import ui from "../components/ui.module.css";
+import { useSignIn } from "../components/SignIn";
+import { fmtCount } from "../lib/format";
 import s from "./Home.module.css";
 
 export function Home() {
-  const [tab, setTab] = useState<"latest" | "top">("latest");
-  const feed = useQuery(api.reviews.feed, { tab });
-  const summary = useQuery(api.reviews.feedSummary);
+  const data = useQuery(api.home.homeStats);
+  const navigate = useNavigate();
+  const { requireAuth } = useSignIn();
+  const [picked, setPicked] = useState<string | null>(null);
+  const [stars, setStars] = useState(0);
+
+  const versionId = picked ?? data?.versions[0]?.versionId ?? "";
+  const selectedName =
+    data?.versions.find((v) => v.versionId === versionId)?.displayName ?? "";
+
+  const onContinue = () => {
+    if (!stars || !versionId) return;
+    const to = `/write?v=${encodeURIComponent(versionId)}&stars=${stars}`;
+    requireAuth(
+      () => navigate(to),
+      "Sign in to finish your review. Your rating is kept.",
+      to,
+    );
+  };
 
   return (
-    <div className={s.layout}>
-      <div className={s.main}>
-        <header className={s.head}>
-          <div>
-            <h1 className={ui.serifTitle}>What people think</h1>
-            {summary && (
-              <p className={s.summary}>
-                {summary.today} {summary.today === 1 ? "review" : "reviews"} today
-                {summary.mostReviewed && <> · {summary.mostReviewed} most reviewed this week</>}
-              </p>
-            )}
-          </div>
-          <Pills
-            label="Feed"
-            options={[
-              { value: "latest", label: "Latest" },
-              { value: "top", label: "Top this week" },
-            ]}
-            value={tab}
-            onChange={setTab}
-          />
-        </header>
-
-        <div className={s.cards}>
-          {feed && feed.length === 0 && (
-            <div className={`${ui.card} ${ui.empty}`}>
-              {tab === "top" ? "No reactions this week yet." : "No reviews yet."}
-            </div>
-          )}
-          {feed?.map((r) => (
-            <article key={r._id} className={`${ui.card} ${s.card}`}>
-              <div className={s.cardTop}>
-                {r.version && (
-                  <Link to={`/m/${r.version.modelSlug}/${r.version.versionId}`} className={s.modelChip}>
-                    {r.version.displayName}
-                  </Link>
-                )}
-                <MatchChip match={r.match} />
-                <span className={`${ui.meta} ${s.when}`}>{timeAgo(r.updatedAt)}</span>
-              </div>
-              <div className={s.byline}>
-                <UserLink user={r.user} className={s.name} />
-                <Stars value={r.scores.overall} />
-              </div>
-              <p className={`${ui.body} ${s.text}`}>{r.text}</p>
-              <AxisScores scores={r.scores} />
-              <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} />
-            </article>
-          ))}
-        </div>
-      </div>
-
-      <aside className={s.rail}>
-        <ModelsRail />
-        <ReviewersLikeYou />
-      </aside>
-    </div>
-  );
-}
-
-function ModelsRail() {
-  const models = useQuery(api.models.list);
-  return (
-    <section>
-      <h2 className={ui.sectionLabel}>Models · overall</h2>
-      <div className={`${s.railList} ${ui.rows}`}>
-        {models?.map((m) => (
-          <Link key={m._id} to={`/m/${m.slug}/${m.primary!.versionId}`} className={s.railRow}>
-            <span>
-              <span className={s.railName}>{m.primary!.displayName}</span>
-              <span className={s.railVer}>{m.primary!.versionId}</span>
+    <>
+      <section className={s.hero}>
+        <h1 className={s.headline}>
+          <span>What did you think of</span>
+          <span className={s.pick}>
+            {/* The hidden sizer makes the select exactly as wide as the chosen name. */}
+            <span className={s.selectWrap}>
+              <span className={s.sizer} aria-hidden>
+                {selectedName || "\u00a0"}
+              </span>
+              <select
+                className={s.select}
+                value={versionId}
+                onChange={(e) => setPicked(e.target.value)}
+                aria-label="Model"
+              >
+                {data?.versions.map((v) => (
+                  <option key={v._id} value={v.versionId}>
+                    {v.displayName}
+                  </option>
+                ))}
+              </select>
             </span>
-            <span className={s.railAvg}>{fmtAvg(m.primary!.overall)}</span>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
+            <span>?</span>
+          </span>
+        </h1>
 
-function ReviewersLikeYou() {
-  const me = useQuery(api.users.me);
-  const matches = useQuery(api.users.reviewersLikeYou);
-  return (
-    <section>
-      <h2 className={ui.sectionLabel}>Reviewers like you</h2>
-      {!me ? (
-        <p className={s.railNote}>Sign in and review three models to see whose taste matches yours.</p>
-      ) : matches && matches.length === 0 ? (
-        <p className={s.railNote}>
-          Review at least three models that other people have reviewed to find your taste matches.
-        </p>
-      ) : (
-        <div className={s.people}>
-          {matches?.map((p) => (
-            <Link key={p.user._id} to={`/u/${p.user.handle}`} className={s.person}>
-              <Avatar name={p.user.name} image={p.user.image} />
-              <span className={s.personName}>{p.user.name}</span>
-              <span className={s.oliveChip}>{p.match}%</span>
-            </Link>
-          ))}
+        <div className={s.action}>
+          <div
+            className={s.stars}
+            role="radiogroup"
+            aria-label="Overall rating"
+          >
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                role="radio"
+                aria-checked={stars === n}
+                aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                className={n <= stars ? s.starOn : s.starOff}
+                onClick={() => setStars(stars === n ? 0 : n)}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={s.continue}
+            disabled={!stars}
+            onClick={onContinue}
+          >
+            {stars ? "Continue →" : "Pick a rating"}
+          </button>
         </div>
-      )}
-    </section>
+
+        {data && (
+          <p className={s.count}>
+            {fmtCount(data.reviewerCount)}{" "}
+            {data.reviewerCount === 1 ? "person has" : "people have"} reviewed{" "}
+            {fmtCount(data.reviewedModelCount)}{" "}
+            {data.reviewedModelCount === 1 ? "model" : "models"}
+          </p>
+        )}
+      </section>
+
+      <section className={s.cards} aria-label="Summary stats">
+        {data?.cards.map((c, i) => {
+          const body = (
+            <>
+              <span className={s.cardLabel}>{c.label}</span>
+              <span className={s.cardRow}>
+                <span className={s.cardModel}>
+                  {c.version?.displayName ?? "—"}
+                </span>
+                {c.value && <span className={s.cardNum}>{c.value}</span>}
+              </span>
+              <span className={s.cardCaption}>{c.caption}</span>
+            </>
+          );
+          const cls = `${s.card} ${s[`cat${i + 1}`]}`;
+          return c.version ? (
+            <Link
+              key={c.key}
+              to={`/m/${c.version.modelSlug}/${c.version.versionId}`}
+              className={cls}
+            >
+              {body}
+            </Link>
+          ) : (
+            <div key={c.key} className={`${cls} ${s.cardEmpty}`}>
+              {body}
+            </div>
+          );
+        })}
+      </section>
+    </>
   );
 }

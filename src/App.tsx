@@ -2,6 +2,7 @@ import { Outlet, Route, Routes } from "react-router-dom";
 import { SignInProvider } from "./components/SignIn";
 import { TopBar } from "./components/TopBar";
 import { Home } from "./pages/Home";
+import { Reviews } from "./pages/Reviews";
 import { Models } from "./pages/Models";
 import { ModelPage } from "./pages/ModelPage";
 import { WriteReview } from "./pages/WriteReview";
@@ -28,6 +29,7 @@ export function App() {
       <Routes>
         <Route element={<Chrome />}>
           <Route path="/" element={<Home />} />
+          <Route path="/reviews" element={<Reviews />} />
           <Route path="/models" element={<Models />} />
           <Route path="/m/:slug/:versionId?" element={<ModelPage />} />
           <Route path="/u/:handle" element={<Profile />} />

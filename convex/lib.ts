@@ -117,6 +117,12 @@ export async function applyScoresToStats(
   await ctx.db.patch(stats._id, patch);
 }
 
+export async function bumpReviewerCount(ctx: MutationCtx, by: number) {
+  const row = await ctx.db.query("siteStats").first();
+  if (row) await ctx.db.patch(row._id, { reviewerCount: row.reviewerCount + by });
+  else await ctx.db.insert("siteStats", { reviewerCount: Math.max(0, by) });
+}
+
 export async function bumpTakeCount(
   ctx: MutationCtx,
   versionId: Id<"versions">,

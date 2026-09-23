@@ -1,13 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useNavigate } from "react-router-dom";
 import s from "./SignIn.module.css";
 
 type Ctx = {
-  /** Opens the sign-in dialog. */
-  open: (reason?: string) => void;
+  /** Opens the sign-in dialog. `redirectTo` is where to land after sign-in (default: here). */
+  open: (reason?: string, redirectTo?: string) => void;
   /** Runs `fn` when signed in; otherwise opens the sign-in dialog. */
-  requireAuth: (fn: () => void, reason?: string) => void;
+  requireAuth: (fn: () => void, reason?: string, redirectTo?: string) => void;
 };
 
 const SignInContext = createContext<Ctx | null>(null);
@@ -15,12 +16,16 @@ const SignInContext = createContext<Ctx | null>(null);
 export function SignInProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useConvexAuth();
   const [reason, setReason] = useState<string | null>(null);
+  const [redirectTo, setRedirectTo] = useState<string | undefined>();
 
-  const open = useCallback((why?: string) => setReason(why ?? "Sign in to join in."), []);
+  const open = useCallback((why?: string, to?: string) => {
+    setReason(why ?? "Sign in to join in.");
+    setRedirectTo(to);
+  }, []);
   const requireAuth = useCallback(
-    (fn: () => void, why?: string) => {
+    (fn: () => void, why?: string, to?: string) => {
       if (isAuthenticated) fn();
-      else open(why);
+      else open(why, to);
     },
     [isAuthenticated, open],
   );
@@ -32,7 +37,9 @@ export function SignInProvider({ children }: { children: React.ReactNode }) {
   return (
     <SignInContext.Provider value={{ open, requireAuth }}>
       {children}
-      {reason !== null && <SignInDialog reason={reason} onClose={() => setReason(null)} />}
+      {reason !== null && (
+        <SignInDialog reason={reason} redirectTo={redirectTo} onClose={() => setReason(null)} />
+      )}
     </SignInContext.Provider>
   );
 }
@@ -43,8 +50,17 @@ export function useSignIn() {
   return ctx;
 }
 
-function SignInDialog({ reason, onClose }: { reason: string; onClose: () => void }) {
+function SignInDialog({
+  reason,
+  redirectTo: target,
+  onClose,
+}: {
+  reason: string;
+  redirectTo?: string;
+  onClose: () => void;
+}) {
   const { signIn } = useAuthActions();
+  const navigate = useNavigate();
   const ref = useRef<HTMLDialogElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -55,13 +71,16 @@ function SignInDialog({ reason, onClose }: { reason: string; onClose: () => void
     ref.current?.showModal();
   }, []);
 
-  const redirectTo = () => window.location.pathname + window.location.search;
+  const redirectTo = () => target ?? window.location.pathname + window.location.search;
 
   const go = (provider: string) => {
     setError(null);
-    void signIn(provider, { redirectTo: redirectTo() }).catch(() =>
-      setError("Couldn't sign in. Check that this provider is configured."),
-    );
+    signIn(provider, { redirectTo: redirectTo() })
+      .then(({ signingIn }) => {
+        // OAuth leaves the page; credential sign-in (demo) completes here, so navigate ourselves.
+        if (signingIn && target) navigate(target);
+      })
+      .catch(() => setError("Couldn't sign in. Check that this provider is configured."));
   };
 
   const sendLink = async (e: React.FormEvent) => {

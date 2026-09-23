@@ -98,6 +98,32 @@ const TAKES: [Handle, Ver, Ver, string | undefined, number][] = [
   ["demo", "claude-opus-4-1", "gpt-5-2025-08-07", undefined, 6],
 ];
 
+// Background reviewers so the homepage "best" cards (20+ reviews) have data.
+// Their reviews are short and dated 2–8 weeks ago, so the curated ones above
+// stay on top of the Latest feed.
+const FIRST = ["Alex", "Bea", "Carlos", "Dana", "Eli", "Farah", "Gus", "Hana", "Ivan", "Jade", "Kofi", "Liv", "Marco", "Noor", "Oren", "Pia", "Quinn", "Ravi", "Sofia", "Tariq", "Uma", "Vic", "Wren", "Xiu", "Yusuf", "Zoe", "Ines", "Ben", "Cleo", "Dev"];
+const LAST = ["Abbott", "Brandt", "Cruz", "Dunn", "Eze", "Fong", "Garza", "Holm", "Ito", "Jensen", "Kaur", "Lund", "Moreau", "Nakamura", "Ortega", "Petrov", "Quist", "Rossi", "Sato", "Tan", "Ueda", "Varga", "Weber", "Xu", "Yilmaz", "Zamora", "Ali", "Berg", "Costa", "Diaz"];
+const BULK_USERS = FIRST.map((first, i) => {
+  const name = `${first} ${LAST[i]}`;
+  return { name, handle: `${first}_${LAST[i]}`.toLowerCase() };
+});
+
+// Per-version mean scores: overall, smarts, taste, vibes, aligned, mom.
+const BULK_PROFILES: Record<string, [number, number, number, number, number, number]> = {
+  "claude-opus-4-1": [4.3, 4.6, 4.9, 3.6, 4.3, 3.5],
+  "gpt-5-2025-08-07": [4.2, 4.8, 3.4, 3.5, 3.9, 3.9],
+  "gemini-2.5-pro": [4.1, 4.2, 3.7, 3.9, 4.0, 4.5],
+  "deepseek-v3.1": [3.9, 4.1, 3.3, 3.2, 3.9, 3.1],
+  "grok-4-0709": [3.3, 3.8, 3.0, 4.6, 2.6, 2.7],
+};
+const BULK_TEXT: Record<string, string[]> = {
+  "claude-opus-4-1": ["Best writing partner I've had.", "Careful, sometimes too careful.", "Catches my mistakes before I do.", "Long answers, but good ones."],
+  "gpt-5-2025-08-07": ["Fast and sharp on technical questions.", "Great at math, bland at prose.", "Reliable default for work.", "Confident even when it shouldn't be."],
+  "gemini-2.5-pro": ["Handles huge documents without blinking.", "Friendly and surprisingly thorough.", "My parents' favorite by far.", "Solid all-rounder."],
+  "deepseek-v3.1": ["Great value for coding.", "Plain prose, clean reasoning.", "Does the job, nothing fancy.", "Better than the price suggests."],
+  "grok-4-0709": ["Fun to talk to, hard to trust.", "Funny, fast, often wrong.", "Good for brainstorming only.", "Says what you want to hear."],
+};
+
 function rng(seed: number) {
   return () => {
     seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -175,9 +201,53 @@ export const run = internalMutation({
       reviewIds.push(reviewId);
     }
 
-    // Reactions: each other user reacts to a review with some probability.
+    // Background reviewers: user i skips version j when (i + j) % 5 === 0.
+    const bulkRand = rng(7);
+    const bulkVersions = Object.keys(BULK_PROFILES);
+    const clamp = (n: number) => Math.min(5, Math.max(1, Math.round(n)));
+    for (const [i, u] of BULK_USERS.entries()) {
+      const userId = await ctx.db.insert("users", {
+        name: u.name,
+        nameLower: u.name.toLowerCase(),
+        handle: u.handle,
+        handleLower: u.handle,
+        joinedAt: now - (60 + i) * DAY,
+      });
+      users.set(u.handle, userId);
+      for (const [j, v] of bulkVersions.entries()) {
+        if ((i + j) % 5 === 0) continue;
+        const p = BULK_PROFILES[v];
+        const s = p.map((mean) => clamp(mean + (bulkRand() * 2 - 1) * 1.2));
+        const axis = (k: number) => (bulkRand() < 0.15 ? undefined : s[k]);
+        const scores = { overall: s[0], smarts: axis(1), taste: axis(2), vibes: axis(3), aligned: axis(4), mom: axis(5) };
+        const at = now - (14 + Math.floor(bulkRand() * 42)) * DAY;
+        const versionId = versions.get(v)!;
+        const reviewId = await ctx.db.insert("reviews", {
+          userId,
+          versionId,
+          reactionCount: 0,
+          createdAt: at,
+          updatedAt: at,
+          ...scores,
+        });
+        const texts = BULK_TEXT[v];
+        await ctx.db.insert("reviewEntries", {
+          reviewId,
+          text: texts[(i + j) % texts.length],
+          overallAtTime: scores.overall,
+          createdAt: at,
+        });
+        await applyScoresToStats(ctx, versionId, null, scores);
+      }
+    }
+
+    // Site counters: everyone seeded above has at least one review.
+    const reviewers = new Set((await ctx.db.query("reviews").collect()).map((r) => r.userId));
+    await ctx.db.insert("siteStats", { reviewerCount: reviewers.size });
+
+    // Reactions (curated reviews only): each other user reacts with some probability.
     const rand = rng(42);
-    const handles = [...users.keys()];
+    const handles = USERS.map((u) => u[1] as string);
     for (const reviewId of reviewIds) {
       const review = (await ctx.db.get(reviewId))!;
       let count = 0;
@@ -209,11 +279,12 @@ export const run = internalMutation({
       await bumpTakeCount(ctx, loserVersionId, 1);
     }
 
-    return `Seeded ${versions.size} versions, ${users.size} users, ${reviewIds.length} reviews, ${TAKES.length} takes.`;
+    const reviewTotal = (await ctx.db.query("reviews").collect()).length;
+    return `Seeded ${versions.size} versions, ${users.size} users, ${reviewTotal} reviews, ${TAKES.length} takes.`;
   },
 });
 
-async function clear(ctx: MutationCtx, table: "models" | "versions" | "reviews" | "reviewEntries" | "reactions" | "takes" | "modelRequests" | "versionStats") {
+async function clear(ctx: MutationCtx, table: "models" | "versions" | "reviews" | "reviewEntries" | "reactions" | "takes" | "modelRequests" | "versionStats" | "siteStats") {
   for (const doc of await ctx.db.query(table).collect()) await ctx.db.delete(doc._id);
 }
 
@@ -221,10 +292,10 @@ async function clear(ctx: MutationCtx, table: "models" | "versions" | "reviews" 
 export const reset = internalMutation({
   args: {},
   handler: async (ctx) => {
-    for (const t of ["models", "versions", "reviews", "reviewEntries", "reactions", "takes", "modelRequests", "versionStats"] as const) {
+    for (const t of ["models", "versions", "reviews", "reviewEntries", "reactions", "takes", "modelRequests", "versionStats", "siteStats"] as const) {
       await clear(ctx, t);
     }
-    const seeded = new Set<string>(USERS.map((u) => u[1]));
+    const seeded = new Set<string>([...USERS.map((u) => u[1]), ...BULK_USERS.map((u) => u.handle)]);
     for (const u of await ctx.db.query("users").collect()) {
       const seedEmail = !u.email || u.email.endsWith("@goodbots.local");
       if (seedEmail && u.handle && seeded.has(u.handle)) await ctx.db.delete(u._id);

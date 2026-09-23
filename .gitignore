@@ -8,3 +8,6 @@ dist
 .agents/
 .claude/skills/
 .claude/settings.local.json
+
+# Local design mockups (not published)
+design/

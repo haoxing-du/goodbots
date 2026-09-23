@@ -5,6 +5,7 @@ import { Doc, Id } from "./_generated/dataModel";
 import {
   applyScoresToStats,
   avg,
+  bumpReviewerCount,
   AXES,
   checkScore,
   matcherFor,
@@ -125,6 +126,12 @@ export const upsert = mutation({
       });
       reviewId = existing._id;
     } else {
+      const firstReview =
+        (await ctx.db
+          .query("reviews")
+          .withIndex("by_user", (q) => q.eq("userId", user._id))
+          .first()) === null;
+      if (firstReview) await bumpReviewerCount(ctx, 1);
       reviewId = await ctx.db.insert("reviews", {
         userId: user._id,
         versionId: args.versionId,

@@ -48,7 +48,12 @@ export function WriteReview() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { open, requireAuth } = useSignIn();
 
-  const [draft, setDraft] = useState<Draft>(loadDraft);
+  // Stars picked on the homepage arrive as ?stars=N and override the saved draft.
+  const [draft, setDraft] = useState<Draft>(() => {
+    const d = loadDraft();
+    const n = Number(params.get("stars"));
+    return Number.isInteger(n) && n >= 1 && n <= 5 ? { ...d, overall: n } : d;
+  });
   const [posted, setPosted] = useState<Id<"versions"> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
