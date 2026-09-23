@@ -72,6 +72,7 @@ All of these are set on the **Convex deployment** (`npx convex env set NAME valu
 | `AUTH_TWITTER_ID`, `AUTH_TWITTER_SECRET` | X OAuth 2.0 client. |
 | `OPENROUTER_API_KEY` | OpenRouter API key for the model-catalog sync (`catalog:sync`, every 6 hours). Listing models is free; any key from openrouter.ai → Keys works. |
 | `ADMIN_EMAILS` | Comma-separated emails allowed to use `/admin`. Matched against the signed-in user's email, so admins sign in with the email link (X doesn't share email). |
+| `ADMIN_X_IDS` | Comma-separated X account ids (the permanent numeric id, not the @username) whose X sign-ins are admins. Find yours in the Convex dashboard: Data → users → your row's `xId`. |
 | `ALLOW_SEED` | `true` lets `seed:run` / `seed:reset` run (fake data; reset deletes all app data). Local only — never on production. |
 | `DEMO_LOGIN` | `true` enables the local demo sign-in. Dev only. |
 

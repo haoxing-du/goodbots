@@ -35,6 +35,7 @@ export default defineSchema({
     handleLower: v.optional(v.string()),
     nameLower: v.optional(v.string()),
     xHandle: v.optional(v.string()),
+    xId: v.optional(v.string()), // X's permanent numeric account id (usernames can change)
     joinedAt: v.optional(v.number()), // seeded users only; real users use _creationTime
   })
     .index("email", ["email"])

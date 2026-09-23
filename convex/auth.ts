@@ -23,6 +23,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           name: data.name,
           image: data.profile_image_url,
           xHandle: data.username,
+          xId: data.id,
         };
       },
     }),

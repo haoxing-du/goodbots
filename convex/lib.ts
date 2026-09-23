@@ -41,13 +41,20 @@ export async function requireMember(ctx: QueryCtx) {
   return user;
 }
 
-export function isAdmin(user: Doc<"users"> | null) {
-  if (!user?.email) return false;
-  const admins = (process.env.ADMIN_EMAILS ?? "")
+const envList = (name: string) =>
+  (process.env[name] ?? "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  return admins.includes(user.email.toLowerCase());
+
+/**
+ * Admins are listed by email (ADMIN_EMAILS) or by X account id (ADMIN_X_IDS; the
+ * permanent numeric id, not the username, which can change hands).
+ */
+export function isAdmin(user: Doc<"users"> | null) {
+  if (!user) return false;
+  if (user.email && envList("ADMIN_EMAILS").includes(user.email.toLowerCase())) return true;
+  return !!user.xId && envList("ADMIN_X_IDS").includes(user.xId);
 }
 
 export async function requireAdmin(ctx: QueryCtx) {
