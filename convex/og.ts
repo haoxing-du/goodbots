@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalQuery } from "./_generated/server";
+import { featuredModels } from "./featured";
 import { avg, axisIndex, compareAxes, scoresForReview, statsFor, versionLabel } from "./lib";
 
 /** What a link preview (Open Graph card) shows for a page. */
@@ -21,7 +22,7 @@ const SITE: PageMeta = {
   title: "GoodBots — Reviews of AI models, by the humans who interact with them",
   description:
     "Rate models on smarts, taste, vibes and whatever else you care about. See all the opinionated reviews, head-to-head takes, and reviewers whose taste matches yours.",
-  image: { kind: "site", title: "So what do you think of Opus 5.5?" },
+  image: { kind: "site", title: "So what do you think?" },
 };
 
 /** Meta for a path: "/", "/m/<provider>/<model>", "/u/<handle>" or "/r/<reviewId>". Null if unknown. */
@@ -30,7 +31,12 @@ export const forPath = internalQuery({
   handler: async (ctx, { path }): Promise<PageMeta | null> => {
     const [, kind, ...rest] = path.split("/");
     const id = rest.map(decodeURIComponent).join("/");
-    if (!kind) return SITE;
+    if (!kind) {
+      // Same model the homepage headline defaults to: the first featured one.
+      const [lead] = await featuredModels(ctx);
+      if (!lead) return SITE;
+      return { ...SITE, image: { ...SITE.image, title: `So what do you think of\n${lead.displayName}?` } };
+    }
 
     if (kind === "m" && id) {
       const version = await ctx.db

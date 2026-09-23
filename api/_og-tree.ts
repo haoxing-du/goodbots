@@ -99,7 +99,7 @@ export function ogTree(p: URLSearchParams): Node {
     h(
       "div",
       { flexDirection: "column", gap: 18 },
-      h("div", { fontFamily: "Newsreader", fontSize: titleSize, lineHeight: 1.05, letterSpacing: -1.5 }, title),
+      h("div", { fontFamily: "Newsreader", fontSize: titleSize, lineHeight: 1.05, letterSpacing: -1.5, whiteSpace: "pre-line" }, title),
       sub ? h("div", { fontSize: 30, color: C.muted }, sub) : null,
       stat || n
         ? h(
