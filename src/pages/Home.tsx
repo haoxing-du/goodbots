@@ -87,7 +87,7 @@ export function Home() {
         {/* The model menu sits beside the <h1>, not inside it, so the heading’s
             accessible name isn’t polluted by every option. */}
         <div className={s.headline}>
-          <h1 className={s.lead}>What did you think of</h1>
+          <h1 className={s.lead}>What do you think of</h1>
           <span className={s.pick}>
             <ModelMenu
               models={options}
