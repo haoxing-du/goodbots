@@ -1,0 +1,50 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-1);
+}
+.hint {
+  font-size: 13px;
+  color: var(--muted-3);
+}
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.lede {
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--muted-2);
+  max-width: 60ch;
+  margin-top: 12px;
+}
+.ok {
+  background: var(--olive-bg);
+  border: 1px solid var(--olive-border);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--olive-text-2);
+}
+.cardPad {
+  padding: 24px;
+}
+@media (max-width: 600px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}

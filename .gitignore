@@ -1,0 +1,10 @@
+node_modules
+dist
+.env.local
+.env
+.DS_Store
+
+# Convex agent skills (reinstall with `npx convex ai-files install`)
+.agents/
+.claude/skills/
+.claude/settings.local.json

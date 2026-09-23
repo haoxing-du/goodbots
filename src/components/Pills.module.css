@@ -1,0 +1,32 @@
+.pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.on,
+.off {
+  border: 0;
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  transition: background 120ms, color 120ms;
+}
+.on {
+  background: var(--ink);
+  color: #fff;
+}
+.off {
+  background: var(--card);
+  color: var(--muted-1);
+}
+.off:hover {
+  color: var(--ink);
+}

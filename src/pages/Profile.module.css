@@ -1,0 +1,249 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.bigAvatar {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  color: var(--ink);
+}
+.subline {
+  margin-top: 8px;
+  font-size: 16px;
+  color: var(--muted-2);
+}
+.subline a {
+  color: inherit;
+}
+.counts {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 9px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-1);
+}
+.countSep {
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 760px;
+}
+.table col {
+  width: auto;
+}
+.table th {
+  background: var(--raised);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-3);
+  text-align: left;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--divider);
+}
+.table th:first-child {
+  width: 26%;
+}
+.table th:nth-child(2) {
+  width: 120px;
+}
+.table th:last-child {
+  width: 90px;
+}
+.table td {
+  padding: 14px 20px;
+  border-top: 1px solid var(--divider);
+  vertical-align: middle;
+}
+.table tr:first-child td {
+  border-top: 0;
+}
+.modelName {
+  display: block;
+  font-size: 15px;
+}
+.modelName a {
+  text-decoration: none;
+}
+.modelName a:hover {
+  text-decoration: underline;
+}
+.num {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 32px;
+  align-items: start;
+}
+.latest {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.latestHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.latestModel {
+  font-family: var(--font-serif);
+  font-size: 22px;
+}
+.latestModel a {
+  text-decoration: none;
+}
+.entryLatest,
+.entryOld {
+  padding-left: 16px;
+  border-left: 2px solid;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.entryLatest {
+  border-color: var(--ink);
+}
+.entryOld {
+  border-color: var(--disabled);
+}
+.entryOld p {
+  color: var(--muted-2);
+}
+.entryHead {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-1);
+}
+.take {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.takeHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.takeLine {
+  font-size: 15px;
+}
+.takeLine a {
+  text-decoration: none;
+}
+.takeLine a:hover {
+  text-decoration: underline;
+}
+.gt {
+  font-family: var(--font-mono);
+  color: var(--muted-3);
+  margin: 0 2px;
+}
+.reason {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+@media (max-width: 1100px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 900px) {
+  .latest {
+    padding: 20px;
+  }
+  .identity {
+    gap: 14px;
+  }
+}
+
+.nudge {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--olive-bg);
+  border: 1px solid var(--olive-border);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--olive-text-2);
+}
+.editLink {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted-2);
+}
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: min(360px, 100%);
+}
+.editField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nameInput {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  padding: 8px 12px;
+}
+.handleWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.at {
+  font-family: var(--font-mono);
+  color: var(--muted-3);
+}
+.handleInput {
+  font-family: var(--font-mono);
+  flex: 1;
+}
+.editActions {
+  display: flex;
+  gap: 8px;
+}

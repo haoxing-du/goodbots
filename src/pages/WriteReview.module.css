@@ -1,0 +1,252 @@
+.layout {
+  display: grid;
+  grid-template-columns: 760px 1fr;
+  gap: 48px;
+  padding: 44px 48px 56px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+.versionSelect {
+  min-width: 360px;
+  align-self: flex-start;
+  font-size: 15px;
+}
+.notice,
+.posted {
+  background: var(--olive-bg);
+  border: 1px solid var(--olive-border);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--olive-text-2);
+}
+.posted {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+.postedActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.ratingCard {
+  overflow: hidden;
+}
+.overallRow,
+.axisRow {
+  display: grid;
+  grid-template-columns: 220px 1fr 150px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+}
+.overallRow {
+  background: var(--raised);
+}
+.axisLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+}
+.axisHint {
+  font-size: 13px;
+  color: var(--muted-3);
+  margin-top: 3px;
+}
+.starButtons {
+  display: flex;
+  gap: 4px;
+}
+.starOn,
+.starOff {
+  background: none;
+  border: 0;
+  padding: 0 2px;
+  font-size: 30px;
+  line-height: 1;
+  transition: color 120ms;
+}
+.starOn {
+  color: var(--ink);
+}
+.starOff {
+  color: var(--disabled);
+}
+.starOff:hover:not(:disabled) {
+  color: var(--muted-3);
+}
+.starOn:disabled,
+.starOff:disabled,
+.numOn:disabled,
+.numOff:disabled {
+  cursor: default;
+}
+.numButtons {
+  display: flex;
+  gap: 6px;
+}
+.numOn,
+.numOff {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-sm);
+  border: 1px solid;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  transition: border-color 120ms, background 120ms;
+}
+.numOff {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink-2);
+}
+.numOff:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.numOn {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.rightCell {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-3);
+  text-align: right;
+  white-space: nowrap;
+}
+.deltaUp {
+  color: var(--olive-text-2);
+}
+.deltaDown {
+  color: var(--rust-text);
+}
+.deltaFlat {
+  color: var(--muted-1);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+.textarea {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 1.5;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  resize: vertical;
+  transition: border-color 120ms;
+}
+.textarea:hover:not(:disabled) {
+  border-color: var(--outline);
+}
+.textarea::placeholder {
+  color: var(--muted-3);
+}
+.snippet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+.monoArea {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  resize: vertical;
+}
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+.progress {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-2);
+}
+
+.aside {
+  padding-top: 64px;
+}
+.scale {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.scale b {
+  font-family: var(--font-mono);
+  font-weight: 400;
+}
+.asideNote {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted-2);
+  max-width: 32ch;
+}
+
+@media (max-width: 1200px) {
+  .layout {
+    grid-template-columns: minmax(0, 760px) 1fr;
+    gap: 32px;
+  }
+}
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 28px 16px 40px;
+  }
+  .aside {
+    padding-top: 0;
+    order: -1;
+    display: none;
+  }
+  .versionSelect {
+    min-width: 0;
+    width: 100%;
+  }
+  .overallRow,
+  .axisRow {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .rightCell {
+    text-align: left;
+  }
+  .snippet {
+    grid-template-columns: 1fr;
+  }
+}

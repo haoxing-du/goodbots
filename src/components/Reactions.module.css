@@ -1,0 +1,32 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.on,
+.off {
+  border: 1px solid;
+  border-radius: var(--r-sm);
+  padding: 5px 10px;
+  font-size: 13px;
+  transition: background 120ms, border-color 120ms;
+}
+.off {
+  background: var(--raised);
+  border-color: var(--border);
+  color: var(--ink-2);
+}
+.off:hover {
+  border-color: var(--ink);
+}
+.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.7;
+  margin-left: 2px;
+}

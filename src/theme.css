@@ -1,0 +1,110 @@
+/* GoodBots design tokens — single source of truth for color, type, radii, spacing. */
+:root {
+  /* surfaces */
+  --page: #f5f4ef;
+  --raised: #fbfaf7;
+  --card: #ffffff;
+  --border: #e4e2da;
+  --divider: #eeede7;
+  --outline: #cfccc2;
+
+  /* ink */
+  --ink: #171715;
+  --ink-hover: #3a3935;
+  --ink-2: #2f2e2a;
+  --muted-1: #4a4943;
+  --muted-2: #5f5d56;
+  --muted-3: #8a877d;
+  --disabled: #dcdad2;
+
+  /* olive accent */
+  --olive-text: #6b6b12;
+  --olive-text-2: #5c5c10;
+  --olive-fill: #8f8f24;
+  --olive-bg: #f6f7e6;
+  --olive-border: #d9dcae;
+
+  /* rust (negative delta, low match) */
+  --rust-text: #a3441a;
+  --rust-bg: #fcf1ea;
+  --rust-border: #efc9b3;
+
+  /* type */
+  --font-serif: "Newsreader", Georgia, serif;
+  --font-sans: "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* radii */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+  --r-pill: 999px;
+
+  /* spacing */
+  --s-1: 4px;
+  --s-2: 6px;
+  --s-3: 8px;
+  --s-4: 10px;
+  --s-5: 12px;
+  --s-6: 14px;
+  --s-7: 16px;
+  --s-8: 20px;
+  --s-9: 24px;
+  --s-10: 28px;
+  --s-11: 32px;
+  --s-12: 36px;
+  --s-13: 40px;
+  --s-14: 48px;
+  --s-15: 56px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--ink);
+  text-underline-offset: 3px;
+}
+a:hover {
+  color: var(--olive-text);
+}
+
+textarea,
+input,
+select,
+button {
+  font-family: inherit;
+  color: inherit;
+  font-size: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}

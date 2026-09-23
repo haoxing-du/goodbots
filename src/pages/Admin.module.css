@@ -1,0 +1,20 @@
+.request {
+  display: grid;
+  grid-template-columns: 1fr 260px auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 20px;
+}
+.reqTitle {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 900px) {
+  .request {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,234 @@
+import { internalMutation, MutationCtx } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+import { applyScoresToStats, bumpTakeCount, REACTION_KINDS } from "./lib";
+import { createVersion } from "./admin";
+
+const MIN = 60 * 1000;
+const HOUR = 60 * MIN;
+const DAY = 24 * HOUR;
+
+const MODELS = [
+  { family: "Claude Opus", provider: "Anthropic", versions: [["claude-opus-4-1", "Claude Opus 4.1", 48], ["claude-opus-4", "Claude Opus 4", 120]] },
+  { family: "GPT", provider: "OpenAI", versions: [["gpt-5-2025-08-07", "GPT-5", 45]] },
+  { family: "Gemini", provider: "Google", versions: [["gemini-2.5-pro", "Gemini 2.5 Pro", 170]] },
+  { family: "DeepSeek", provider: "DeepSeek", versions: [["deepseek-v3.1", "DeepSeek V3.1", 30]] },
+  { family: "Grok", provider: "xAI", versions: [["grok-4-0709", "Grok 4", 75]] },
+  { family: "Llama", provider: "Meta", versions: [["llama-4-maverick", "Llama 4 Maverick", 165]] },
+] as const;
+
+// [name, handle, xHandle?, joined days ago]
+const USERS = [
+  ["Priya Raman", "priya_r", "priya_r", 100],
+  ["Jonah Becker", "jonahb", "jonahb", 90],
+  ["Lena Ortiz", "lena_evals", "lena_evals", 110],
+  ["Sam Okafor", "samokafor", undefined, 60],
+  ["Mira Chen", "mirac", "mirachen", 80],
+  ["Ade Laniyan", "ade_l", "ade_l", 70],
+  ["Kai Thompson", "kt_builds", "kt_builds", 95],
+  ["Rosa Delgado", "rosad", undefined, 50],
+  ["Theo Park", "theopark", "theopark", 40],
+  ["Nadia Haddad", "nadia_h", undefined, 35],
+  ["Demo Reviewer", "demo", undefined, 20],
+] as const;
+
+type Handle = (typeof USERS)[number][1];
+type Ver = (typeof MODELS)[number]["versions"][number][0];
+// overall, smarts, taste, vibes, aligned, mom (0 = skipped)
+type S = [number, number, number, number, number, number];
+
+type Entry = { text: string; overall: number; ago: number; prompt?: string; response?: string };
+const REVIEWS: { by: Handle; v: Ver; s: S; entries: Entry[] }[] = [
+  {
+    by: "priya_r", v: "claude-opus-4-1", s: [5, 5, 5, 4, 5, 4],
+    entries: [
+      { overall: 4, ago: 41 * DAY, text: "Pushes back on bad ideas instead of polishing them. A bit long-winded in chat." },
+      {
+        overall: 5, ago: 2 * DAY,
+        text: "The first model that pushes back on my bad ideas instead of polishing them. Asked it to \"make this abstract punchier\" and it told me the results section doesn't support the claim. It was right.",
+        prompt: "Make this abstract punchier.",
+        response: "Happy to — but the claim in line 2 isn't supported by Table 3. Want me to soften it or…",
+      },
+    ],
+  },
+  { by: "jonahb", v: "claude-opus-4-1", s: [2, 5, 4, 1, 4, 2], entries: [{ overall: 2, ago: 4 * DAY, text: "Brilliant coworker you would never get a beer with. Every answer is a memo. I asked for a yes or no and got three headers and a caveat section." }] },
+  { by: "lena_evals", v: "claude-opus-4-1", s: [4, 5, 4, 4, 4, 3], entries: [{ overall: 4, ago: 7 * DAY, text: "Great taste in code and prose. Too cautious for my mom though — she asked about a mole and got a very polite \"see a doctor\" essay." }] },
+  { by: "kt_builds", v: "claude-opus-4-1", s: [5, 5, 5, 4, 4, 0], entries: [{ overall: 5, ago: 9 * DAY, text: "Refactored a 4k-line module without losing the plot once. The only model I let touch migrations." }] },
+  { by: "samokafor", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 4], entries: [{ overall: 4, ago: 12 * MIN, text: "Smartest thing I've used for math proofs, and it knows it. Taste is fine, nothing more — its UI suggestions all look like the same SaaS landing page." }] },
+  { by: "priya_r", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 4], entries: [{ overall: 4, ago: 20 * DAY, text: "Writes like a consultant: correct, confident, and just slightly padded. Excellent at finding the bug I swore wasn't there." }] },
+  { by: "jonahb", v: "gpt-5-2025-08-07", s: [5, 5, 4, 4, 3, 4], entries: [{ overall: 5, ago: 3 * HOUR, text: "Finally, a model that answers the question I asked. Short when I want short, long when I ask for long." }] },
+  { by: "lena_evals", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 3, 3], entries: [{ overall: 4, ago: 6 * DAY, text: "Top-tier on my eval suite. Still agrees with me a little too fast when I'm wrong on purpose." }] },
+  { by: "mirac", v: "gemini-2.5-pro", s: [5, 4, 4, 5, 4, 5], entries: [{ overall: 5, ago: 1 * HOUR, text: "Underrated. The long-context recall is absurd and it's the only one my mom actually enjoys talking to. Warm without being a golden retriever." }] },
+  { by: "priya_r", v: "gemini-2.5-pro", s: [4, 4, 4, 4, 4, 5], entries: [{ overall: 4, ago: 39 * DAY, text: "Remembers the whole doc and doesn't flatter you. Occasionally forgets what format I asked for." }] },
+  { by: "lena_evals", v: "gemini-2.5-pro", s: [4, 4, 3, 4, 4, 4], entries: [{ overall: 4, ago: 15 * DAY, text: "Reliable workhorse. Dropped a 900-page PDF in and got citations that actually checked out." }] },
+  { by: "ade_l", v: "grok-4-0709", s: [3, 4, 2, 4, 2, 2], entries: [{ overall: 3, ago: 5 * HOUR, text: "Fun, fast, and will absolutely tell you what you want to hear. Great for brainstorming, I would not let it near my taxes." }] },
+  { by: "priya_r", v: "grok-4-0709", s: [2, 4, 2, 4, 1, 2], entries: [{ overall: 2, ago: 54 * DAY, text: "Entertaining until you need it to be right. Called my obviously broken proof \"elegant\"." }] },
+  { by: "jonahb", v: "grok-4-0709", s: [4, 4, 3, 5, 3, 3], entries: [{ overall: 4, ago: 2 * DAY, text: "The only model with a sense of humor that lands. Yes it's a little reckless. So am I." }] },
+  { by: "theopark", v: "deepseek-v3.1", s: [4, 4, 3, 3, 4, 3], entries: [{ overall: 4, ago: 8 * HOUR, text: "Absurd value. It's 90% of the frontier for a rounding error of the price, and the thinking mode is genuinely good at code." }] },
+  { by: "lena_evals", v: "deepseek-v3.1", s: [4, 4, 3, 3, 4, 0], entries: [{ overall: 4, ago: 10 * DAY, text: "Surprisingly strict about not making things up. Prose is flat but the reasoning is clean." }] },
+  { by: "rosad", v: "llama-4-maverick", s: [3, 3, 3, 3, 3, 3], entries: [{ overall: 3, ago: 1 * DAY, text: "Fine, forgettable, and I can run it myself. That last part carries a lot of weight." }] },
+  { by: "samokafor", v: "llama-4-maverick", s: [3, 3, 2, 4, 3, 3], entries: [{ overall: 3, ago: 11 * DAY, text: "Chatty and friendly, but it gets lost on anything multi-step. Nice for quick rewrites." }] },
+  { by: "nadia_h", v: "claude-opus-4", s: [4, 4, 5, 4, 4, 4], entries: [{ overall: 4, ago: 30 * DAY, text: "The version that made me cancel my other subscription. 4.1 is better at code, but this one wrote nicer." }] },
+  { by: "kt_builds", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 0], entries: [{ overall: 4, ago: 13 * HOUR, text: "Fantastic at planning agents. Less fantastic at admitting a tool call failed." }] },
+  { by: "demo", v: "claude-opus-4-1", s: [5, 5, 4, 4, 5, 4], entries: [{ overall: 5, ago: 5 * DAY, text: "Best editor I've worked with, human or otherwise." }] },
+  { by: "demo", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 3], entries: [{ overall: 4, ago: 6 * DAY, text: "Sharp and fast. Gives me the answer, then three things I didn't ask about." }] },
+  { by: "demo", v: "gemini-2.5-pro", s: [4, 4, 4, 5, 4, 5], entries: [{ overall: 4, ago: 8 * DAY, text: "The friendliest of the bunch, and it never loses track of a long doc." }] },
+  { by: "demo", v: "grok-4-0709", s: [2, 4, 2, 4, 1, 2], entries: [{ overall: 2, ago: 9 * DAY, text: "Funny. Wrong a lot. Agrees with anything." }] },
+];
+
+// [by, winner, loser, reason?, days ago]
+const TAKES: [Handle, Ver, Ver, string | undefined, number][] = [
+  ["priya_r", "claude-opus-4-1", "gpt-5-2025-08-07", "Opus writes like an editor, GPT-5 writes like a consultant.", 1],
+  ["lena_evals", "gpt-5-2025-08-07", "claude-opus-4-1", "GPT-5 wins on raw correctness; Opus wins on judgment. Correctness pays my bills.", 3],
+  ["kt_builds", "claude-opus-4-1", "gpt-5-2025-08-07", undefined, 4],
+  ["nadia_h", "claude-opus-4-1", "gpt-5-2025-08-07", undefined, 5],
+  ["samokafor", "gpt-5-2025-08-07", "claude-opus-4-1", undefined, 2],
+  ["kt_builds", "claude-opus-4-1", "gemini-2.5-pro", "Gemini remembers more, Opus understands more.", 6],
+  ["priya_r", "claude-opus-4-1", "gemini-2.5-pro", undefined, 12],
+  ["mirac", "gemini-2.5-pro", "claude-opus-4-1", "Gemini is kinder and just as right.", 2],
+  ["lena_evals", "claude-opus-4-1", "grok-4-0709", "Not close. Grok is fun until you need it to be right.", 7],
+  ["theopark", "claude-opus-4-1", "grok-4-0709", undefined, 3],
+  ["priya_r", "gemini-2.5-pro", "grok-4-0709", "Remembers the whole doc and doesn't flatter you.", 14],
+  ["priya_r", "gpt-5-2025-08-07", "llama-4-maverick", undefined, 23],
+  ["theopark", "deepseek-v3.1", "llama-4-maverick", "Same price class, one of them can reason.", 1],
+  ["jonahb", "grok-4-0709", "claude-opus-4-1", "At least Grok gets to the point.", 4],
+  ["ade_l", "grok-4-0709", "gpt-5-2025-08-07", undefined, 5],
+  ["rosad", "deepseek-v3.1", "gpt-5-2025-08-07", "Ninety percent as good for a tenth of the price.", 8],
+  ["mirac", "gemini-2.5-pro", "gpt-5-2025-08-07", undefined, 9],
+  ["samokafor", "gpt-5-2025-08-07", "gemini-2.5-pro", "Better at proofs. Not close.", 10],
+  ["demo", "claude-opus-4-1", "gpt-5-2025-08-07", undefined, 6],
+];
+
+function rng(seed: number) {
+  return () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+}
+
+export const run = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    if (await ctx.db.query("models").first()) {
+      return "Already seeded. Run seed:reset first to start over.";
+    }
+    const now = Date.now();
+
+    const versions = new Map<string, Id<"versions">>();
+    for (const m of MODELS) {
+      for (const [versionId, displayName, releasedDaysAgo] of m.versions) {
+        versions.set(
+          versionId,
+          await createVersion(ctx, {
+            family: m.family,
+            provider: m.provider,
+            versionId,
+            displayName,
+            releasedAt: now - releasedDaysAgo * DAY,
+          }),
+        );
+      }
+    }
+
+    const users = new Map<string, Id<"users">>();
+    for (const [name, handle, xHandle, joinedDaysAgo] of USERS) {
+      users.set(
+        handle,
+        await ctx.db.insert("users", {
+          name,
+          nameLower: name.toLowerCase(),
+          handle,
+          handleLower: handle,
+          xHandle,
+          joinedAt: now - joinedDaysAgo * DAY,
+          // Lets the local demo sign-in act as admin via ADMIN_EMAILS=demo@goodbots.local.
+          email: handle === "demo" ? "demo@goodbots.local" : undefined,
+        }),
+      );
+    }
+
+    const reviewIds: Id<"reviews">[] = [];
+    for (const r of REVIEWS) {
+      const [overall, smarts, taste, vibes, aligned, mom] = r.s.map((n) => n || undefined);
+      const scores = { overall: overall!, smarts, taste, vibes, aligned, mom };
+      const versionId = versions.get(r.v)!;
+      const first = now - r.entries[0].ago;
+      const last = now - r.entries[r.entries.length - 1].ago;
+      const reviewId = await ctx.db.insert("reviews", {
+        userId: users.get(r.by)!,
+        versionId,
+        reactionCount: 0,
+        createdAt: first,
+        updatedAt: last,
+        ...scores,
+      });
+      for (const e of r.entries) {
+        await ctx.db.insert("reviewEntries", {
+          reviewId,
+          text: e.text,
+          prompt: e.prompt,
+          response: e.response,
+          overallAtTime: e.overall,
+          createdAt: now - e.ago,
+        });
+      }
+      await applyScoresToStats(ctx, versionId, null, scores);
+      reviewIds.push(reviewId);
+    }
+
+    // Reactions: each other user reacts to a review with some probability.
+    const rand = rng(42);
+    const handles = [...users.keys()];
+    for (const reviewId of reviewIds) {
+      const review = (await ctx.db.get(reviewId))!;
+      let count = 0;
+      for (const h of handles) {
+        const userId = users.get(h)!;
+        if (userId === review.userId) continue;
+        for (const kind of REACTION_KINDS) {
+          const p = kind === "agree" ? 0.45 : kind === "useful" ? 0.3 : 0.15;
+          if (rand() > p) continue;
+          const age = Math.min(now - review.createdAt, 6 * DAY) * rand();
+          await ctx.db.insert("reactions", { reviewId, userId, kind, createdAt: now - age });
+          count++;
+        }
+      }
+      await ctx.db.patch(reviewId, { reactionCount: count });
+    }
+
+    for (const [by, w, l, reason, daysAgo] of TAKES) {
+      const winnerVersionId = versions.get(w)!;
+      const loserVersionId = versions.get(l)!;
+      await ctx.db.insert("takes", {
+        userId: users.get(by)!,
+        winnerVersionId,
+        loserVersionId,
+        reason,
+        createdAt: now - daysAgo * DAY,
+      });
+      await bumpTakeCount(ctx, winnerVersionId, 1);
+      await bumpTakeCount(ctx, loserVersionId, 1);
+    }
+
+    return `Seeded ${versions.size} versions, ${users.size} users, ${reviewIds.length} reviews, ${TAKES.length} takes.`;
+  },
+});
+
+async function clear(ctx: MutationCtx, table: "models" | "versions" | "reviews" | "reviewEntries" | "reactions" | "takes" | "modelRequests" | "versionStats") {
+  for (const doc of await ctx.db.query(table).collect()) await ctx.db.delete(doc._id);
+}
+
+/** Deletes all app data and the seeded users (real signed-in users are kept). */
+export const reset = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    for (const t of ["models", "versions", "reviews", "reviewEntries", "reactions", "takes", "modelRequests", "versionStats"] as const) {
+      await clear(ctx, t);
+    }
+    const seeded = new Set<string>(USERS.map((u) => u[1]));
+    for (const u of await ctx.db.query("users").collect()) {
+      const seedEmail = !u.email || u.email.endsWith("@goodbots.local");
+      if (seedEmail && u.handle && seeded.has(u.handle)) await ctx.db.delete(u._id);
+    }
+    return "Cleared.";
+  },
+});

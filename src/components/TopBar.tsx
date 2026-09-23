@@ -1,0 +1,95 @@
+import { useState } from "react";
+import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import { useQuery } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { api } from "../../convex/_generated/api";
+import { useSignIn } from "./SignIn";
+import { Avatar } from "./bits";
+import s from "./TopBar.module.css";
+
+export function TopBar() {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const [q, setQ] = useState(params.get("q") ?? "");
+  const me = useQuery(api.users.me);
+  const { open } = useSignIn();
+  const { signOut } = useAuthActions();
+
+  return (
+    <header className={s.bar}>
+      <Link to="/" className={s.wordmark}>
+        GoodBots
+      </Link>
+      <nav className={s.nav} aria-label="Main">
+        <NavLink to="/" end className={({ isActive }) => (isActive ? s.active : s.link)}>
+          Home
+        </NavLink>
+        <NavLink to="/models" className={({ isActive }) => (isActive ? s.active : s.link)}>
+          Models
+        </NavLink>
+      </nav>
+      <div className={s.spacer} />
+      <form
+        role="search"
+        className={s.searchForm}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+        }}
+      >
+        <input
+          className={s.search}
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search models or reviewers"
+          aria-label="Search models or reviewers"
+        />
+      </form>
+      <Link to="/write" className={s.write}>
+        Write a review
+      </Link>
+      {me === undefined ? (
+        <span className={s.userSlot} />
+      ) : me ? (
+        <details className={s.menu}>
+          <summary className={s.menuButton} aria-label="Account">
+            <Avatar name={me.name} image={me.image} size={32} />
+          </summary>
+          <div className={s.menuList}>
+            <Link to={`/u/${me.handle}`}>Your profile</Link>
+            <Link to="/request">Request a model</Link>
+            {me.isAdmin && <Link to="/admin">Admin</Link>}
+            <button type="button" onClick={() => void signOut()}>
+              Sign out
+            </button>
+          </div>
+        </details>
+      ) : (
+        <button type="button" className={s.signIn} onClick={() => open()}>
+          Sign in
+        </button>
+      )}
+    </header>
+  );
+}
+
+/** Minimal bar for the write screen: wordmark + Cancel. */
+export function MinimalBar() {
+  const navigate = useNavigate();
+  return (
+    <header className={s.bar}>
+      <Link to="/" className={s.wordmark}>
+        GoodBots
+      </Link>
+      <div className={s.spacer} />
+      <button
+        type="button"
+        className={s.cancel}
+        onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+      >
+        Cancel
+      </button>
+    </header>
+  );
+}

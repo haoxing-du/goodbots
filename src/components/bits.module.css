@@ -1,0 +1,106 @@
+.stars {
+  letter-spacing: 2px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.starOn {
+  color: var(--ink);
+}
+.starOff {
+  color: var(--disabled);
+}
+
+.match {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: var(--r-sm);
+  border: 1px solid;
+  white-space: nowrap;
+}
+.matchHigh {
+  background: var(--olive-bg);
+  border-color: var(--olive-border);
+  color: var(--olive-text-2);
+}
+.matchMid {
+  background: var(--page);
+  border-color: var(--border);
+  color: var(--muted-1);
+}
+.matchLow {
+  background: var(--rust-bg);
+  border-color: var(--rust-border);
+  color: var(--rust-text);
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 50%;
+  background: var(--page);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-1);
+  object-fit: cover;
+}
+
+.userLink {
+  text-decoration: none;
+}
+.userLink:hover {
+  text-decoration: underline;
+}
+
+.axisInline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.axisStack {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 4px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.axisItem {
+  white-space: nowrap;
+}
+.axisLabel {
+  color: var(--muted-3);
+}
+.axisValue {
+  color: var(--ink);
+}
+
+.snippet {
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  white-space: pre-wrap;
+}
+.snipPrompt {
+  color: var(--muted-3);
+}
+.snipModel {
+  color: var(--olive-text);
+}

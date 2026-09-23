@@ -1,0 +1,29 @@
+.q {
+  color: var(--muted-2);
+}
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  text-decoration: none;
+  transition: background 120ms;
+}
+.row:hover {
+  background: var(--raised);
+  color: var(--ink);
+}
+.name {
+  font-size: 15px;
+}
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
