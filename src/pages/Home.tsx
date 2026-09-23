@@ -85,8 +85,10 @@ export function Home() {
   return (
     <>
       <section className={s.hero}>
-        <h1 className={s.headline}>
-          <span>What did you think of</span>
+        {/* The select sits beside the <h1>, not inside it, so the heading's
+            accessible name isn't polluted by every option. */}
+        <div className={s.headline}>
+          <h1 className={s.lead}>What did you think of</h1>
           <span className={s.pick}>
             {/* The hidden sizer makes the select exactly as wide as the chosen name. */}
             <span className={s.selectWrap}>
@@ -111,9 +113,9 @@ export function Home() {
                 <option value={OTHER}>Something else…</option>
               </select>
             </span>
-            <span>?</span>
+            <span aria-hidden>?</span>
           </span>
-        </h1>
+        </div>
 
         {searching && (
           <div className={s.otherModel}>
