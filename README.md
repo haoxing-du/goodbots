@@ -40,6 +40,7 @@ To sign in locally without setting up email, use the "Local dev: sign in as the 
 - [`docs/SPEC.md`](docs/SPEC.md): product rules, data model, scope
 - [`docs/DESIGN.md`](docs/DESIGN.md): design handoff (layout, tokens, behavior)
 - [`docs/PROMPT.md`](docs/PROMPT.md): the prompt the MVP was built from
+- [`docs/LATER.md`](docs/LATER.md): known limits to fix once there's real traffic (speed, rate limits, leftovers)
 
 ## License
 
