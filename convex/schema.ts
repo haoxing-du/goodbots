@@ -176,6 +176,12 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_user", ["userId"]),
 
+  // Homepage headline models, in order (admin-picked). Empty = DEFAULT_FEATURED in featured.ts.
+  featured: defineTable({
+    versionId: v.string(), // "<provider>/<model>"; may be a catalog model without a page yet
+    order: v.number(),
+  }),
+
   // Singleton row of site-wide counters.
   siteStats: defineTable({
     reviewerCount: v.number(), // users with at least one review

@@ -1,6 +1,7 @@
 import { query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { avg, compareAxes, publicAxis } from "./lib";
+import { featuredModels } from "./featured";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 /** Custom axes are suggested on the homepage once this many different people rated on them. */
@@ -128,7 +129,8 @@ export const homeStats = query({
     return {
       reviewerCount: site?.reviewerCount ?? 0,
       reviewedModelCount: rows.filter((r) => r.stats.reviewCount > 0).length,
-      versions: rows.map(ref), // most-reviewed first; the hero defaults to versions[0]
+      // Headline select: the admin-picked featured models (the hero defaults to the first).
+      versions: await featuredModels(ctx),
       // Axes the hero can suggest: core, plus custom axes rated by enough different people
       // (so one person can't put a new axis on the homepage).
       axes: suggestable.sort(compareAxes).map(publicAxis),

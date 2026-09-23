@@ -45,3 +45,27 @@
   flex: 1;
   min-width: 220px;
 }
+
+.featured {
+  list-style: decimal inside;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.featuredRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--divider);
+  font-size: 15px;
+}
+.featuredRow:first-child {
+  border-top: 0;
+}
+.featuredRow::marker {
+  font-family: var(--font-mono);
+  color: var(--muted-3);
+}

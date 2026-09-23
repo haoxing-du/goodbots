@@ -384,6 +384,7 @@ const APP_TABLES = [
   "modelRequests",
   "versionStats",
   "siteStats",
+  "featured",
 ] as const;
 
 async function clear(ctx: MutationCtx, table: (typeof APP_TABLES)[number]) {

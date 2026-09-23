@@ -4,6 +4,7 @@ import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { UserLink } from "../components/bits";
+import { ModelPicker, PickedModel } from "../components/ModelPicker";
 import { shortDate } from "../lib/format";
 import ui from "../components/ui.module.css";
 import f from "./forms.module.css";
@@ -22,13 +23,16 @@ export function Admin() {
     return (
       <div className={ui.page}>
         <h1 className={ui.serifTitle}>Admins only</h1>
-        <p className={f.lede}>Sign in with an email listed in ADMIN_EMAILS to manage the catalog.</p>
+        <p className={f.lede}>
+          Sign in with an email listed in ADMIN_EMAILS to manage the catalog.
+        </p>
       </div>
     );
   }
   return (
     <div className={ui.page}>
       <h1 className={ui.serifTitle}>Admin</h1>
+      <HomepageModels />
       <Requests />
       <AddVersion />
       <MergeModels />
@@ -56,7 +60,9 @@ function Requests() {
     <section>
       <h2 className={ui.sectionLabel}>Pending requests</h2>
       <div className={`${ui.card} ${ui.rows}`}>
-        {requests?.length === 0 && <div className={ui.empty}>No pending requests.</div>}
+        {requests?.length === 0 && (
+          <div className={ui.empty}>No pending requests.</div>
+        )}
         {requests?.map((r) => (
           <div key={r._id} className={s.request}>
             <div>
@@ -64,7 +70,8 @@ function Requests() {
                 {r.name} <span className={ui.meta}>{r.versionId}</span>
               </div>
               <div className={ui.meta}>
-                {r.provider} · {shortDate(r.createdAt)} · by <UserLink user={r.user} />
+                {r.provider} · {shortDate(r.createdAt)} · by{" "}
+                <UserLink user={r.user} />
                 {r.link && (
                   <>
                     {" "}
@@ -84,10 +91,18 @@ function Requests() {
               onChange={(e) => setNames({ ...names, [r._id]: e.target.value })}
             />
             <div className={s.actions}>
-              <button type="button" className={ui.btn} onClick={() => void act(r._id, true)}>
+              <button
+                type="button"
+                className={ui.btn}
+                onClick={() => void act(r._id, true)}
+              >
                 Approve
               </button>
-              <button type="button" className={ui.btnGhost} onClick={() => void act(r._id, false)}>
+              <button
+                type="button"
+                className={ui.btnGhost}
+                onClick={() => void act(r._id, false)}
+              >
                 Reject
               </button>
             </div>
@@ -106,7 +121,11 @@ function AddVersion() {
   const [form, setForm] = useState(EMPTY);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const input = (key: keyof typeof EMPTY, label: string, placeholder: string) => (
+  const input = (
+    key: keyof typeof EMPTY,
+    label: string,
+    placeholder: string,
+  ) => (
     <label className={f.field}>
       <span className={f.label}>{label}</span>
       <input
@@ -132,13 +151,17 @@ function AddVersion() {
             setMsg({ ok: true, text: `Added ${form.displayName}.` });
             setForm(EMPTY);
           } catch (err) {
-            setMsg({ ok: false, text: errText(err, "Couldn't add that version.") });
+            setMsg({
+              ok: false,
+              text: errText(err, "Couldn't add that version."),
+            });
           }
         }}
       >
         <p className={f.hint}>
-          For models not in the OpenRouter catalog (catalog models get a page on their first review).
-          Ids look like provider/model; the provider part is taken from the provider name if omitted.
+          For models not in the OpenRouter catalog (catalog models get a page on
+          their first review). Ids look like provider/model; the provider part
+          is taken from the provider name if omitted.
         </p>
         <div className={f.row}>
           {input("provider", "Provider", "Anthropic")}
@@ -181,7 +204,9 @@ function Axes() {
         {axes?.map((a) => (
           <div key={a._id} className={s.axis}>
             <div>
-              <div className={a.status === "hidden" ? s.axisHidden : s.reqTitle}>
+              <div
+                className={a.status === "hidden" ? s.axisHidden : s.reqTitle}
+              >
                 {a.name}{" "}
                 <span className={ui.meta}>
                   {a.core ? "core" : "custom"}
@@ -205,7 +230,8 @@ function Axes() {
                   className={ui.btnGhost}
                   onClick={() =>
                     void run(async () => {
-                      const status = a.status === "hidden" ? "active" : "hidden";
+                      const status =
+                        a.status === "hidden" ? "active" : "hidden";
                       await setStatus({ axisId: a._id, status });
                       return `${a.name} is now ${status === "hidden" ? "hidden" : "visible"}.`;
                     })
@@ -217,7 +243,9 @@ function Axes() {
                   className={ui.input}
                   aria-label={`Merge ${a.name} into`}
                   value={targets[a._id] ?? ""}
-                  onChange={(e) => setTargets({ ...targets, [a._id]: e.target.value })}
+                  onChange={(e) =>
+                    setTargets({ ...targets, [a._id]: e.target.value })
+                  }
                 >
                   <option value="">Merge into…</option>
                   {axes
@@ -234,9 +262,18 @@ function Axes() {
                   disabled={!targets[a._id]}
                   onClick={() => {
                     const into = axes.find((b) => b._id === targets[a._id]);
-                    if (!into || !window.confirm(`Merge ${a.name} into ${into.name}? This can't be undone.`)) return;
+                    if (
+                      !into ||
+                      !window.confirm(
+                        `Merge ${a.name} into ${into.name}? This can't be undone.`,
+                      )
+                    )
+                      return;
                     void run(async () => {
-                      const r = await merge({ fromId: a._id, intoId: into._id });
+                      const r = await merge({
+                        fromId: a._id,
+                        intoId: into._id,
+                      });
                       return `Merged ${a.name} into ${into.name}: ${r.moved} scores moved, ${r.dropped} duplicates dropped.`;
                     });
                   }}
@@ -259,10 +296,16 @@ function MergeModels() {
   const [from, setFrom] = useState("");
   const [into, setInto] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const name = (id: string) => versions?.find((v) => v.versionId === id)?.displayName ?? id;
+  const name = (id: string) =>
+    versions?.find((v) => v.versionId === id)?.displayName ?? id;
 
   const select = (value: string, set: (v: string) => void, label: string) => (
-    <select className={ui.input} value={value} aria-label={label} onChange={(e) => set(e.target.value)}>
+    <select
+      className={ui.input}
+      value={value}
+      aria-label={label}
+      onChange={(e) => set(e.target.value)}
+    >
       <option value="">{label}…</option>
       {versions?.map((v) => (
         <option key={v._id} value={v.versionId}>
@@ -277,9 +320,10 @@ function MergeModels() {
       <h2 className={ui.sectionLabel}>Merge models</h2>
       <div className={`${ui.card} ${f.cardPad} ${f.form}`}>
         <p className={f.hint}>
-          For duplicates (e.g. a hand-added model that later appeared in the catalog). Reviews, scores and
-          takes move to the second model; if someone reviewed both, their newer review is kept. The first
-          model's page redirects.
+          For duplicates (e.g. a hand-added model that later appeared in the
+          catalog). Reviews, scores and takes move to the second model; if
+          someone reviewed both, their newer review is kept. The first model's
+          page redirects.
         </p>
         <div className={s.mergeRow}>
           {select(from, setFrom, "Merge")}
@@ -290,7 +334,12 @@ function MergeModels() {
             className={ui.btn}
             disabled={!from || !into || from === into}
             onClick={async () => {
-              if (!window.confirm(`Merge ${name(from)} into ${name(into)}? This can't be undone.`)) return;
+              if (
+                !window.confirm(
+                  `Merge ${name(from)} into ${name(into)}? This can't be undone.`,
+                )
+              )
+                return;
               setMsg(null);
               try {
                 const r = await merge({ from, into });
@@ -301,12 +350,125 @@ function MergeModels() {
                 setFrom("");
                 setInto("");
               } catch (e) {
-                setMsg({ ok: false, text: errText(e, "Couldn't merge those models.") });
+                setMsg({
+                  ok: false,
+                  text: errText(e, "Couldn't merge those models."),
+                });
               }
             }}
           >
             Merge
           </button>
+        </div>
+        {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
+      </div>
+    </section>
+  );
+}
+
+function HomepageModels() {
+  const data = useQuery(api.featured.list);
+  const save = useMutation(api.featured.set);
+  const [draft, setDraft] = useState<PickedModel[] | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const models = draft ?? data?.models ?? [];
+  const edit = (next: PickedModel[]) => {
+    setDraft(next);
+    setMsg(null);
+  };
+  const move = (i: number, by: number) => {
+    const next = [...models];
+    const [m] = next.splice(i, 1);
+    next.splice(i + by, 0, m);
+    edit(next);
+  };
+
+  return (
+    <section>
+      <h2 className={ui.sectionLabel}>Homepage models</h2>
+      <div className={`${ui.card} ${f.cardPad} ${f.form}`}>
+        <p className={f.hint}>
+          The models in the homepage headline (&ldquo;What did you think of
+          …?&rdquo;), in order; the first is selected by default. Any catalog
+          model works, reviewed or not.
+          {data?.isDefault &&
+            " Showing the built-in default list; saving makes it yours."}
+        </p>
+        <ol className={s.featured}>
+          {models.map((m, i) => (
+            <li key={m.versionId} className={s.featuredRow}>
+              <span>
+                {m.displayName} <span className={ui.meta}>{m.versionId}</span>
+              </span>
+              <span className={s.actions}>
+                <button
+                  type="button"
+                  className={ui.btnGhost}
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                  aria-label={`Move ${m.displayName} up`}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  className={ui.btnGhost}
+                  disabled={i === models.length - 1}
+                  onClick={() => move(i, 1)}
+                  aria-label={`Move ${m.displayName} down`}
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  className={ui.btnGhost}
+                  onClick={() =>
+                    edit(models.filter((x) => x.versionId !== m.versionId))
+                  }
+                >
+                  Remove
+                </button>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <ModelPicker
+          label="Add a homepage model"
+          placeholder="Add a model…"
+          onPick={(m) => {
+            if (!models.some((x) => x.versionId === m.versionId))
+              edit([...models, m]);
+          }}
+        />
+        <div className={s.actions}>
+          <button
+            type="button"
+            className={ui.btn}
+            disabled={!draft || models.length === 0}
+            onClick={async () => {
+              try {
+                await save({ versionIds: models.map((m) => m.versionId) });
+                setDraft(null);
+                setMsg({ ok: true, text: "Saved. The homepage is updated." });
+              } catch (e) {
+                setMsg({
+                  ok: false,
+                  text: errText(e, "Couldn't save the list."),
+                });
+              }
+            }}
+          >
+            Save
+          </button>
+          {draft && (
+            <button
+              type="button"
+              className={ui.btnGhost}
+              onClick={() => edit(data?.models ?? [])}
+            >
+              Discard changes
+            </button>
+          )}
         </div>
         {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
       </div>
