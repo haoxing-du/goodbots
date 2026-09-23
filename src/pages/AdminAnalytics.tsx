@@ -58,7 +58,8 @@ export function Analytics() {
         <div className={`${ui.card} ${s.loading}`} aria-busy="true" />
       ) : (
         <div className={s.body} style={{ opacity: fresh ? 1 : 0.5 }}>
-          <Tiles data={data} days={days} metric={metric} onPick={setMetric} />
+          <Tiles data={data} metric={metric} onPick={setMetric} />
+          <Rates data={data} />
           <Trend data={data} metric={metric} />
           <Reactions totals={data.totals} />
           <TopLists top={data.top} />
@@ -86,18 +87,14 @@ function Delta({ now, before }: { now: number; before: number }) {
 
 function Tiles({
   data,
-  days,
   metric,
   onPick,
 }: {
   data: Overview;
-  days: number;
   metric: MetricKey;
   onPick: (m: MetricKey) => void;
 }) {
   const { totals, prevTotals, allTime } = data;
-  const activation = pct(totals.activated, totals.signups);
-  const prevActivation = pct(prevTotals.activated, prevTotals.signups);
   return (
     <div className={s.tiles} role="group" aria-label="Chart a metric">
       {METRICS.map((m) => (
@@ -116,13 +113,88 @@ function Tiles({
           </span>
         </button>
       ))}
+    </div>
+  );
+}
+
+/** A share, e.g. 12 of 40 → 30%, with last period's share for comparison. */
+function Rate({
+  label,
+  part,
+  whole,
+  prev,
+  of,
+}: {
+  label: string;
+  part: number;
+  whole: number;
+  prev: [number, number];
+  of: string;
+}) {
+  const now = pct(part, whole);
+  const before = pct(...prev);
+  return (
+    <div className={s.tile}>
+      <span className={s.tileLabel}>{label}</span>
+      <span className={s.tileValue}>{now === null ? "—" : `${now}%`}</span>
+      <span className={s.tileFoot}>
+        <span>
+          {fmtCount(part)} of {fmtCount(whole)} {of}
+          {before !== null && ` · ${before}% before`}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+function Rates({ data }: { data: Overview }) {
+  const { totals: t, prevTotals: p, returning } = data;
+  const words = (c: Counts) => (c.reviews ? Math.round(c.reviewWords / c.reviews) : null);
+  const methodKnown = (c: Counts) => c.signupsX + c.signupsEmail;
+  return (
+    <div className={s.tiles}>
+      <Rate
+        label="Activation"
+        part={t.activated}
+        whole={t.signups}
+        prev={[p.activated, p.signups]}
+        of="new users reviewed within 7 days"
+      />
+      <Rate
+        label="Returning"
+        part={returning.now}
+        whole={t.activeUsers}
+        prev={[returning.before, p.activeUsers]}
+        of="active users were active before"
+      />
+      <Rate
+        label="Signups via X"
+        part={t.signupsX}
+        whole={methodKnown(t)}
+        prev={[p.signupsX, methodKnown(p)]}
+        of="signups (the rest used email)"
+      />
+      <Rate
+        label="With screenshot"
+        part={t.reviewsWithImage}
+        whole={t.reviews}
+        prev={[p.reviewsWithImage, p.reviews]}
+        of="new reviews"
+      />
+      <Rate
+        label="Rated an axis"
+        part={t.reviewsRated}
+        whole={t.reviews}
+        prev={[p.reviewsRated, p.reviews]}
+        of="new reviews"
+      />
       <div className={s.tile}>
-        <span className={s.tileLabel}>Activation</span>
-        <span className={s.tileValue}>{activation === null ? "—" : `${activation}%`}</span>
+        <span className={s.tileLabel}>Review length</span>
+        <span className={s.tileValue}>{words(t) ?? "—"}</span>
         <span className={s.tileFoot}>
           <span>
-            of new users reviewed within 7 days
-            {prevActivation !== null && ` (${prevActivation}% the ${days} days before)`}
+            words on average
+            {words(p) !== null && ` · ${words(p)} before`}
           </span>
         </span>
       </div>

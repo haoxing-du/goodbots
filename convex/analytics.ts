@@ -30,6 +30,8 @@ export const rollupDay = internalMutation({
 
     let signups = 0;
     let activated = 0;
+    let signupsX = 0;
+    let signupsEmail = 0;
     for await (const user of ctx.db
       .query("users")
       .withIndex("by_creation_time", (q) => q.gte("_creationTime", start).lt("_creationTime", end))) {
@@ -40,14 +42,36 @@ export const rollupDay = internalMutation({
         .withIndex("by_user", (q) => q.eq("userId", user._id))
         .first();
       if (first && first._creationTime - user._creationTime <= ACTIVATION_WINDOW) activated++;
+      const account = await ctx.db
+        .query("authAccounts")
+        .withIndex("userIdAndProvider", (q) => q.eq("userId", user._id))
+        .first();
+      if (account?.provider === "twitter") signupsX++;
+      else if (account?.provider === "email") signupsEmail++;
     }
 
     let reviews = 0;
+    let reviewsWithImage = 0;
+    let reviewsRated = 0;
+    let reviewWords = 0;
     for await (const review of ctx.db
       .query("reviews")
       .withIndex("by_creation_time", (q) => q.gte("_creationTime", start).lt("_creationTime", end))) {
       reviews++;
       active.add(review.userId);
+      const [entry, score] = await Promise.all([
+        ctx.db
+          .query("reviewEntries")
+          .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+          .first(),
+        ctx.db
+          .query("reviewScores")
+          .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+          .first(),
+      ]);
+      if (entry?.image) reviewsWithImage++;
+      if (entry) reviewWords += entry.text.split(/\s+/).filter(Boolean).length;
+      if (score) reviewsRated++;
     }
 
     let updates = 0;
@@ -110,6 +134,11 @@ export const rollupDay = internalMutation({
       requests,
       models,
       activeUsers: active.size,
+      signupsX,
+      signupsEmail,
+      reviewsWithImage,
+      reviewsRated,
+      reviewWords,
     };
     const existing = await ctx.db
       .query("dailyStats")
@@ -157,8 +186,8 @@ export const backfill = internalMutation({
 
 // ---------- admin page ----------
 
-type DayRow = Omit<Doc<"dailyStats">, "_id" | "_creationTime">;
-type Counts = Omit<DayRow, "day">;
+type Counts = Required<Omit<Doc<"dailyStats">, "_id" | "_creationTime" | "day">>;
+type DayRow = Counts & { day: string };
 
 const emptyCounts = (): Counts => ({
   signups: 0,
@@ -171,6 +200,11 @@ const emptyCounts = (): Counts => ({
   requests: 0,
   models: 0,
   activeUsers: 0,
+  signupsX: 0,
+  signupsEmail: 0,
+  reviewsWithImage: 0,
+  reviewsRated: 0,
+  reviewWords: 0,
 });
 
 function addCounts(into: Counts, row: Counts) {
@@ -208,7 +242,8 @@ export const overview = query({
 
     const rows = new Map<string, DayRow>();
     const allTime = emptyCounts();
-    for await (const { _id, _creationTime, ...row } of ctx.db.query("dailyStats")) {
+    for await (const { _id, _creationTime, ...stored } of ctx.db.query("dailyStats")) {
+      const row: DayRow = { ...emptyCounts(), ...stored };
       addCounts(allTime, row);
       if (row.day >= dayKey(prevStart) && row.day <= today) rows.set(row.day, row);
     }
@@ -228,12 +263,30 @@ export const overview = query({
         .withIndex("by_day", (q) => q.gte("day", dayKey(from)).lt("day", dayKey(to)))) {
         users.add(row.userId);
       }
-      return users.size;
+      return users;
     };
+    // Of a period's active users, how many were also active before it.
+    const countReturning = async (users: Set<Id<"users">>, from: number) => {
+      let n = 0;
+      for (const userId of users) {
+        const before = await ctx.db
+          .query("dailyActiveUsers")
+          .withIndex("by_userId_and_day", (q) => q.eq("userId", userId).lt("day", dayKey(from)))
+          .first();
+        if (before) n++;
+      }
+      return n;
+    };
+    const active = await distinctActive(start, end);
+    const prevActive = await distinctActive(prevStart, start);
     const totals = current.reduce(addCounts, emptyCounts());
-    totals.activeUsers = await distinctActive(start, end);
+    totals.activeUsers = active.size;
     const prevTotals = previous.reduce(addCounts, emptyCounts());
-    prevTotals.activeUsers = await distinctActive(prevStart, start);
+    prevTotals.activeUsers = prevActive.size;
+    const returning = {
+      now: await countReturning(active, start),
+      before: await countReturning(prevActive, prevStart),
+    };
 
     // Top lists, from reviews posted in the period.
     const reviews = await ctx.db
@@ -285,6 +338,7 @@ export const overview = query({
       totals,
       prevTotals,
       allTime,
+      returning,
       top: {
         models: topModels,
         reviewers: topReviewers,

@@ -223,13 +223,21 @@ export default defineSchema({
     requests: v.number(), // model requests
     models: v.number(), // new model pages
     activeUsers: v.number(), // distinct users who reviewed, updated, reacted or did a head-to-head
+    // Added later, so optional (read missing as 0).
+    signupsX: v.optional(v.number()), // signed up with X
+    signupsEmail: v.optional(v.number()), // signed up with an email link
+    reviewsWithImage: v.optional(v.number()), // new reviews whose first entry has a screenshot
+    reviewsRated: v.optional(v.number()), // new reviews that score at least one axis
+    reviewWords: v.optional(v.number()), // words across new reviews' first entries
   }).index("by_day", ["day"]),
 
   // Who was active on each UTC day, so a period's distinct active users can be counted.
   dailyActiveUsers: defineTable({
     day: v.string(),
     userId: v.id("users"),
-  }).index("by_day", ["day"]),
+  })
+    .index("by_day", ["day"])
+    .index("by_userId_and_day", ["userId", "day"]),
 
   versionStats: defineTable({
     versionId: v.id("versions"),
