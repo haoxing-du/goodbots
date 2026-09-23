@@ -30,11 +30,11 @@ export function About() {
 }
 
 export function Privacy() {
-  useTitle("Privacy");
+  useTitle("Privacy Policy");
   return (
     <div className={ui.page}>
       <article className={s.prose}>
-        <h1 className={ui.serifTitle}>Privacy</h1>
+        <h1 className={ui.serifTitle}>Privacy Policy</h1>
         <p className={s.updated}>Last updated {UPDATED}</p>
 
         <h2>What we collect</h2>
@@ -53,24 +53,22 @@ export function Privacy() {
           </li>
         </ul>
 
-        <h2>How we use it</h2>
+        <h2>How we use this data</h2>
         <p>
-          To run and improve the site. Your browser stores a sign-in token to keep you signed in.
+          For now, we only use this data to run and improve the site. Your browser stores a sign-in token to keep you signed in.
         </p>
         <p>
-          We may also analyze site data, for example for research about AI models, and share, license or
-          sell it, for example as a dataset. This covers what you post, which is already public, and
-          aggregate statistics. We may add analytics tools to see how the site is used.
+          In the future, we may also analyze site data, for example for research about AI models. This covers what you post, which is already public, and
+          aggregate statistics. We may also add analytics tools to see how the site is used.
         </p>
         <p>
           Your email address stays private. We don’t sell it or share it, except with the services below
           to run the site, or if the law requires it.
         </p>
 
-        <h2>Who else handles it</h2>
+        <h2>Other services that handle this data</h2>
         <p>
-          Convex (database), Vercel (hosting), Resend (sign-in emails) and X (if you sign in with X). Anyone
-          we share or license data to, as described above.
+          Convex (database), Vercel (hosting), Resend (sign-in emails) and X (if you sign in with X).
         </p>
 
         <h2>Deleting your data</h2>
@@ -105,9 +103,8 @@ export function Terms() {
           <li>You must be at least 13 to create an account.</li>
           <li>
             You own what you post. You give GoodBots a free, worldwide, permanent license to use, copy,
-            display, modify and distribute it, and to let others do the same, including in datasets we
-            share, license or sell. Deleting your content removes it from the site, but not from copies
-            already shared.
+            display, modify and distribute it, and to let others do the same. Deleting your content removes
+            it from the site, but not from copies already shared.
           </li>
           <li>
             Don’t post anything illegal, harassing or spammy, or anyone else’s private information. Check
