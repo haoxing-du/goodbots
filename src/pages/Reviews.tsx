@@ -82,15 +82,18 @@ function ModelsRail() {
     <section>
       <h2 className={ui.sectionLabel}>Models · overall</h2>
       <div className={`${s.railList} ${ui.rows}`}>
-        {models?.map((m) => (
-          <Link key={m._id} to={versionPath(m.primary!.versionId)} className={s.railRow}>
-            <span>
-              <span className={s.railName}>{m.primary!.displayName}</span>
-              <span className={s.railVer}>{m.primary!.versionId}</span>
-            </span>
-            <span className={s.railAvg}>{fmtAvg(m.primary!.overall)}</span>
-          </Link>
-        ))}
+        {models
+          ?.filter((m) => m.reviewCount > 0)
+          .slice(0, 8)
+          .map((m) => (
+            <Link key={m._id} to={versionPath(m.versionId)} className={s.railRow}>
+              <span>
+                <span className={s.railName}>{m.displayName}</span>
+                <span className={s.railVer}>{m.versionId}</span>
+              </span>
+              <span className={s.railAvg}>{fmtAvg(m.overall)}</span>
+            </Link>
+          ))}
       </div>
     </section>
   );

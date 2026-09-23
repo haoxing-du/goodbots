@@ -13,41 +13,52 @@ async function versionsOf(ctx: QueryCtx, modelId: Id<"models">) {
     .sort((a, b) => (b.releasedAt ?? 0) - (a.releasedAt ?? 0));
 }
 
-/** Every model with its versions and headline numbers, sorted by overall rating. */
+/**
+ * Every active model version with its headline numbers, best overall first
+ * (unrated last). Each version is its own model; `family` is only for grouping.
+ */
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const models = await ctx.db.query("models").collect();
-    const out = await Promise.all(
-      models.map(async (m) => {
-        const versions = await Promise.all(
-          (await versionsOf(ctx, m._id)).map(async (ver) => {
-            const s = await statsFor(ctx, ver._id);
-            return {
-              _id: ver._id,
-              versionId: ver.versionId,
-              displayName: ver.displayName,
-              reviewCount: s?.reviewCount ?? 0,
-              overall: s ? avg(s.overall) : null,
-            };
+    const [families, axes] = await Promise.all([
+      ctx.db.query("models").collect(),
+      axisIndex(ctx),
+    ]);
+    const coreAxes = [...axes.values()]
+      .filter((a) => a.core && a.status === "active")
+      .sort(compareAxes);
+
+    const versions = [];
+    for (const f of families) {
+      for (const ver of await versionsOf(ctx, f._id)) {
+        const [stats, axisStats] = await Promise.all([
+          statsFor(ctx, ver._id),
+          ctx.db
+            .query("axisStats")
+            .withIndex("by_version_axis", (q) => q.eq("versionId", ver._id))
+            .collect(),
+        ]);
+        const byAxis = new Map(axisStats.map((s) => [s.axisId, s]));
+        versions.push({
+          _id: ver._id,
+          versionId: ver.versionId,
+          displayName: ver.displayName,
+          releasedAt: ver.releasedAt ?? 0,
+          family: f.family,
+          familySlug: f.slug,
+          provider: f.provider,
+          reviewCount: stats?.reviewCount ?? 0,
+          overall: stats ? avg(stats.overall) : null,
+          axes: coreAxes.map((a) => {
+            const s = byAxis.get(a._id);
+            return { _id: a._id, name: a.name, avg: s ? avg(s) : null };
           }),
-        );
-        // The version people review most stands in for the model.
-        const primary =
-          [...versions].sort((a, b) => b.reviewCount - a.reviewCount)[0] ?? null;
-        return {
-          _id: m._id,
-          family: m.family,
-          provider: m.provider,
-          slug: m.slug,
-          versions,
-          primary,
-        };
-      }),
+        });
+      }
+    }
+    return versions.sort(
+      (a, b) => (b.overall ?? -1) - (a.overall ?? -1) || b.reviewCount - a.reviewCount,
     );
-    return out
-      .filter((m) => m.primary)
-      .sort((a, b) => (b.primary!.overall ?? 0) - (a.primary!.overall ?? 0));
   },
 });
 
