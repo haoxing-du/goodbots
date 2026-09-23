@@ -40,7 +40,8 @@ export function Privacy() {
           </li>
           <li>
             <b>X sign-in:</b> your X name, username and profile picture. We get no email address, and we
-            can’t post to your X account or read your posts.
+            can’t post to your X account. X’s sign-in permission technically also covers reading your
+            posts, but we never read or store them.
           </li>
           <li>
             <b>What you post:</b> your name, handle, reviews, scores, takes, reactions, screenshots and model
