@@ -4,7 +4,7 @@ import { useTitle } from "../lib/useTitle";
 import s from "./Legal.module.css";
 
 const CONTACT = "hello@goodbots.review";
-export const SOURCE = "https://github.com/haoxing-du/goodbots";
+const SOURCE = "https://github.com/haoxing-du/goodbots";
 const UPDATED = "September 23, 2026";
 
 function Mail({ children }: { children: React.ReactNode }) {
