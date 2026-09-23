@@ -100,7 +100,7 @@ export function Home() {
                   ↻
                 </button>
               </div>
-              <div className={s.axisHint}>{axis.hint ?? "optional"}</div>
+              <div className={s.axisHint}>optional</div>
             </div>
           )}
           <div

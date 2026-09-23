@@ -77,7 +77,14 @@ export function cleanAxisName(raw: string) {
   return { name, slug };
 }
 
-export type ScoreInput = { axisId?: Id<"axes">; name?: string; score: number };
+export type ScoreInput = { axisId?: Id<"axes">; name?: string; hint?: string; score: number };
+
+export function cleanAxisHint(raw: string | undefined) {
+  const hint = raw?.trim().replace(/\s+/g, " ");
+  if (!hint) return undefined;
+  if (hint.length > 80) throw new ConvexError("Keep the description to one line (80 characters).");
+  return hint;
+}
 
 /**
  * Turns score inputs into axisId → score, creating custom axes for new names.
@@ -104,6 +111,7 @@ export async function resolveScores(
         const id = await ctx.db.insert("axes", {
           name,
           slug,
+          hint: cleanAxisHint(input.hint),
           core: false,
           status: "active",
           ratingCount: 0,

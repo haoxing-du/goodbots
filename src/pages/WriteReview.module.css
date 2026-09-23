@@ -162,10 +162,13 @@
   flex-wrap: wrap;
   padding: 16px 20px;
 }
-.addInput {
-  flex: 1;
-  min-width: 220px;
-  max-width: 420px;
+.addName {
+  flex: 0 1 220px;
+  min-width: 180px;
+}
+.addHint {
+  flex: 1 1 280px;
+  min-width: 200px;
 }
 .addNote {
   font-family: var(--font-mono);

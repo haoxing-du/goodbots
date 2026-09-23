@@ -83,6 +83,7 @@ export type ReviewCard = Awaited<ReturnType<typeof hydrateReview>>;
 const scoreInput = v.object({
   axisId: v.optional(v.id("axes")),
   name: v.optional(v.string()), // a new (or existing) axis by name
+  hint: v.optional(v.string()), // one-line description, used only when creating an axis
   score: v.number(),
 });
 

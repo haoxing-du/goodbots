@@ -2,7 +2,7 @@
 export type Draft = {
   overall: number; // 0 = not rated (optional)
   scores: Record<string, number>; // axisId → 1–5
-  newAxes: { name: string; score: number }[]; // axes this reviewer is adding
+  newAxes: { name: string; hint?: string; score: number }[]; // axes this reviewer is adding
   text: string;
   showSnippet: boolean;
   prompt: string;

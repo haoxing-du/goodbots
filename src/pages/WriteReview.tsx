@@ -95,7 +95,9 @@ export function WriteReview() {
               axisId: axisId as Id<"axes">,
               score,
             })),
-            ...draft.newAxes.filter((x) => x.score > 0).map((x) => ({ name: x.name, score: x.score })),
+            ...draft.newAxes
+              .filter((x) => x.score > 0)
+              .map((x) => ({ name: x.name, hint: x.hint, score: x.score })),
           ],
           text: draft.text,
           prompt: draft.showSnippet ? draft.prompt : undefined,
@@ -212,7 +214,7 @@ export function WriteReview() {
                 <AxisRow
                   key={x.name}
                   name={x.name}
-                  hint="New axis"
+                  hint={x.hint ?? "New axis"}
                   value={x.score}
                   onChange={(n) => setNewScore(x.name, n)}
                   right={
@@ -230,7 +232,7 @@ export function WriteReview() {
               <AddAxis
                 existing={data.axes}
                 pending={pendingAxes.map((x) => x.name)}
-                onAdd={(name) => set({ newAxes: [...draft.newAxes, { name, score: 0 }] })}
+                onAdd={(name, hint) => set({ newAxes: [...draft.newAxes, { name, hint, score: 0 }] })}
               />
             )}
           </div>
@@ -383,10 +385,11 @@ function AddAxis({
 }: {
   existing: { name: string; slug: string }[];
   pending: string[];
-  onAdd: (name: string) => void;
+  onAdd: (name: string, hint?: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [hint, setHint] = useState("");
   const [note, setNote] = useState<string | null>(null);
 
   if (!open) {
@@ -419,8 +422,9 @@ function AddAxis({
       setNote("You've already added that.");
       return;
     }
-    onAdd(clean);
+    onAdd(clean, hint.trim().replace(/\s+/g, " ") || undefined);
     setName("");
+    setHint("");
     setNote(null);
   };
 
@@ -433,16 +437,24 @@ function AddAxis({
       }}
     >
       <input
-        className={`${ui.input} ${s.addInput}`}
+        className={`${ui.input} ${s.addName}`}
         value={name}
         maxLength={40}
         autoFocus
-        placeholder="Design, dessert recipes, legal questions…"
+        placeholder="Axis name"
         aria-label="New axis name"
         onChange={(e) => {
           setName(e.target.value);
           setNote(null);
         }}
+      />
+      <input
+        className={`${ui.input} ${s.addHint}`}
+        value={hint}
+        maxLength={80}
+        placeholder="What it means, in one line (optional)"
+        aria-label="New axis description"
+        onChange={(e) => setHint(e.target.value)}
       />
       <button type="submit" className={ui.btnGhost}>
         Add

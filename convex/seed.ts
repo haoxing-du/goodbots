@@ -42,13 +42,13 @@ type Ver = (typeof MODELS)[number]["versions"][number][0];
 // overall, smarts, taste, vibes, aligned, mom (0 = skipped)
 type S = [number, number, number, number, number, number];
 
-// Custom axes people "added" — [name, created by].
-const CUSTOM_AXES: [string, Handle][] = [
-  ["Coding", "kt_builds"],
-  ["Design", "priya_r"],
-  ["Humor", "jonahb"],
-  ["Dessert recipes", "mirac"],
-  ["Long documents", "lena_evals"],
+// Custom axes people "added" — [name, one-line description, created by].
+const CUSTOM_AXES: [string, string, Handle][] = [
+  ["Coding", "Writes code that works the first time", "kt_builds"],
+  ["Design", "Makes things look good", "priya_r"],
+  ["Humor", "Is actually funny", "jonahb"],
+  ["Dessert recipes", "Knows its way around a pastry", "mirac"],
+  ["Long documents", "Keeps track of very long inputs", "lena_evals"],
 ];
 
 type Entry = { text: string; overall: number; ago: number; prompt?: string; response?: string };
@@ -205,13 +205,14 @@ export const run = internalMutation({
         await ctx.db.insert("axes", { ...a, core: true, order: i, status: "active", ratingCount: 0, createdAt: now }),
       );
     }
-    for (const [name, by] of CUSTOM_AXES) {
+    for (const [name, hint, by] of CUSTOM_AXES) {
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       axisBySlug.set(
         slug,
         await ctx.db.insert("axes", {
           name,
           slug,
+          hint,
           core: false,
           status: "active",
           ratingCount: 0,
