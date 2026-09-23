@@ -138,6 +138,8 @@
   font-size: 14px;
   font-weight: 500;
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .oliveChip {
   font-family: var(--font-mono);
