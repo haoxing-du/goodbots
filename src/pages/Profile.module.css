@@ -156,6 +156,11 @@
   letter-spacing: 0.06em;
   color: var(--muted-1);
 }
+.takeCards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .take {
   padding: 16px 20px;
   display: flex;

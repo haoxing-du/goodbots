@@ -203,12 +203,12 @@ export function Profile() {
 
         <section>
           <h2 className={ui.sectionLabel}>Takes</h2>
-          <div className={`${ui.card} ${ui.rows}`}>
+          <div className={s.takeCards}>
             {data.takes.length === 0 && (
-              <div className={ui.empty}>No takes yet.</div>
+              <div className={`${ui.card} ${ui.empty}`}>No takes yet.</div>
             )}
             {data.takes.map((t) => (
-              <div key={t._id} className={s.take}>
+              <div key={t._id} className={`${ui.card} ${s.take}`}>
                 <div className={s.takeHead}>
                   <span className={s.takeLine}>
                     <VersionLink v={t.winner} />{" "}

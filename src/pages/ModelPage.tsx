@@ -123,12 +123,12 @@ function AxisGrid({ axes, custom }: { axes: AxisStat[]; custom: AxisStat[] }) {
       {custom.length > 0 && (
         <div className={s.also}>
           <h3 className={s.alsoLabel}>Also rated on</h3>
-          <div className={`${ui.card} ${ui.rows}`}>
+          <div className={s.alsoGrid}>
             {custom.map((a) => {
               const rounded = a.avg == null ? 0 : Math.round(a.avg);
               const max = Math.max(1, ...a.hist);
               return (
-                <div key={a._id} className={s.alsoRow}>
+                <div key={a._id} className={`${ui.card} ${s.alsoCard}`} title={a.hint}>
                   <span className={s.alsoName}>{a.name}</span>
                   <span className={s.alsoAvg}>{fmtAvg(a.avg)}</span>
                   {dist ? (
@@ -329,14 +329,14 @@ function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
           onChange={setStars}
         />
       </div>
-      <div className={`${ui.card} ${ui.rows}`}>
+      <div className={s.reviewCards}>
         {reviews && reviews.length === 0 && (
-          <div className={ui.empty}>
+          <div className={`${ui.card} ${ui.empty}`}>
             {stars ? `No ${stars}★ reviews yet.` : "No reviews yet. Write the first one."}
           </div>
         )}
         {reviews?.map((r) => (
-          <article key={r._id} className={s.review}>
+          <article key={r._id} className={`${ui.card} ${s.review}`}>
             <div className={s.reviewer}>
               <div className={s.who}>
                 <Avatar name={r.user?.name ?? "?"} image={r.user?.image} />
