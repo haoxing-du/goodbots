@@ -138,6 +138,7 @@
 .axisHint {
   font-size: 13px;
   color: var(--muted-3);
+  line-height: 1.5;
 }
 .stars {
   display: flex;
@@ -244,6 +245,7 @@ a.card:hover {
   font-size: 13px;
   color: var(--muted-2);
   margin-top: -8px;
+  line-height: 1.5;
 }
 .cardEmpty .cardModel {
   color: var(--muted-3);

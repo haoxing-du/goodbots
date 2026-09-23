@@ -95,6 +95,7 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   /* Long URLs, handles and model names break instead of overflowing. */
   overflow-wrap: break-word;
 }
@@ -133,6 +134,14 @@ h2,
 h3,
 p {
   margin: 0;
+}
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
 }
 
 /* Visible only when focused, so keyboard users can jump past the header. */

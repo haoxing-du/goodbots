@@ -72,6 +72,7 @@
   line-height: 1.5;
   color: var(--ink);
   white-space: pre-wrap;
+  max-width: 66ch;
 }
 
 .btn {
@@ -147,6 +148,7 @@
   padding: 28px;
   color: var(--muted-2);
   font-size: 15px;
+  line-height: 1.5;
 }
 
 .error {

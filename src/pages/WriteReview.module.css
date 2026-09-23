@@ -85,6 +85,7 @@
   font-size: 13px;
   color: var(--muted-3);
   margin-top: 3px;
+  line-height: 1.5;
 }
 .starButtons {
   display: flex;

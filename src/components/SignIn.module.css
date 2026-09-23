@@ -23,6 +23,7 @@
 .reason {
   color: var(--muted-2);
   font-size: 15px;
+  line-height: 1.5;
 }
 .buttons {
   display: flex;
@@ -94,6 +95,9 @@
 .secondary:hover {
   border-color: var(--ink);
 }
+.sent b {
+  font-weight: 500; /* Geist is loaded at 300/400/500; 700 would be synthesized */
+}
 .sent {
   display: flex;
   flex-direction: column;
@@ -109,6 +113,7 @@
   border: 1px dashed var(--outline);
   border-radius: var(--r-sm);
   padding: 8px 10px;
+  line-height: 1.5;
 }
 .devNote code {
   font-family: var(--font-mono);
