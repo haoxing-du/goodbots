@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSignIn } from "../components/SignIn";
+import { EMPTY_DRAFT, saveDraft } from "../lib/draft";
 import { fmtCount } from "../lib/format";
 import s from "./Home.module.css";
 
@@ -12,17 +13,22 @@ export function Home() {
   const { requireAuth } = useSignIn();
   const [picked, setPicked] = useState<string | null>(null);
   const [stars, setStars] = useState(0);
+  const [text, setText] = useState("");
 
   const versionId = picked ?? data?.versions[0]?.versionId ?? "";
   const selectedName =
     data?.versions.find((v) => v.versionId === versionId)?.displayName ?? "";
 
-  const onContinue = () => {
-    if (!stars || !versionId) return;
-    const to = `/write?v=${encodeURIComponent(versionId)}&stars=${stars}`;
+  const started = stars > 0 || text.trim().length > 0;
+
+  const onFinish = () => {
+    if (!started || !versionId) return;
+    // Hand the text and stars to the write page; the draft also survives sign-in.
+    saveDraft({ ...EMPTY_DRAFT, text, overall: stars });
+    const to = `/write?v=${encodeURIComponent(versionId)}`;
     requireAuth(
       () => navigate(to),
-      "Sign in to finish your review. Your rating is kept.",
+      "Sign in to finish your review. What you wrote is kept.",
       to,
     );
   };
@@ -55,11 +61,20 @@ export function Home() {
           </span>
         </h1>
 
+        <textarea
+          className={s.text}
+          rows={4}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="What did you use it for? Where did it surprise you? Hot takes welcome."
+          aria-label="Your review"
+        />
+
         <div className={s.action}>
           <div
             className={s.stars}
             role="radiogroup"
-            aria-label="Overall rating"
+            aria-label="Overall rating (optional)"
           >
             {[1, 2, 3, 4, 5].map((n) => (
               <button
@@ -78,10 +93,10 @@ export function Home() {
           <button
             type="button"
             className={s.continue}
-            disabled={!stars}
-            onClick={onContinue}
+            disabled={!started}
+            onClick={onFinish}
           >
-            {stars ? "Continue →" : "Pick a rating"}
+            Finish your review →
           </button>
         </div>
 

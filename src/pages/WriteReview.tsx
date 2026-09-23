@@ -6,40 +6,11 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { MinimalBar } from "../components/TopBar";
 import { useSignIn } from "../components/SignIn";
-import { AXES, AxisKey } from "../lib/axes";
+import { AXES } from "../lib/axes";
+import { Draft, loadDraft, saveDraft } from "../lib/draft";
 import { proseDate } from "../lib/format";
 import ui from "../components/ui.module.css";
 import s from "./WriteReview.module.css";
-
-type Draft = {
-  overall: number;
-  axes: Partial<Record<AxisKey, number>>;
-  text: string;
-  showSnippet: boolean;
-  prompt: string;
-  response: string;
-};
-
-const EMPTY: Draft = { overall: 0, axes: {}, text: "", showSnippet: false, prompt: "", response: "" };
-const DRAFT_KEY = "gb.draft";
-
-// The draft survives the OAuth round trip (sign-in redirects away from the page).
-function loadDraft(): Draft {
-  try {
-    const raw = sessionStorage.getItem(DRAFT_KEY);
-    return raw ? { ...EMPTY, ...JSON.parse(raw) } : EMPTY;
-  } catch {
-    return EMPTY;
-  }
-}
-function saveDraft(d: Draft | null) {
-  try {
-    if (d) sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d));
-    else sessionStorage.removeItem(DRAFT_KEY);
-  } catch {
-    /* storage unavailable */
-  }
-}
 
 export function WriteReview() {
   const [params, setParams] = useSearchParams();
@@ -48,12 +19,8 @@ export function WriteReview() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { open, requireAuth } = useSignIn();
 
-  // Stars picked on the homepage arrive as ?stars=N and override the saved draft.
-  const [draft, setDraft] = useState<Draft>(() => {
-    const d = loadDraft();
-    const n = Number(params.get("stars"));
-    return Number.isInteger(n) && n >= 1 && n <= 5 ? { ...d, overall: n } : d;
-  });
+  // Text and stars started on the homepage arrive through the saved draft.
+  const [draft, setDraft] = useState<Draft>(loadDraft);
   const [posted, setPosted] = useState<Id<"versions"> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

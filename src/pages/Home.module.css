@@ -51,6 +51,24 @@
   max-width: 100%;
 }
 
+.text {
+  width: min(680px, 100%);
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 1.5;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  resize: vertical;
+  transition: border-color 120ms;
+}
+.text:hover {
+  border-color: var(--outline);
+}
+.text::placeholder {
+  color: var(--muted-3);
+}
 .action {
   display: flex;
   align-items: center;
