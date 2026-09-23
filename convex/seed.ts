@@ -5,21 +5,24 @@ import {
   bumpTakeCount,
   CORE_AXES,
   REACTION_KINDS,
+  createVersion,
   replaceReviewScores,
 } from "./lib";
-import { createVersion } from "./admin";
 
 const MIN = 60 * 1000;
 const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
 
+// [seed key, model id (OpenRouter-style), display name, provider, released days ago, source].
+// Claude Opus 4 and Grok 4 have been retired from OpenRouter, so they're added by hand.
 const MODELS = [
-  { family: "Claude Opus", provider: "Anthropic", versions: [["claude-opus-4-1", "Claude Opus 4.1", 48], ["claude-opus-4", "Claude Opus 4", 120]] },
-  { family: "GPT", provider: "OpenAI", versions: [["gpt-5-2025-08-07", "GPT-5", 45]] },
-  { family: "Gemini", provider: "Google", versions: [["gemini-2.5-pro", "Gemini 2.5 Pro", 170]] },
-  { family: "DeepSeek", provider: "DeepSeek", versions: [["deepseek-v3.1", "DeepSeek V3.1", 30]] },
-  { family: "Grok", provider: "xAI", versions: [["grok-4-0709", "Grok 4", 75]] },
-  { family: "Llama", provider: "Meta", versions: [["llama-4-maverick", "Llama 4 Maverick", 165]] },
+  ["claude-opus-4-1", "anthropic/claude-opus-4.1", "Claude Opus 4.1", "Anthropic", 48, "catalog"],
+  ["claude-opus-4", "anthropic/claude-opus-4", "Claude Opus 4", "Anthropic", 120, "manual"],
+  ["gpt-5-2025-08-07", "openai/gpt-5", "GPT-5", "OpenAI", 45, "catalog"],
+  ["gemini-2.5-pro", "google/gemini-2.5-pro", "Gemini 2.5 Pro", "Google", 170, "catalog"],
+  ["deepseek-v3.1", "deepseek/deepseek-chat-v3.1", "DeepSeek V3.1", "DeepSeek", 30, "catalog"],
+  ["grok-4-0709", "x-ai/grok-4", "Grok 4", "xAI", 75, "manual"],
+  ["llama-4-maverick", "meta-llama/llama-4-maverick", "Llama 4 Maverick", "Meta", 165, "catalog"],
 ] as const;
 
 // [name, handle, xHandle?, joined days ago]
@@ -38,7 +41,7 @@ const USERS = [
 ] as const;
 
 type Handle = (typeof USERS)[number][1];
-type Ver = (typeof MODELS)[number]["versions"][number][0];
+type Ver = (typeof MODELS)[number][0];
 // overall, smarts, taste, vibes, aligned, mom-approved (0 = skipped). Mom-approved
 // used to be a core axis; it's now a regular custom axis.
 type S = [number, number, number, number, number, number];
@@ -164,25 +167,23 @@ function rng(seed: number) {
 export const run = internalMutation({
   args: {},
   handler: async (ctx) => {
-    if (await ctx.db.query("models").first()) {
+    if (await ctx.db.query("versions").first()) {
       return "Already seeded. Run seed:reset first to start over.";
     }
     const now = Date.now();
 
     const versions = new Map<string, Id<"versions">>();
-    for (const m of MODELS) {
-      for (const [versionId, displayName, releasedDaysAgo] of m.versions) {
-        versions.set(
+    for (const [key, versionId, displayName, provider, releasedDaysAgo, source] of MODELS) {
+      versions.set(
+        key,
+        await createVersion(ctx, {
           versionId,
-          await createVersion(ctx, {
-            family: m.family,
-            provider: m.provider,
-            versionId,
-            displayName,
-            releasedAt: now - releasedDaysAgo * DAY,
-          }),
-        );
-      }
+          displayName,
+          provider,
+          releasedAt: now - releasedDaysAgo * DAY,
+          source,
+        }),
+      );
     }
 
     const users = new Map<string, Id<"users">>();
@@ -371,7 +372,7 @@ export const run = internalMutation({
 });
 
 const APP_TABLES = [
-  "models",
+  "providers",
   "versions",
   "axes",
   "reviews",

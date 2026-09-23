@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes, useParams } from "react-router-dom";
+import { Outlet, Route, Routes } from "react-router-dom";
 import { SignInProvider } from "./components/SignIn";
 import { TopBar } from "./components/TopBar";
 import { Home } from "./pages/Home";
@@ -24,12 +24,6 @@ function Chrome() {
   );
 }
 
-/** Old /m/<family>/<version> links → /m/<version>. */
-function LegacyModelRedirect() {
-  const { versionId = "" } = useParams();
-  return <Navigate to={`/m/${encodeURIComponent(versionId)}`} replace />;
-}
-
 export function App() {
   return (
     <SignInProvider>
@@ -38,8 +32,7 @@ export function App() {
           <Route path="/" element={<Home />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/models" element={<Models />} />
-          <Route path="/m/:id" element={<ModelPage />} />
-          <Route path="/m/:family/:versionId" element={<LegacyModelRedirect />} />
+          <Route path="/m/:provider/:model" element={<ModelPage />} />
           <Route path="/u/:handle" element={<Profile />} />
           <Route path="/r/:id" element={<ReviewPage />} />
           <Route path="/request" element={<RequestModel />} />

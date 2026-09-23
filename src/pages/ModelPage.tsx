@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
@@ -12,18 +12,21 @@ import { fmtAvg, fmtCount } from "../lib/format";
 import { NotFound } from "./NotFound";
 import ui from "../components/ui.module.css";
 import s from "./ModelPage.module.css";
-import { versionPath } from "../lib/paths";
+import { versionPath, writePath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
 
 export function ModelPage() {
-  const { id = "" } = useParams();
+  const { provider = "", model = "" } = useParams();
+  const id = `${provider}/${model}`;
   const data = useQuery(api.models.page, { id });
-  useTitle(data && data.redirectTo === null ? data.version.displayName : undefined);
+  useTitle(
+    data?.kind === "page" ? data.version.displayName : data?.kind === "catalog" ? data.entry.name : undefined,
+  );
 
   if (data === undefined) return <div className={ui.page} />;
   if (data === null) return <NotFound what="model" />;
-  if (data.redirectTo !== null) return <Navigate to={versionPath(data.redirectTo)} replace />;
-  const { model, version } = data;
+  if (data.kind === "catalog") return <UnreviewedModel entry={data.entry} />;
+  const { version } = data;
   const overall = data.overall;
 
   return (
@@ -31,7 +34,7 @@ export function ModelPage() {
       <header className={s.header}>
         <div>
           <div className={ui.monoLabel}>
-            {model.provider} · <span className={s.versionId}>{version.versionId}</span>
+            {data.provider} · <span className={s.versionId}>{version.versionId}</span>
           </div>
           <h1 className={s.name}>{version.displayName}</h1>
           <p className={s.summary}>
@@ -165,7 +168,7 @@ function AxisGrid({ axes, custom }: { axes: AxisStat[]; custom: AxisStat[] }) {
 }
 
 type H2HRow = {
-  opponent: { _id: Id<"versions">; displayName: string; versionId: string; modelSlug: string } | null;
+  opponent: { _id: Id<"versions">; displayName: string; versionId: string } | null;
   winPct: number;
   total: number;
   quote: string | null;
@@ -351,5 +354,32 @@ function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
         <LoadMore status={status} loadMore={loadMore} label="More reviews" />
       </div>
     </section>
+  );
+}
+
+/** A model from the OpenRouter catalog that nobody has reviewed yet. */
+function UnreviewedModel({
+  entry,
+}: {
+  entry: { orId: string; name: string; provider: string; releasedAt?: number };
+}) {
+  return (
+    <div className={ui.page}>
+      <header className={s.header}>
+        <div>
+          <div className={ui.monoLabel}>
+            {entry.provider} · <span className={s.versionId}>{entry.orId}</span>
+          </div>
+          <h1 className={s.name}>{entry.name}</h1>
+          <p className={s.summary}>No reviews yet.</p>
+        </div>
+      </header>
+      <div className={`${ui.card} ${s.firstReview}`}>
+        <p>Used {entry.name}? Be the first to say what you thought.</p>
+        <Link to={writePath(entry.orId)} className={ui.btn}>
+          Write the first review
+        </Link>
+      </div>
+    </div>
   );
 }

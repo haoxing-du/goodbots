@@ -11,18 +11,19 @@ import s from "./Models.module.css";
 import { useTitle } from "../lib/useTitle";
 
 type Version = NonNullable<ReturnType<typeof useQuery<typeof api.models.list>>>[number];
-type View = "family" | "all";
+type View = "provider" | "all";
 
 const VIEW_KEY = "gb.modelsView";
 
 export function Models() {
   useTitle("Models");
-  const versions = useQuery(api.models.list);
+  // Only models people have reviewed; the full catalog is reachable through search.
+  const versions = useQuery(api.models.list)?.filter((v) => v.reviewCount > 0);
   const [view, setView] = useState<View>(() => {
     try {
-      return localStorage.getItem(VIEW_KEY) === "all" ? "all" : "family";
+      return localStorage.getItem(VIEW_KEY) === "all" ? "all" : "provider";
     } catch {
-      return "family";
+      return "provider";
     }
   });
   useEffect(() => {
@@ -41,7 +42,7 @@ export function Models() {
           <Pills
             label="Group models"
             options={[
-              { value: "family", label: "By family" },
+              { value: "provider", label: "By provider" },
               { value: "all", label: "All models" },
             ]}
             value={view}
@@ -60,13 +61,12 @@ export function Models() {
             <Grid versions={versions} />
           </section>
         ) : (
-          // Family blocks share rows: each spans as many columns as it has versions.
+          // Provider blocks share rows: each spans as many columns as it has models.
           <div className={s.families}>
             {families(versions).map((f) => (
               <section key={f.slug} className={s[`span${Math.min(f.versions.length, 3)}`]}>
                 <div className={s.familyHead}>
                   <h2 className={s.familyName}>{f.name}</h2>
-                  <span className={ui.monoLabel}>{f.provider}</span>
                 </div>
                 <Grid versions={f.versions} />
               </section>
@@ -77,13 +77,13 @@ export function Models() {
   );
 }
 
-/** Group by family: families ordered by their best-rated version, versions newest first. */
+/** Group by provider: providers ordered by their best-rated model, models newest first. */
 function families(versions: Version[]) {
-  const map = new Map<string, { slug: string; name: string; provider: string; versions: Version[] }>();
+  const map = new Map<string, { slug: string; name: string; versions: Version[] }>();
   for (const v of versions) {
-    const f = map.get(v.familySlug) ?? { slug: v.familySlug, name: v.family, provider: v.provider, versions: [] };
+    const f = map.get(v.providerSlug) ?? { slug: v.providerSlug, name: v.provider, versions: [] };
     f.versions.push(v);
-    map.set(v.familySlug, f);
+    map.set(v.providerSlug, f);
   }
   const best = (f: { versions: Version[] }) => Math.max(...f.versions.map((v) => v.overall ?? -1));
   return [...map.values()]

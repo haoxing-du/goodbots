@@ -11,6 +11,7 @@ import {
   checkScore,
   compareAxes,
   deleteReviewCascade,
+  findOrActivateVersion,
   isAdmin,
   matcherFor,
   publicAxis,
@@ -94,7 +95,7 @@ const scoreInput = v.object({
 
 export const upsert = mutation({
   args: {
-    versionId: v.id("versions"),
+    versionId: v.string(), // "<provider>/<model>"; a catalog model gets its page on first review
     overall: v.optional(v.number()),
     scores: v.array(scoreInput),
     text: v.string(),
@@ -103,28 +104,27 @@ export const upsert = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireMember(ctx);
-    const version = await ctx.db.get(args.versionId);
-    if (!version || version.status !== "active") {
-      throw new ConvexError("That version isn't available to review.");
-    }
     checkScore(args.overall, "Overall");
     if (args.scores.length > 40) throw new ConvexError("That's a lot of axes. Keep it under 40.");
+    if (!args.text.trim()) throw new ConvexError("Write a few words about it.");
+    const version = await findOrActivateVersion(ctx, args.versionId);
+    if (!version) throw new ConvexError("That model isn't available to review.");
+    const versionId = version._id;
     const text = args.text.trim();
-    if (!text) throw new ConvexError("Write a few words about it.");
     const scores = await resolveScores(ctx, user._id, args.scores);
 
     const now = Date.now();
     const existing = await ctx.db
       .query("reviews")
       .withIndex("by_user_version", (q) =>
-        q.eq("userId", user._id).eq("versionId", args.versionId),
+        q.eq("userId", user._id).eq("versionId", versionId),
       )
       .unique();
 
     let reviewId: Id<"reviews">;
     if (existing) {
       // An update: new scores replace the old ones; the entry is appended to history.
-      await applyOverallToStats(ctx, args.versionId, existing.overall, args.overall);
+      await applyOverallToStats(ctx, versionId, existing.overall, args.overall);
       await ctx.db.replace(existing._id, {
         userId: existing.userId,
         versionId: existing.versionId,
@@ -143,17 +143,17 @@ export const upsert = mutation({
       if (firstReview) await bumpReviewerCount(ctx, 1);
       reviewId = await ctx.db.insert("reviews", {
         userId: user._id,
-        versionId: args.versionId,
+        versionId: versionId,
         overall: args.overall,
         reactionCount: 0,
         createdAt: now,
         updatedAt: now,
       });
-      await applyOverallToStats(ctx, args.versionId, null, args.overall);
+      await applyOverallToStats(ctx, versionId, null, args.overall);
     }
     await replaceReviewScores(
       ctx,
-      { _id: reviewId, userId: user._id, versionId: args.versionId },
+      { _id: reviewId, userId: user._id, versionId: versionId },
       scores,
     );
     const entry = {
@@ -288,26 +288,35 @@ export const feedSummary = query({
   },
 });
 
-/** Data for the write-a-review screen. Never includes community scores. */
+/**
+ * Data for the write-a-review screen. Never includes community scores.
+ * `v` may be a catalog model that has no page yet; it's included as an option.
+ */
 export const forWrite = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { v: v.optional(v.string()) },
+  handler: async (ctx, args) => {
     const viewerId = await getAuthUserId(ctx);
-    const models = await ctx.db.query("models").collect();
-    const options = [];
-    for (const m of models.sort((a, b) => a.family.localeCompare(b.family))) {
-      const versions = await ctx.db
-        .query("versions")
-        .withIndex("by_model", (q) => q.eq("modelId", m._id))
-        .collect();
-      for (const ver of versions) {
-        if (ver.status !== "active") continue;
-        options.push({
-          _id: ver._id,
-          versionId: ver.versionId,
-          displayName: ver.displayName,
-          modelSlug: m.slug,
-        });
+    const [versions, providers] = await Promise.all([
+      ctx.db.query("versions").collect(),
+      ctx.db.query("providers").collect(),
+    ]);
+    const providerName = new Map(providers.map((p) => [p._id, p.name]));
+    const options: { versionId: string; displayName: string; provider: string; onSite: boolean }[] = versions
+      .filter((ver) => ver.status === "active")
+      .map((ver) => ({
+        versionId: ver.versionId,
+        displayName: ver.displayName,
+        provider: providerName.get(ver.providerId) ?? "",
+        onSite: true,
+      }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+    if (args.v && !options.some((o) => o.versionId === args.v)) {
+      const entry = await ctx.db
+        .query("catalog")
+        .withIndex("by_orId", (q) => q.eq("orId", args.v!))
+        .unique();
+      if (entry) {
+        options.unshift({ versionId: entry.orId, displayName: entry.name, provider: entry.provider, onSite: false });
       }
     }
     // Every axis anyone has rated on (plus the core ones), core first.
@@ -322,13 +331,15 @@ export const forWrite = query({
         .query("reviews")
         .withIndex("by_user", (q) => q.eq("userId", viewerId))
         .collect();
+      const versionIdOf = new Map(versions.map((ver) => [ver._id, ver.versionId]));
       for (const r of mine) {
         const last = await ctx.db
           .query("reviewEntries")
           .withIndex("by_review", (q) => q.eq("reviewId", r._id))
           .order("desc")
           .first();
-        prior[r.versionId] = { createdAt: r.createdAt, lastPostAt: last?.createdAt ?? r.updatedAt };
+        const key = versionIdOf.get(r.versionId);
+        if (key) prior[key] = { createdAt: r.createdAt, lastPostAt: last?.createdAt ?? r.updatedAt };
       }
     }
     return { options, axes, prior };
@@ -340,10 +351,16 @@ export const forWrite = query({
  * the viewer has posted a review of it (anti-anchoring).
  */
 export const communityAfterPost = query({
-  args: { versionId: v.id("versions") },
-  handler: async (ctx, { versionId }) => {
+  args: { versionId: v.string() },
+  handler: async (ctx, args) => {
     const viewerId = await getAuthUserId(ctx);
     if (!viewerId) return null;
+    const version = await ctx.db
+      .query("versions")
+      .withIndex("by_versionId", (q) => q.eq("versionId", args.versionId))
+      .unique();
+    if (!version) return null;
+    const versionId = version._id;
     const mine = await ctx.db
       .query("reviews")
       .withIndex("by_user_version", (q) =>

@@ -41,14 +41,11 @@ export default defineSchema({
     .index("by_handle", ["handleLower"])
     .index("by_name", ["nameLower"]),
 
-  models: defineTable({
-    family: v.string(),
-    familyLower: v.string(),
-    provider: v.string(),
-    slug: v.string(),
-  })
-    .index("by_slug", ["slug"])
-    .index("by_family", ["familyLower"]),
+  // Who makes a model ("Anthropic", slug "anthropic"). Used to group models.
+  providers: defineTable({
+    name: v.string(),
+    slug: v.string(), // first segment of version ids, e.g. "anthropic"
+  }).index("by_slug", ["slug"]),
 
   // Every model OpenRouter lists, synced by a cron (convex/catalog.ts). A site
   // model page (versions row) is only created when someone first reviews one.
@@ -67,14 +64,16 @@ export default defineSchema({
     .index("by_orId", ["orId"])
     .searchIndex("search", { searchField: "searchText" }),
 
+  // A model with a page on the site (created on its first review, or by an admin).
   versions: defineTable({
-    modelId: v.id("models"),
-    versionId: v.string(),
+    providerId: v.id("providers"),
+    versionId: v.string(), // "<provider>/<model>", e.g. "anthropic/claude-opus-4.1" (= OpenRouter id)
     displayName: v.string(),
     releasedAt: v.optional(v.number()),
     status: v.union(v.literal("active"), v.literal("hidden")),
+    source: v.union(v.literal("catalog"), v.literal("manual")),
   })
-    .index("by_model", ["modelId"])
+    .index("by_provider", ["providerId"])
     .index("by_versionId", ["versionId"]),
 
   // Things to rate models on. Core axes are seeded; anyone signed in can add more.
@@ -162,7 +161,7 @@ export default defineSchema({
 
   modelRequests: defineTable({
     userId: v.id("users"),
-    family: v.string(),
+    name: v.string(), // model name, e.g. "Claude Opus 5.5"
     versionId: v.string(),
     provider: v.string(),
     link: v.string(),

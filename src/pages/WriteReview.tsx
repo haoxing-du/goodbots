@@ -19,7 +19,7 @@ const EDIT_WINDOW_MS = 10 * 60 * 1000;
 export function WriteReview() {
   useTitle("Write a review");
   const [params, setParams] = useSearchParams();
-  const data = useQuery(api.reviews.forWrite);
+  const data = useQuery(api.reviews.forWrite, { v: params.get("v") ?? undefined });
   const upsert = useMutation(api.reviews.upsert);
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { open, requireAuth } = useSignIn();
@@ -28,7 +28,7 @@ export function WriteReview() {
   // homepage arrive through it). `draftFor` is the version the draft belongs to.
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [draftFor, setDraftFor] = useState<string | null>(null);
-  const [posted, setPosted] = useState<Id<"versions"> | null>(null);
+  const [posted, setPosted] = useState<string | null>(null); // versionId just posted
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -71,8 +71,8 @@ export function WriteReview() {
     );
   }
 
-  const done = posted === selected._id;
-  const prior = data.prior[selected._id];
+  const done = posted === selected.versionId;
+  const prior = data.prior[selected.versionId];
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
   // Axes added in this draft that don't exist yet (after posting they do, and merge in).
@@ -104,7 +104,7 @@ export function WriteReview() {
       setError(null);
       try {
         await upsert({
-          versionId: selected._id,
+          versionId: selected.versionId,
           overall: draft.overall || undefined,
           scores: [
             ...Object.entries(draft.scores).map(([axisId, score]) => ({
@@ -119,7 +119,7 @@ export function WriteReview() {
           prompt: draft.showSnippet ? draft.prompt : undefined,
           response: draft.showSnippet ? draft.response : undefined,
         });
-        setPosted(selected._id);
+        setPosted(selected.versionId);
         saveDraft(selected.versionId, null);
       } catch (e) {
         setError(e instanceof ConvexError ? String(e.data) : "Couldn't post your review. Try again.");
@@ -146,7 +146,7 @@ export function WriteReview() {
             }}
           >
             {data.options.map((o) => (
-              <option key={o._id} value={o.versionId}>
+              <option key={o.versionId} value={o.versionId}>
                 {o.displayName} · {o.versionId}
               </option>
             ))}

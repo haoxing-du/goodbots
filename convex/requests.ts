@@ -1,11 +1,10 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { publicUser, requireAdmin, requireMember } from "./lib";
-import { createVersion } from "./admin";
+import { createVersion, normalizeVersionId, publicUser, requireAdmin, requireMember } from "./lib";
 
 export const create = mutation({
   args: {
-    family: v.string(),
+    name: v.string(),
     versionId: v.string(),
     provider: v.string(),
     link: v.string(),
@@ -13,13 +12,13 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const user = await requireMember(ctx);
     const clean = {
-      family: args.family.trim(),
+      name: args.name.trim(),
       versionId: args.versionId.trim(),
       provider: args.provider.trim(),
       link: args.link.trim(),
     };
-    if (!clean.family || !clean.versionId || !clean.provider) {
-      throw new ConvexError("Family, version id and provider are required.");
+    if (!clean.name || !clean.versionId || !clean.provider) {
+      throw new ConvexError("Model name, id and provider are required.");
     }
     await ctx.db.insert("modelRequests", {
       userId: user._id,
@@ -59,10 +58,11 @@ export const resolve = mutation({
     if (!req || req.status !== "pending") return;
     if (approve) {
       await createVersion(ctx, {
-        family: req.family,
+        versionId: normalizeVersionId(req.provider, req.versionId),
+        displayName: displayName?.trim() || req.name,
         provider: req.provider,
-        versionId: req.versionId,
-        displayName: displayName?.trim() || req.family,
+        releasedAt: Date.now(),
+        source: "manual",
       });
     }
     await ctx.db.patch(requestId, { status: approve ? "approved" : "rejected" });

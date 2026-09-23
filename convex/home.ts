@@ -27,17 +27,11 @@ export const homeStats = query({
       ctx.db.query("siteStats").first(),
     ]);
 
-    // Join stats with active versions and their model slugs.
-    const rows: {
-      stats: Doc<"versionStats">;
-      version: Doc<"versions">;
-      modelSlug: string;
-    }[] = [];
+    // Join stats with active versions.
+    const rows: { stats: Doc<"versionStats">; version: Doc<"versions"> }[] = [];
     for (const stats of allStats) {
       const version = await ctx.db.get(stats.versionId);
-      if (!version || version.status !== "active") continue;
-      const model = await ctx.db.get(version.modelId);
-      if (model) rows.push({ stats, version, modelSlug: model.slug });
+      if (version?.status === "active") rows.push({ stats, version });
     }
     rows.sort((a, b) => b.stats.reviewCount - a.stats.reviewCount);
 
@@ -45,7 +39,6 @@ export const homeStats = query({
       _id: r.version._id,
       versionId: r.version.versionId,
       displayName: r.version.displayName,
-      modelSlug: r.modelSlug,
     });
 
     const axes = await ctx.db.query("axes").collect();

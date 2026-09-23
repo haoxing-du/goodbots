@@ -411,13 +411,93 @@ export function publicUser(u: Doc<"users">) {
 export async function versionLabel(ctx: QueryCtx, versionId: Id<"versions">) {
   const version = await ctx.db.get(versionId);
   if (!version) return null;
-  const model = await ctx.db.get(version.modelId);
-  if (!model) return null;
+  const provider = await ctx.db.get(version.providerId);
   return {
     _id: version._id,
     versionId: version.versionId,
     displayName: version.displayName,
-    modelSlug: model.slug,
-    family: model.family,
+    provider: provider?.name ?? "",
   };
+}
+
+// ---------- models (versions) ----------
+
+export function slugPart(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9.]+/g, "-")
+    .replace(/^[-.]+|[-.]+$/g, "");
+}
+
+/** "<provider>/<model>" from a provider name and a raw id (which may already include the provider). */
+export function normalizeVersionId(provider: string, raw: string) {
+  const [a, b] = raw.includes("/") ? raw.split("/", 2) : [provider, raw];
+  const id = `${slugPart(a)}/${slugPart(b)}`;
+  if (!/^[a-z0-9][a-z0-9.-]*\/[a-z0-9][a-z0-9.-]*$/.test(id)) {
+    throw new ConvexError("Model ids look like provider/model, e.g. anthropic/claude-opus-4.1.");
+  }
+  return id;
+}
+
+export async function getOrCreateProvider(ctx: MutationCtx, slug: string, name: string) {
+  const existing = await ctx.db
+    .query("providers")
+    .withIndex("by_slug", (q) => q.eq("slug", slug))
+    .unique();
+  if (existing) return existing._id;
+  return await ctx.db.insert("providers", { name: name.trim() || slug, slug });
+}
+
+/** Creates a model page (versions row + empty stats). Throws if the id is taken. */
+export async function createVersion(
+  ctx: MutationCtx,
+  args: {
+    versionId: string; // already normalized
+    displayName: string;
+    provider: string; // display name
+    releasedAt?: number;
+    source: "catalog" | "manual";
+  },
+) {
+  const dupe = await ctx.db
+    .query("versions")
+    .withIndex("by_versionId", (q) => q.eq("versionId", args.versionId))
+    .first();
+  if (dupe) throw new ConvexError(`${args.versionId} already exists.`);
+  const providerId = await getOrCreateProvider(ctx, args.versionId.split("/")[0], args.provider);
+  const id = await ctx.db.insert("versions", {
+    providerId,
+    versionId: args.versionId,
+    displayName: args.displayName.trim(),
+    releasedAt: args.releasedAt,
+    status: "active",
+    source: args.source,
+  });
+  await getOrCreateStats(ctx, id);
+  return id;
+}
+
+/**
+ * The model page for an id, creating it from the OpenRouter catalog if this is
+ * its first review. Null if the id is neither on the site nor in the catalog.
+ */
+export async function findOrActivateVersion(ctx: MutationCtx, versionId: string) {
+  const existing = await ctx.db
+    .query("versions")
+    .withIndex("by_versionId", (q) => q.eq("versionId", versionId))
+    .unique();
+  if (existing) return existing.status === "active" ? existing : null;
+  const entry = await ctx.db
+    .query("catalog")
+    .withIndex("by_orId", (q) => q.eq("orId", versionId))
+    .unique();
+  if (!entry) return null;
+  const id = await createVersion(ctx, {
+    versionId,
+    displayName: entry.name,
+    provider: entry.provider,
+    releasedAt: entry.releasedAt,
+    source: "catalog",
+  });
+  return (await ctx.db.get(id))!;
 }

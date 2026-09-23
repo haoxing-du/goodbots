@@ -60,7 +60,7 @@ function Requests() {
           <div key={r._id} className={s.request}>
             <div>
               <div className={s.reqTitle}>
-                {r.family} <span className={ui.meta}>{r.versionId}</span>
+                {r.name} <span className={ui.meta}>{r.versionId}</span>
               </div>
               <div className={ui.meta}>
                 {r.provider} · {shortDate(r.createdAt)} · by <UserLink user={r.user} />
@@ -77,7 +77,7 @@ function Requests() {
             </div>
             <input
               className={ui.input}
-              placeholder={`Display name (default: ${r.family})`}
+              placeholder={`Display name (default: ${r.name})`}
               aria-label="Display name"
               value={names[r._id] ?? ""}
               onChange={(e) => setNames({ ...names, [r._id]: e.target.value })}
@@ -98,7 +98,7 @@ function Requests() {
   );
 }
 
-const EMPTY = { family: "", provider: "", versionId: "", displayName: "" };
+const EMPTY = { provider: "", versionId: "", displayName: "" };
 
 function AddVersion() {
   const add = useMutation(api.admin.addVersion);
@@ -135,14 +135,16 @@ function AddVersion() {
           }
         }}
       >
-        <p className={f.hint}>An existing family adds a new version to that model; a new family creates the model.</p>
+        <p className={f.hint}>
+          For models not in the OpenRouter catalog (catalog models get a page on their first review).
+          Ids look like provider/model; the provider part is taken from the provider name if omitted.
+        </p>
         <div className={f.row}>
-          {input("family", "Model family", "Claude Opus")}
           {input("provider", "Provider", "Anthropic")}
+          {input("versionId", "Model id", "anthropic/claude-opus-5.5")}
         </div>
         <div className={f.row}>
-          {input("versionId", "Version id", "claude-opus-4-1")}
-          {input("displayName", "Display name", "Claude Opus 4.1")}
+          {input("displayName", "Display name", "Claude Opus 5.5")}
         </div>
         {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
         <div>

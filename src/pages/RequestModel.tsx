@@ -7,7 +7,7 @@ import ui from "../components/ui.module.css";
 import f from "./forms.module.css";
 import { useTitle } from "../lib/useTitle";
 
-const EMPTY = { family: "", versionId: "", provider: "", link: "" };
+const EMPTY = { name: "", versionId: "", provider: "", link: "" };
 
 export function RequestModel() {
   useTitle("Request a model");
@@ -63,7 +63,7 @@ export function RequestModel() {
           </div>
         )}
         <div className={f.row}>
-          {field("family", "Model family", "Claude Sonnet")}
+          {field("name", "Model name", "Claude Sonnet 5")}
           {field("provider", "Provider", "Anthropic")}
         </div>
         {field("versionId", "Version id", "claude-sonnet-4-5")}

@@ -24,12 +24,12 @@ const SITE: PageMeta = {
   image: { kind: "site", title: "What did you think of your model?", sub: "Reviews of AI models, by the people who use them" },
 };
 
-/** Meta for a path: "/", "/m/<version>", "/u/<handle>" or "/r/<reviewId>". Null if unknown. */
+/** Meta for a path: "/", "/m/<provider>/<model>", "/u/<handle>" or "/r/<reviewId>". Null if unknown. */
 export const forPath = internalQuery({
   args: { path: v.string() },
   handler: async (ctx, { path }): Promise<PageMeta | null> => {
-    const [, kind, raw] = path.split("/");
-    const id = decodeURIComponent(raw ?? "");
+    const [, kind, ...rest] = path.split("/");
+    const id = rest.map(decodeURIComponent).join("/");
     if (!kind) return SITE;
 
     if (kind === "m" && id) {
@@ -38,7 +38,7 @@ export const forPath = internalQuery({
         .withIndex("by_versionId", (q) => q.eq("versionId", id))
         .unique();
       if (!version || version.status !== "active") return null;
-      const model = await ctx.db.get(version.modelId);
+      const provider = await ctx.db.get(version.providerId);
       const stats = await statsFor(ctx, version._id);
       const overall = stats ? avg(stats.overall) : null;
       const axes = await axisIndex(ctx);
@@ -61,7 +61,7 @@ export const forPath = internalQuery({
         image: {
           kind: "model",
           title: version.displayName,
-          sub: `${model?.provider ?? ""} · ${n} ${n === 1 ? "review" : "reviews"}`,
+          sub: `${provider?.name ?? ""} · ${n} ${n === 1 ? "review" : "reviews"}`,
           stat: overall != null ? overall.toFixed(1) : undefined,
           stars: overall != null ? Math.round(overall) : undefined,
         },

@@ -15,7 +15,6 @@ import { useTitle } from "../lib/useTitle";
 type VersionRef = {
   displayName: string;
   versionId: string;
-  modelSlug: string;
 } | null;
 
 function VersionLink({ v }: { v: VersionRef }) {

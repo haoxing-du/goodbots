@@ -327,3 +327,16 @@
     min-height: 0;
   }
 }
+
+.firstReview {
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 16px;
+}
+.firstReview a {
+  text-decoration: none;
+}

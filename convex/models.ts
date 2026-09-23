@@ -3,10 +3,10 @@ import { query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { avg, axisIndex, compareAxes, publicAxis, publicUser, statsFor } from "./lib";
 
-async function versionsOf(ctx: QueryCtx, modelId: Id<"models">) {
+async function versionsOf(ctx: QueryCtx, providerId: Id<"providers">) {
   const versions = await ctx.db
     .query("versions")
-    .withIndex("by_model", (q) => q.eq("modelId", modelId))
+    .withIndex("by_provider", (q) => q.eq("providerId", providerId))
     .collect();
   return versions
     .filter((ver) => ver.status === "active")
@@ -14,14 +14,14 @@ async function versionsOf(ctx: QueryCtx, modelId: Id<"models">) {
 }
 
 /**
- * Every active model version with its headline numbers, best overall first
- * (unrated last). Each version is its own model; `family` is only for grouping.
+ * Every model with a page, with its headline numbers, best overall first
+ * (unrated last). `provider` is for grouping.
  */
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const [families, axes] = await Promise.all([
-      ctx.db.query("models").collect(),
+    const [providers, axes] = await Promise.all([
+      ctx.db.query("providers").collect(),
       axisIndex(ctx),
     ]);
     const coreAxes = [...axes.values()]
@@ -29,8 +29,8 @@ export const list = query({
       .sort(compareAxes);
 
     const versions = [];
-    for (const f of families) {
-      for (const ver of await versionsOf(ctx, f._id)) {
+    for (const p of providers) {
+      for (const ver of await versionsOf(ctx, p._id)) {
         const [stats, axisStats] = await Promise.all([
           statsFor(ctx, ver._id),
           ctx.db
@@ -44,9 +44,8 @@ export const list = query({
           versionId: ver.versionId,
           displayName: ver.displayName,
           releasedAt: ver.releasedAt ?? 0,
-          family: f.family,
-          familySlug: f.slug,
-          provider: f.provider,
+          provider: p.name,
+          providerSlug: p.slug,
           reviewCount: stats?.reviewCount ?? 0,
           overall: stats ? avg(stats.overall) : null,
           axes: coreAxes.map((a) => {
@@ -63,9 +62,8 @@ export const list = query({
 });
 
 /**
- * One model version's page (every version is its own page). If `id` is a family
- * slug instead (old links like /m/claude-opus), returns a redirect to that
- * family's newest version.
+ * One model's page. `kind: "catalog"` means the id is in the OpenRouter catalog
+ * but nobody has reviewed it yet (the page invites the first review).
  */
 export const page = query({
   args: { id: v.string() },
@@ -75,14 +73,18 @@ export const page = query({
       .withIndex("by_versionId", (q) => q.eq("versionId", id))
       .unique();
     if (!version || version.status !== "active") {
-      const family = await ctx.db
-        .query("models")
-        .withIndex("by_slug", (q) => q.eq("slug", id))
+      const entry = await ctx.db
+        .query("catalog")
+        .withIndex("by_orId", (q) => q.eq("orId", id))
         .unique();
-      const newest = family ? (await versionsOf(ctx, family._id))[0] : undefined;
-      return newest ? ({ redirectTo: newest.versionId } as const) : null;
+      return entry
+        ? ({
+            kind: "catalog",
+            entry: { orId: entry.orId, name: entry.name, provider: entry.provider, releasedAt: entry.releasedAt },
+          } as const)
+        : null;
     }
-    const model = (await ctx.db.get(version.modelId))!;
+    const provider = await ctx.db.get(version.providerId);
 
     const [stats, axisStats, axisDocs] = await Promise.all([
       statsFor(ctx, version._id),
@@ -152,7 +154,6 @@ export const page = query({
         .sort((a, b) => b[1].total - a[1].total)
         .map(async ([oppId, row]) => {
           const opp = await ctx.db.get(oppId);
-          const oppModel = opp ? await ctx.db.get(opp.modelId) : null;
           const quoteUser = row.quote ? await ctx.db.get(row.quote.userId) : null;
           return {
             opponent: opp
@@ -160,7 +161,6 @@ export const page = query({
                   _id: opp._id,
                   displayName: opp.displayName,
                   versionId: opp.versionId,
-                  modelSlug: oppModel?.slug ?? "",
                 }
               : null,
             winPct: Math.round((100 * row.wins) / row.total),
@@ -172,8 +172,8 @@ export const page = query({
     );
 
     return {
-      redirectTo: null,
-      model,
+      kind: "page",
+      provider: provider?.name ?? "",
       version,
       reviewCount: stats?.reviewCount ?? 0,
       takeCount: stats?.takeCount ?? 0,
@@ -184,22 +184,14 @@ export const page = query({
   },
 });
 
-/** All active versions, for pickers (take composer). */
+/** All models with pages, for pickers (take composer). */
 export const allVersions = query({
   args: {},
   handler: async (ctx) => {
-    const models = await ctx.db.query("models").collect();
-    const out = [];
-    for (const m of models) {
-      for (const ver of await versionsOf(ctx, m._id)) {
-        out.push({
-          _id: ver._id,
-          versionId: ver.versionId,
-          displayName: ver.displayName,
-          modelSlug: m.slug,
-        });
-      }
-    }
-    return out.sort((a, b) => a.displayName.localeCompare(b.displayName));
+    const versions = await ctx.db.query("versions").collect();
+    return versions
+      .filter((ver) => ver.status === "active")
+      .map((ver) => ({ _id: ver._id, versionId: ver.versionId, displayName: ver.displayName }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
   },
 });

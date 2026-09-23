@@ -23,10 +23,14 @@ export function Search() {
         {results?.models.length === 0 && <div className={`${ui.card} ${ui.empty}`}>No models match.</div>}
         <div className={s.grid}>
           {results?.models.map((m) => (
-            <Link key={m._id} to={versionPath(m.versionId)} className={s.card}>
+            <Link key={m.versionId} to={versionPath(m.versionId)} className={s.card}>
               <span className={ui.monoLabel}>{m.provider}</span>
               <span className={s.modelName}>{m.displayName}</span>
-              <span className={ui.meta}>{m.versionId}</span>
+              <span className={ui.meta}>
+                {m.reviewCount > 0
+                  ? `${m.reviewCount} ${m.reviewCount === 1 ? "review" : "reviews"}`
+                  : "No reviews yet"}
+              </span>
             </Link>
           ))}
         </div>
