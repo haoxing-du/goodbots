@@ -3,6 +3,9 @@ import { Doc, Id } from "./_generated/dataModel";
 import { avg, compareAxes, publicAxis } from "./lib";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
+/** Custom axes are suggested on the homepage once this many different people rated on them. */
+export const MIN_RATERS_TO_SUGGEST = 3;
+
 /** A version needs this many ratings (on that axis) to win a "best" card. */
 export const MIN_REVIEWS_FOR_BEST = 20;
 
@@ -110,15 +113,32 @@ export const homeStats = query({
       },
     ];
 
+    const suggestable = [];
+    for (const a of axes) {
+      if (a.status !== "active") continue;
+      if (a.core) {
+        suggestable.push(a);
+        continue;
+      }
+      if (a.ratingCount < MIN_RATERS_TO_SUGGEST) continue;
+      const raters = new Set(
+        (
+          await ctx.db
+            .query("reviewScores")
+            .withIndex("by_axis", (q) => q.eq("axisId", a._id))
+            .collect()
+        ).map((r) => r.userId),
+      );
+      if (raters.size >= MIN_RATERS_TO_SUGGEST) suggestable.push(a);
+    }
+
     return {
       reviewerCount: site?.reviewerCount ?? 0,
       reviewedModelCount: rows.filter((r) => r.stats.reviewCount > 0).length,
       versions: rows.map(ref), // most-reviewed first; the hero defaults to versions[0]
-      // Axes the hero can suggest: core plus every custom axis anyone has rated on.
-      axes: axes
-        .filter((a) => a.status === "active" && (a.core || a.ratingCount > 0))
-        .sort(compareAxes)
-        .map(publicAxis),
+      // Axes the hero can suggest: core, plus custom axes rated by enough different people
+      // (so one person can't put a new axis on the homepage).
+      axes: suggestable.sort(compareAxes).map(publicAxis),
       cards,
     };
   },

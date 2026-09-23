@@ -2,6 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { ConvexError } from "convex/values";
 import { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx } from "./_generated/server";
+import { assertClean } from "./moderation";
 
 /** The seeded axes every review form starts with, in display order. */
 export const CORE_AXES = [
@@ -73,8 +74,13 @@ export function cleanAxisName(raw: string) {
     throw new ConvexError("Axis names must be 2–40 characters.");
   }
   if (slug === "overall") throw new ConvexError("“Overall” is already the star rating.");
+  assertClean(name, "axis name");
   return { name, slug };
 }
+
+/** Anyone can add axes, but at most this many per day. */
+export const MAX_NEW_AXES_PER_DAY = 5;
+const DAY = 24 * 60 * 60 * 1000;
 
 export type ScoreInput = { axisId?: Id<"axes">; name?: string; hint?: string; score: number };
 
@@ -82,6 +88,7 @@ export function cleanAxisHint(raw: string | undefined) {
   const hint = raw?.trim().replace(/\s+/g, " ");
   if (!hint) return undefined;
   if (hint.length > 80) throw new ConvexError("Keep the description to one line (80 characters).");
+  assertClean(hint, "description");
   return hint;
 }
 
@@ -107,6 +114,15 @@ export async function resolveScores(
         .withIndex("by_slug", (q) => q.eq("slug", slug))
         .unique();
       if (!axis) {
+        const recent = await ctx.db
+          .query("axes")
+          .withIndex("by_creator", (q) => q.eq("createdBy", userId).gte("createdAt", Date.now() - DAY))
+          .collect();
+        if (recent.length >= MAX_NEW_AXES_PER_DAY) {
+          throw new ConvexError(
+            `You can add up to ${MAX_NEW_AXES_PER_DAY} new axes a day. Rate on existing ones for now.`,
+          );
+        }
         const id = await ctx.db.insert("axes", {
           name,
           slug,

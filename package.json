@@ -16,6 +16,7 @@
     "@auth/core": "^0.41.3",
     "@convex-dev/auth": "^0.0.95",
     "convex": "^1.46.0",
+    "obscenity": "^0.4.6",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router-dom": "^7.18.4"

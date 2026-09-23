@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internalQuery, mutation, query } from "./_generated/server";
+import { assertClean } from "./moderation";
 import { Id } from "./_generated/dataModel";
 import {
   getViewer,
@@ -164,6 +165,8 @@ export const updateProfile = mutation({
     if (!/^[A-Za-z0-9_]{3,20}$/.test(handle)) {
       throw new ConvexError("Handle must be 3–20 letters, numbers or underscores.");
     }
+    assertClean(name, "name");
+    assertClean(handle, "handle");
     const handleLower = handle.toLowerCase();
     const taken = await ctx.db
       .query("users")

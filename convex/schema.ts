@@ -71,7 +71,9 @@ export default defineSchema({
     ratingCount: v.number(), // site-wide number of scores on this axis
     createdBy: v.optional(v.id("users")),
     createdAt: v.number(),
-  }).index("by_slug", ["slug"]),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_creator", ["createdBy", "createdAt"]),
 
   reviews: defineTable({
     userId: v.id("users"),
