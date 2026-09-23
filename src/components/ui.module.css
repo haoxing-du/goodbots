@@ -119,7 +119,7 @@
 
 .input {
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: var(--r-sm);
   padding: 9px 12px;
   font-size: 14px;

@@ -62,14 +62,14 @@
 .search {
   width: 260px;
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: var(--r-md);
   padding: 8px 12px;
   font-size: 14px;
   transition: border-color 120ms;
 }
 .search:hover {
-  border-color: var(--outline);
+  border-color: var(--muted-1);
 }
 .search::placeholder {
   color: var(--muted-3);
