@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { avg, AXES, publicUser, statsFor } from "./lib";
+import { avg, axisIndex, compareAxes, publicAxis, publicUser, statsFor } from "./lib";
 
 async function versionsOf(ctx: QueryCtx, modelId: Id<"models">) {
   const versions = await ctx.db
@@ -66,13 +66,33 @@ export const page = query({
       : versions[0];
     if (!version) return { model, versions, version: null } as const;
 
-    const stats = await statsFor(ctx, version._id);
-    const axes = (["overall", ...AXES] as const).map((key) => ({
-      key,
-      avg: stats ? avg(stats[key]) : null,
-      count: stats?.[key].count ?? 0,
-      hist: stats?.[key].hist ?? [0, 0, 0, 0, 0],
-    }));
+    const [stats, axisStats, axisDocs] = await Promise.all([
+      statsFor(ctx, version._id),
+      ctx.db
+        .query("axisStats")
+        .withIndex("by_version_axis", (q) => q.eq("versionId", version._id))
+        .collect(),
+      axisIndex(ctx),
+    ]);
+    const overall = {
+      avg: stats ? avg(stats.overall) : null,
+      count: stats?.overall.count ?? 0,
+      hist: stats?.overall.hist ?? [0, 0, 0, 0, 0],
+    };
+    // Core axes always; custom axes once anyone has rated this version on them.
+    const byAxis = new Map(axisStats.map((s) => [s.axisId, s]));
+    const axes = [...axisDocs.values()]
+      .filter((a) => a.status === "active" && (a.core || (byAxis.get(a._id)?.count ?? 0) > 0))
+      .sort(compareAxes)
+      .map((a) => {
+        const s = byAxis.get(a._id);
+        return {
+          ...publicAxis(a),
+          avg: s ? avg(s) : null,
+          count: s?.count ?? 0,
+          hist: s?.hist ?? [0, 0, 0, 0, 0],
+        };
+      });
 
     // Head to head: group every take involving this version by opponent.
     const [wins, losses] = await Promise.all([
@@ -129,6 +149,7 @@ export const page = query({
       version,
       reviewCount: stats?.reviewCount ?? 0,
       takeCount: stats?.takeCount ?? 0,
+      overall,
       axes,
       headToHead: headToHead.filter((h) => h.opponent),
     } as const;

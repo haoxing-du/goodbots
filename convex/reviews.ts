@@ -3,17 +3,21 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import {
-  applyScoresToStats,
+  applyOverallToStats,
   avg,
+  axisIndex,
   bumpReviewerCount,
-  AXES,
   checkScore,
+  compareAxes,
   matcherFor,
+  publicAxis,
   publicUser,
   REACTION_KINDS,
   ReactionKind,
+  replaceReviewScores,
   requireUser,
-  scoresOf,
+  resolveScores,
+  scoresForReview,
   statsFor,
   versionLabel,
 } from "./lib";
@@ -22,6 +26,7 @@ const WEEK = 7 * 24 * 60 * 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
 
 type Matcher = Awaited<ReturnType<typeof matcherFor>>;
+type AxisMap = Awaited<ReturnType<typeof axisIndex>>;
 
 /** Everything a review card (model page or feed) needs. */
 export async function hydrateReview(
@@ -29,8 +34,9 @@ export async function hydrateReview(
   review: Doc<"reviews">,
   viewerId: Id<"users"> | null,
   match: Matcher,
+  axes: AxisMap,
 ) {
-  const [user, version, latest, reactions] = await Promise.all([
+  const [user, version, latest, reactions, scores] = await Promise.all([
     ctx.db.get(review.userId),
     versionLabel(ctx, review.versionId),
     ctx.db
@@ -42,6 +48,7 @@ export async function hydrateReview(
       .query("reactions")
       .withIndex("by_review", (q) => q.eq("reviewId", review._id))
       .collect(),
+    scoresForReview(ctx, review._id, axes),
   ]);
   const counts = Object.fromEntries(REACTION_KINDS.map((k) => [k, 0])) as Record<
     ReactionKind,
@@ -56,7 +63,8 @@ export async function hydrateReview(
     _id: review._id,
     user: user ? publicUser(user) : null,
     version,
-    scores: scoresOf(review),
+    overall: review.overall,
+    scores,
     text: latest?.text ?? "",
     prompt: latest?.prompt,
     response: latest?.response,
@@ -72,15 +80,17 @@ export type ReviewCard = Awaited<ReturnType<typeof hydrateReview>>;
 
 // ---------- mutations ----------
 
+const scoreInput = v.object({
+  axisId: v.optional(v.id("axes")),
+  name: v.optional(v.string()), // a new (or existing) axis by name
+  score: v.number(),
+});
+
 export const upsert = mutation({
   args: {
     versionId: v.id("versions"),
-    overall: v.number(),
-    smarts: v.optional(v.number()),
-    taste: v.optional(v.number()),
-    vibes: v.optional(v.number()),
-    aligned: v.optional(v.number()),
-    mom: v.optional(v.number()),
+    overall: v.optional(v.number()),
+    scores: v.array(scoreInput),
     text: v.string(),
     prompt: v.optional(v.string()),
     response: v.optional(v.string()),
@@ -92,19 +102,12 @@ export const upsert = mutation({
       throw new ConvexError("That version isn't available to review.");
     }
     checkScore(args.overall, "Overall");
-    for (const a of AXES) checkScore(args[a], a);
+    if (args.scores.length > 40) throw new ConvexError("That's a lot of axes. Keep it under 40.");
     const text = args.text.trim();
     if (!text) throw new ConvexError("Write a few words about it.");
+    const scores = await resolveScores(ctx, user._id, args.scores);
 
     const now = Date.now();
-    const scores = {
-      overall: args.overall,
-      smarts: args.smarts,
-      taste: args.taste,
-      vibes: args.vibes,
-      aligned: args.aligned,
-      mom: args.mom,
-    };
     const existing = await ctx.db
       .query("reviews")
       .withIndex("by_user_version", (q) =>
@@ -115,14 +118,14 @@ export const upsert = mutation({
     let reviewId: Id<"reviews">;
     if (existing) {
       // An update: new scores replace the old ones; the entry is appended to history.
-      await applyScoresToStats(ctx, args.versionId, scoresOf(existing), scores);
+      await applyOverallToStats(ctx, args.versionId, existing.overall, args.overall);
       await ctx.db.replace(existing._id, {
         userId: existing.userId,
         versionId: existing.versionId,
+        overall: args.overall,
         reactionCount: existing.reactionCount,
         createdAt: existing.createdAt,
         updatedAt: now,
-        ...scores,
       });
       reviewId = existing._id;
     } else {
@@ -135,13 +138,18 @@ export const upsert = mutation({
       reviewId = await ctx.db.insert("reviews", {
         userId: user._id,
         versionId: args.versionId,
+        overall: args.overall,
         reactionCount: 0,
         createdAt: now,
         updatedAt: now,
-        ...scores,
       });
-      await applyScoresToStats(ctx, args.versionId, null, scores);
+      await applyOverallToStats(ctx, args.versionId, null, args.overall);
     }
+    await replaceReviewScores(
+      ctx,
+      { _id: reviewId, userId: user._id, versionId: args.versionId },
+      scores,
+    );
     await ctx.db.insert("reviewEntries", {
       reviewId,
       text,
@@ -160,7 +168,7 @@ export const byVersion = query({
   args: { versionId: v.id("versions"), stars: v.optional(v.number()) },
   handler: async (ctx, { versionId, stars }) => {
     const viewerId = await getAuthUserId(ctx);
-    const match = await matcherFor(ctx, viewerId);
+    const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
     let reviews = await ctx.db
       .query("reviews")
       .withIndex("by_version_reactions", (q) => q.eq("versionId", versionId))
@@ -168,7 +176,7 @@ export const byVersion = query({
       .take(200);
     if (stars) reviews = reviews.filter((r) => r.overall === stars);
     return await Promise.all(
-      reviews.slice(0, 50).map((r) => hydrateReview(ctx, r, viewerId, match)),
+      reviews.slice(0, 50).map((r) => hydrateReview(ctx, r, viewerId, match, axes)),
     );
   },
 });
@@ -177,7 +185,7 @@ export const feed = query({
   args: { tab: v.union(v.literal("latest"), v.literal("top")) },
   handler: async (ctx, { tab }) => {
     const viewerId = await getAuthUserId(ctx);
-    const match = await matcherFor(ctx, viewerId);
+    const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
     let reviews: Doc<"reviews">[];
     if (tab === "latest") {
       reviews = await ctx.db
@@ -200,7 +208,7 @@ export const feed = query({
       );
     }
     return await Promise.all(
-      reviews.map((r) => hydrateReview(ctx, r, viewerId, match)),
+      reviews.map((r) => hydrateReview(ctx, r, viewerId, match, axes)),
     );
   },
 });
@@ -245,6 +253,11 @@ export const forWrite = query({
         });
       }
     }
+    // Every axis anyone has rated on (plus the core ones), core first.
+    const axes = (await ctx.db.query("axes").collect())
+      .filter((a) => a.status === "active" && (a.core || a.ratingCount > 0))
+      .sort(compareAxes)
+      .map(publicAxis);
     const prior: Record<string, number> = {};
     if (viewerId) {
       const mine = await ctx.db
@@ -253,13 +266,13 @@ export const forWrite = query({
         .collect();
       for (const r of mine) prior[r.versionId] = r.createdAt;
     }
-    return { options, prior };
+    return { options, axes, prior };
   },
 });
 
 /**
- * Community averages for a version, returned only once the viewer has posted a
- * review of it (anti-anchoring).
+ * Community averages for a version (overall + every axis), returned only once
+ * the viewer has posted a review of it (anti-anchoring).
  */
 export const communityAfterPost = query({
   args: { versionId: v.id("versions") },
@@ -273,13 +286,25 @@ export const communityAfterPost = query({
       )
       .unique();
     if (!mine) return null;
-    const stats = await statsFor(ctx, versionId);
-    if (!stats) return null;
+    const [stats, axisStats, myScores] = await Promise.all([
+      statsFor(ctx, versionId),
+      ctx.db
+        .query("axisStats")
+        .withIndex("by_version_axis", (q) => q.eq("versionId", versionId))
+        .collect(),
+      ctx.db
+        .query("reviewScores")
+        .withIndex("by_review", (q) => q.eq("reviewId", mine._id))
+        .collect(),
+    ]);
+    const axes: Record<string, number | null> = {};
+    for (const s of axisStats) axes[s.axisId] = avg(s);
+    const myAxes: Record<string, number> = {};
+    for (const s of myScores) myAxes[s.axisId] = s.score;
     return {
-      mine: scoresOf(mine),
-      avg: Object.fromEntries(
-        (["overall", ...AXES] as const).map((k) => [k, avg(stats[k])]),
-      ) as Record<"overall" | (typeof AXES)[number], number | null>,
+      overall: stats ? avg(stats.overall) : null,
+      axes,
+      mine: { overall: mine.overall, axes: myAxes },
     };
   },
 });

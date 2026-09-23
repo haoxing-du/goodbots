@@ -1,6 +1,12 @@
 import { internalMutation, MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
-import { applyScoresToStats, bumpTakeCount, REACTION_KINDS } from "./lib";
+import {
+  applyOverallToStats,
+  bumpTakeCount,
+  CORE_AXES,
+  REACTION_KINDS,
+  replaceReviewScores,
+} from "./lib";
 import { createVersion } from "./admin";
 
 const MIN = 60 * 1000;
@@ -36,10 +42,20 @@ type Ver = (typeof MODELS)[number]["versions"][number][0];
 // overall, smarts, taste, vibes, aligned, mom (0 = skipped)
 type S = [number, number, number, number, number, number];
 
+// Custom axes people "added" — [name, created by].
+const CUSTOM_AXES: [string, Handle][] = [
+  ["Coding", "kt_builds"],
+  ["Design", "priya_r"],
+  ["Humor", "jonahb"],
+  ["Dessert recipes", "mirac"],
+  ["Long documents", "lena_evals"],
+];
+
 type Entry = { text: string; overall: number; ago: number; prompt?: string; response?: string };
-const REVIEWS: { by: Handle; v: Ver; s: S; entries: Entry[] }[] = [
+// `c`: custom axis scores by slug.
+const REVIEWS: { by: Handle; v: Ver; s: S; c?: Record<string, number>; entries: Entry[] }[] = [
   {
-    by: "priya_r", v: "claude-opus-4-1", s: [5, 5, 5, 4, 5, 4],
+    by: "priya_r", v: "claude-opus-4-1", s: [5, 5, 5, 4, 5, 4], c: { design: 4, "long-documents": 5 },
     entries: [
       { overall: 4, ago: 41 * DAY, text: "Pushes back on bad ideas instead of polishing them. A bit long-winded in chat." },
       {
@@ -52,26 +68,26 @@ const REVIEWS: { by: Handle; v: Ver; s: S; entries: Entry[] }[] = [
   },
   { by: "jonahb", v: "claude-opus-4-1", s: [2, 5, 4, 1, 4, 2], entries: [{ overall: 2, ago: 4 * DAY, text: "Brilliant coworker you would never get a beer with. Every answer is a memo. I asked for a yes or no and got three headers and a caveat section." }] },
   { by: "lena_evals", v: "claude-opus-4-1", s: [4, 5, 4, 4, 4, 3], entries: [{ overall: 4, ago: 7 * DAY, text: "Great taste in code and prose. Too cautious for my mom though — she asked about a mole and got a very polite \"see a doctor\" essay." }] },
-  { by: "kt_builds", v: "claude-opus-4-1", s: [5, 5, 5, 4, 4, 0], entries: [{ overall: 5, ago: 9 * DAY, text: "Refactored a 4k-line module without losing the plot once. The only model I let touch migrations." }] },
-  { by: "samokafor", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 4], entries: [{ overall: 4, ago: 12 * MIN, text: "Smartest thing I've used for math proofs, and it knows it. Taste is fine, nothing more — its UI suggestions all look like the same SaaS landing page." }] },
+  { by: "kt_builds", v: "claude-opus-4-1", s: [5, 5, 5, 4, 4, 0], c: { coding: 5 }, entries: [{ overall: 5, ago: 9 * DAY, text: "Refactored a 4k-line module without losing the plot once. The only model I let touch migrations." }] },
+  { by: "samokafor", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 4], c: { design: 2 }, entries: [{ overall: 4, ago: 12 * MIN, text: "Smartest thing I've used for math proofs, and it knows it. Taste is fine, nothing more — its UI suggestions all look like the same SaaS landing page." }] },
   { by: "priya_r", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 4], entries: [{ overall: 4, ago: 20 * DAY, text: "Writes like a consultant: correct, confident, and just slightly padded. Excellent at finding the bug I swore wasn't there." }] },
   { by: "jonahb", v: "gpt-5-2025-08-07", s: [5, 5, 4, 4, 3, 4], entries: [{ overall: 5, ago: 3 * HOUR, text: "Finally, a model that answers the question I asked. Short when I want short, long when I ask for long." }] },
   { by: "lena_evals", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 3, 3], entries: [{ overall: 4, ago: 6 * DAY, text: "Top-tier on my eval suite. Still agrees with me a little too fast when I'm wrong on purpose." }] },
-  { by: "mirac", v: "gemini-2.5-pro", s: [5, 4, 4, 5, 4, 5], entries: [{ overall: 5, ago: 1 * HOUR, text: "Underrated. The long-context recall is absurd and it's the only one my mom actually enjoys talking to. Warm without being a golden retriever." }] },
+  { by: "mirac", v: "gemini-2.5-pro", s: [5, 4, 4, 5, 4, 5], c: { "dessert-recipes": 5, "long-documents": 5 }, entries: [{ overall: 5, ago: 1 * HOUR, text: "Underrated. The long-context recall is absurd and it's the only one my mom actually enjoys talking to. Warm without being a golden retriever." }] },
   { by: "priya_r", v: "gemini-2.5-pro", s: [4, 4, 4, 4, 4, 5], entries: [{ overall: 4, ago: 39 * DAY, text: "Remembers the whole doc and doesn't flatter you. Occasionally forgets what format I asked for." }] },
   { by: "lena_evals", v: "gemini-2.5-pro", s: [4, 4, 3, 4, 4, 4], entries: [{ overall: 4, ago: 15 * DAY, text: "Reliable workhorse. Dropped a 900-page PDF in and got citations that actually checked out." }] },
-  { by: "ade_l", v: "grok-4-0709", s: [3, 4, 2, 4, 2, 2], entries: [{ overall: 3, ago: 5 * HOUR, text: "Fun, fast, and will absolutely tell you what you want to hear. Great for brainstorming, I would not let it near my taxes." }] },
+  { by: "ade_l", v: "grok-4-0709", s: [3, 4, 2, 4, 2, 2], c: { humor: 4 }, entries: [{ overall: 3, ago: 5 * HOUR, text: "Fun, fast, and will absolutely tell you what you want to hear. Great for brainstorming, I would not let it near my taxes." }] },
   { by: "priya_r", v: "grok-4-0709", s: [2, 4, 2, 4, 1, 2], entries: [{ overall: 2, ago: 54 * DAY, text: "Entertaining until you need it to be right. Called my obviously broken proof \"elegant\"." }] },
-  { by: "jonahb", v: "grok-4-0709", s: [4, 4, 3, 5, 3, 3], entries: [{ overall: 4, ago: 2 * DAY, text: "The only model with a sense of humor that lands. Yes it's a little reckless. So am I." }] },
-  { by: "theopark", v: "deepseek-v3.1", s: [4, 4, 3, 3, 4, 3], entries: [{ overall: 4, ago: 8 * HOUR, text: "Absurd value. It's 90% of the frontier for a rounding error of the price, and the thinking mode is genuinely good at code." }] },
+  { by: "jonahb", v: "grok-4-0709", s: [4, 4, 3, 5, 3, 3], c: { humor: 5 }, entries: [{ overall: 4, ago: 2 * DAY, text: "The only model with a sense of humor that lands. Yes it's a little reckless. So am I." }] },
+  { by: "theopark", v: "deepseek-v3.1", s: [4, 4, 3, 3, 4, 3], c: { coding: 5 }, entries: [{ overall: 4, ago: 8 * HOUR, text: "Absurd value. It's 90% of the frontier for a rounding error of the price, and the thinking mode is genuinely good at code." }] },
   { by: "lena_evals", v: "deepseek-v3.1", s: [4, 4, 3, 3, 4, 0], entries: [{ overall: 4, ago: 10 * DAY, text: "Surprisingly strict about not making things up. Prose is flat but the reasoning is clean." }] },
   { by: "rosad", v: "llama-4-maverick", s: [3, 3, 3, 3, 3, 3], entries: [{ overall: 3, ago: 1 * DAY, text: "Fine, forgettable, and I can run it myself. That last part carries a lot of weight." }] },
   { by: "samokafor", v: "llama-4-maverick", s: [3, 3, 2, 4, 3, 3], entries: [{ overall: 3, ago: 11 * DAY, text: "Chatty and friendly, but it gets lost on anything multi-step. Nice for quick rewrites." }] },
   { by: "nadia_h", v: "claude-opus-4", s: [4, 4, 5, 4, 4, 4], entries: [{ overall: 4, ago: 30 * DAY, text: "The version that made me cancel my other subscription. 4.1 is better at code, but this one wrote nicer." }] },
-  { by: "kt_builds", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 0], entries: [{ overall: 4, ago: 13 * HOUR, text: "Fantastic at planning agents. Less fantastic at admitting a tool call failed." }] },
-  { by: "demo", v: "claude-opus-4-1", s: [5, 5, 4, 4, 5, 4], entries: [{ overall: 5, ago: 5 * DAY, text: "Best editor I've worked with, human or otherwise." }] },
+  { by: "kt_builds", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 0], c: { coding: 4 }, entries: [{ overall: 4, ago: 13 * HOUR, text: "Fantastic at planning agents. Less fantastic at admitting a tool call failed." }] },
+  { by: "demo", v: "claude-opus-4-1", s: [5, 5, 4, 4, 5, 4], c: { coding: 5 }, entries: [{ overall: 5, ago: 5 * DAY, text: "Best editor I've worked with, human or otherwise." }] },
   { by: "demo", v: "gpt-5-2025-08-07", s: [4, 5, 3, 3, 4, 3], entries: [{ overall: 4, ago: 6 * DAY, text: "Sharp and fast. Gives me the answer, then three things I didn't ask about." }] },
-  { by: "demo", v: "gemini-2.5-pro", s: [4, 4, 4, 5, 4, 5], entries: [{ overall: 4, ago: 8 * DAY, text: "The friendliest of the bunch, and it never loses track of a long doc." }] },
+  { by: "demo", v: "gemini-2.5-pro", s: [4, 4, 4, 5, 4, 5], c: { "long-documents": 4 }, entries: [{ overall: 4, ago: 8 * DAY, text: "The friendliest of the bunch, and it never loses track of a long doc." }] },
   { by: "demo", v: "grok-4-0709", s: [2, 4, 2, 4, 1, 2], entries: [{ overall: 2, ago: 9 * DAY, text: "Funny. Wrong a lot. Agrees with anything." }] },
 ];
 
@@ -116,6 +132,15 @@ const BULK_PROFILES: Record<string, [number, number, number, number, number, num
   "deepseek-v3.1": [3.9, 4.1, 3.3, 3.2, 3.9, 3.1],
   "grok-4-0709": [3.3, 3.8, 3.0, 4.6, 2.6, 2.7],
 };
+// Per-version means for custom axes; each background review rates one of them 35% of the time.
+const BULK_CUSTOM: Record<string, Record<string, number>> = {
+  coding: { "claude-opus-4-1": 4.7, "gpt-5-2025-08-07": 4.5, "gemini-2.5-pro": 4.0, "deepseek-v3.1": 4.4, "grok-4-0709": 3.6 },
+  design: { "claude-opus-4-1": 4.4, "gpt-5-2025-08-07": 3.2, "gemini-2.5-pro": 3.8, "deepseek-v3.1": 3.0, "grok-4-0709": 3.3 },
+  humor: { "claude-opus-4-1": 3.4, "gpt-5-2025-08-07": 3.0, "gemini-2.5-pro": 3.8, "deepseek-v3.1": 2.9, "grok-4-0709": 4.6 },
+  "dessert-recipes": { "claude-opus-4-1": 4.1, "gpt-5-2025-08-07": 4.0, "gemini-2.5-pro": 4.5, "deepseek-v3.1": 3.5, "grok-4-0709": 3.2 },
+  "long-documents": { "claude-opus-4-1": 4.3, "gpt-5-2025-08-07": 4.1, "gemini-2.5-pro": 4.8, "deepseek-v3.1": 3.6, "grok-4-0709": 3.0 },
+};
+
 const BULK_TEXT: Record<string, string[]> = {
   "claude-opus-4-1": ["Best writing partner I've had.", "Careful, sometimes too careful.", "Catches my mistakes before I do.", "Long answers, but good ones."],
   "gpt-5-2025-08-07": ["Fast and sharp on technical questions.", "Great at math, bland at prose.", "Reliable default for work.", "Confident even when it shouldn't be."],
@@ -172,20 +197,71 @@ export const run = internalMutation({
       );
     }
 
+    // Axes: the five core ones, then a few custom ones "added" by reviewers.
+    const axisBySlug = new Map<string, Id<"axes">>();
+    for (const [i, a] of CORE_AXES.entries()) {
+      axisBySlug.set(
+        a.slug,
+        await ctx.db.insert("axes", { ...a, core: true, order: i, status: "active", ratingCount: 0, createdAt: now }),
+      );
+    }
+    for (const [name, by] of CUSTOM_AXES) {
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      axisBySlug.set(
+        slug,
+        await ctx.db.insert("axes", {
+          name,
+          slug,
+          core: false,
+          status: "active",
+          ratingCount: 0,
+          createdBy: users.get(by),
+          createdAt: now - 30 * DAY,
+        }),
+      );
+    }
+
+    /** Inserts a review with its overall + axis scores and keeps all stats in sync. */
+    const seedReview = async (args: {
+      userId: Id<"users">;
+      versionId: Id<"versions">;
+      overall: number | undefined;
+      core: (number | undefined)[]; // in CORE_AXES order
+      custom?: Record<string, number>;
+      createdAt: number;
+      updatedAt: number;
+    }) => {
+      const reviewId = await ctx.db.insert("reviews", {
+        userId: args.userId,
+        versionId: args.versionId,
+        overall: args.overall,
+        reactionCount: 0,
+        createdAt: args.createdAt,
+        updatedAt: args.updatedAt,
+      });
+      await applyOverallToStats(ctx, args.versionId, null, args.overall);
+      const scores = new Map<Id<"axes">, number>();
+      CORE_AXES.forEach((a, i) => {
+        const n = args.core[i];
+        if (n) scores.set(axisBySlug.get(a.slug)!, n);
+      });
+      for (const [slug, n] of Object.entries(args.custom ?? {})) scores.set(axisBySlug.get(slug)!, n);
+      await replaceReviewScores(ctx, { _id: reviewId, userId: args.userId, versionId: args.versionId }, scores);
+      return reviewId;
+    };
+
     const reviewIds: Id<"reviews">[] = [];
     for (const r of REVIEWS) {
-      const [overall, smarts, taste, vibes, aligned, mom] = r.s.map((n) => n || undefined);
-      const scores = { overall: overall!, smarts, taste, vibes, aligned, mom };
+      const [overall, ...core] = r.s.map((n) => n || undefined);
       const versionId = versions.get(r.v)!;
-      const first = now - r.entries[0].ago;
-      const last = now - r.entries[r.entries.length - 1].ago;
-      const reviewId = await ctx.db.insert("reviews", {
+      const reviewId = await seedReview({
         userId: users.get(r.by)!,
         versionId,
-        reactionCount: 0,
-        createdAt: first,
-        updatedAt: last,
-        ...scores,
+        overall,
+        core,
+        custom: r.c,
+        createdAt: now - r.entries[0].ago,
+        updatedAt: now - r.entries[r.entries.length - 1].ago,
       });
       for (const e of r.entries) {
         await ctx.db.insert("reviewEntries", {
@@ -197,7 +273,6 @@ export const run = internalMutation({
           createdAt: now - e.ago,
         });
       }
-      await applyScoresToStats(ctx, versionId, null, scores);
       reviewIds.push(reviewId);
     }
 
@@ -218,26 +293,30 @@ export const run = internalMutation({
         if ((i + j) % 5 === 0) continue;
         const p = BULK_PROFILES[v];
         const s = p.map((mean) => clamp(mean + (bulkRand() * 2 - 1) * 1.2));
-        const axis = (k: number) => (bulkRand() < 0.15 ? undefined : s[k]);
-        const scores = { overall: s[0], smarts: axis(1), taste: axis(2), vibes: axis(3), aligned: axis(4), mom: axis(5) };
+        const core = s.slice(1).map((n) => (bulkRand() < 0.15 ? undefined : n));
+        const custom: Record<string, number> = {};
+        if (bulkRand() < 0.35) {
+          const slugs = Object.keys(BULK_CUSTOM);
+          const slug = slugs[Math.floor(bulkRand() * slugs.length)];
+          custom[slug] = clamp(BULK_CUSTOM[slug][v] + (bulkRand() * 2 - 1) * 1.2);
+        }
         const at = now - (14 + Math.floor(bulkRand() * 42)) * DAY;
-        const versionId = versions.get(v)!;
-        const reviewId = await ctx.db.insert("reviews", {
+        const reviewId = await seedReview({
           userId,
-          versionId,
-          reactionCount: 0,
+          versionId: versions.get(v)!,
+          overall: s[0],
+          core,
+          custom,
           createdAt: at,
           updatedAt: at,
-          ...scores,
         });
         const texts = BULK_TEXT[v];
         await ctx.db.insert("reviewEntries", {
           reviewId,
           text: texts[(i + j) % texts.length],
-          overallAtTime: scores.overall,
+          overallAtTime: s[0],
           createdAt: at,
         });
-        await applyScoresToStats(ctx, versionId, null, scores);
       }
     }
 
@@ -284,7 +363,22 @@ export const run = internalMutation({
   },
 });
 
-async function clear(ctx: MutationCtx, table: "models" | "versions" | "reviews" | "reviewEntries" | "reactions" | "takes" | "modelRequests" | "versionStats" | "siteStats") {
+const APP_TABLES = [
+  "models",
+  "versions",
+  "axes",
+  "reviews",
+  "reviewEntries",
+  "reviewScores",
+  "axisStats",
+  "reactions",
+  "takes",
+  "modelRequests",
+  "versionStats",
+  "siteStats",
+] as const;
+
+async function clear(ctx: MutationCtx, table: (typeof APP_TABLES)[number]) {
   for (const doc of await ctx.db.query(table).collect()) await ctx.db.delete(doc._id);
 }
 
@@ -292,7 +386,7 @@ async function clear(ctx: MutationCtx, table: "models" | "versions" | "reviews" 
 export const reset = internalMutation({
   args: {},
   handler: async (ctx) => {
-    for (const t of ["models", "versions", "reviews", "reviewEntries", "reactions", "takes", "modelRequests", "versionStats", "siteStats"] as const) {
+    for (const t of APP_TABLES) {
       await clear(ctx, t);
     }
     const seeded = new Set<string>([...USERS.map((u) => u[1]), ...BULK_USERS.map((u) => u.handle)]);

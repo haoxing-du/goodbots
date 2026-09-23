@@ -6,7 +6,6 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { MinimalBar } from "../components/TopBar";
 import { useSignIn } from "../components/SignIn";
-import { AXES } from "../lib/axes";
 import { Draft, loadDraft, saveDraft } from "../lib/draft";
 import { proseDate } from "../lib/format";
 import ui from "../components/ui.module.css";
@@ -58,9 +57,29 @@ export function WriteReview() {
 
   const done = posted === selected._id;
   const priorAt = data.prior[selected._id];
-  const rated = AXES.filter((a) => draft.axes[a.key]).length;
-  const canPost = draft.overall > 0 && draft.text.trim().length > 0 && !busy;
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
+
+  // Axes added in this draft that don't exist yet (after posting they do, and merge in).
+  const knownSlugs = new Set(data.axes.map((a) => a.slug));
+  const pendingAxes = draft.newAxes.filter((n) => !knownSlugs.has(axisSlug(n.name)));
+  // Your score on an axis: while editing, from the draft; after posting, from the server.
+  const valueFor = (axis: { _id: string; slug: string }) =>
+    done
+      ? (community?.mine.axes[axis._id] ?? 0)
+      : (draft.scores[axis._id] ?? draft.newAxes.find((n) => axisSlug(n.name) === axis.slug)?.score ?? 0);
+  const setScore = (axis: { _id: string; slug: string }, n: number) =>
+    setDraft((d) => {
+      const scores = { ...d.scores };
+      if (n) scores[axis._id] = n;
+      else delete scores[axis._id];
+      return { ...d, scores, newAxes: d.newAxes.filter((x) => axisSlug(x.name) !== axis.slug) };
+    });
+  const setNewScore = (name: string, n: number) =>
+    set({ newAxes: draft.newAxes.map((x) => (x.name === name ? { ...x, score: n } : x)) });
+
+  const rated =
+    data.axes.filter((a) => valueFor(a) > 0).length + pendingAxes.filter((a) => a.score > 0).length;
+  const canPost = draft.text.trim().length > 0 && !busy;
 
   const submit = () =>
     requireAuth(async () => {
@@ -70,8 +89,14 @@ export function WriteReview() {
       try {
         await upsert({
           versionId: selected._id,
-          overall: draft.overall,
-          ...draft.axes,
+          overall: draft.overall || undefined,
+          scores: [
+            ...Object.entries(draft.scores).map(([axisId, score]) => ({
+              axisId: axisId as Id<"axes">,
+              score,
+            })),
+            ...draft.newAxes.filter((x) => x.score > 0).map((x) => ({ name: x.name, score: x.score })),
+          ],
           text: draft.text,
           prompt: draft.showSnippet ? draft.prompt : undefined,
           response: draft.showSnippet ? draft.response : undefined,
@@ -136,64 +161,78 @@ export function WriteReview() {
             <div className={s.overallRow}>
               <div>
                 <div className={s.axisLabel}>Overall</div>
-                <div className={s.axisHint}>Required</div>
+                <div className={s.axisHint}>Optional</div>
               </div>
               <div className={s.starButtons} role="radiogroup" aria-label="Overall stars">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    role="radio"
-                    aria-checked={draft.overall === n}
-                    aria-label={`${n} star${n > 1 ? "s" : ""}`}
-                    disabled={done}
-                    className={n <= draft.overall ? s.starOn : s.starOff}
-                    onClick={() => set({ overall: draft.overall === n ? 0 : n })}
-                  >
-                    ★
-                  </button>
-                ))}
+                {[1, 2, 3, 4, 5].map((n) => {
+                  const v = done ? (community?.mine.overall ?? 0) : draft.overall;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      role="radio"
+                      aria-checked={v === n}
+                      aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                      disabled={done}
+                      className={n <= v ? s.starOn : s.starOff}
+                      onClick={() => set({ overall: draft.overall === n ? 0 : n })}
+                    >
+                      ★
+                    </button>
+                  );
+                })}
               </div>
               <div className={s.rightCell}>
-                {done && community?.avg.overall != null ? (
-                  <Delta mine={draft.overall} avg={community.avg.overall} />
+                {done && community?.overall != null ? (
+                  <Delta mine={community.mine.overall ?? null} avg={community.overall} />
                 ) : draft.overall ? (
                   `${draft.overall} of 5`
                 ) : (
-                  "Tap to rate"
+                  "optional"
                 )}
               </div>
             </div>
-            {AXES.map((a) => {
-              const v = draft.axes[a.key] ?? 0;
-              const avg = community?.avg[a.key];
+            {data.axes.map((a) => {
+              const v = valueFor(a);
+              const avg = community?.axes[a._id];
               return (
-                <div key={a.key} className={s.axisRow}>
-                  <div>
-                    <div className={s.axisLabel}>{a.label}</div>
-                    <div className={s.axisHint}>{a.hint}</div>
-                  </div>
-                  <div className={s.numButtons} role="radiogroup" aria-label={a.label}>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        role="radio"
-                        aria-checked={v === n}
-                        disabled={done}
-                        className={v === n ? s.numOn : s.numOff}
-                        onClick={() => set({ axes: { ...draft.axes, [a.key]: v === n ? undefined : n } })}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                  <div className={s.rightCell}>
-                    {done && avg != null ? <Delta mine={v || null} avg={avg} /> : "optional"}
-                  </div>
-                </div>
+                <AxisRow
+                  key={a._id}
+                  name={a.name}
+                  hint={a.hint ?? (a.core ? undefined : "Added by reviewers")}
+                  value={v}
+                  disabled={done}
+                  onChange={(n) => setScore(a, n)}
+                  right={done && avg != null ? <Delta mine={v || null} avg={avg} /> : "optional"}
+                />
               );
             })}
+            {!done &&
+              pendingAxes.map((x) => (
+                <AxisRow
+                  key={x.name}
+                  name={x.name}
+                  hint="New axis"
+                  value={x.score}
+                  onChange={(n) => setNewScore(x.name, n)}
+                  right={
+                    <button
+                      type="button"
+                      className={s.removeAxis}
+                      onClick={() => set({ newAxes: draft.newAxes.filter((y) => y.name !== x.name) })}
+                    >
+                      Remove
+                    </button>
+                  }
+                />
+              ))}
+            {!done && (
+              <AddAxis
+                existing={data.axes}
+                pending={pendingAxes.map((x) => x.name)}
+                onAdd={(name) => set({ newAxes: [...draft.newAxes, { name, score: 0 }] })}
+              />
+            )}
           </div>
 
           <label className={s.field}>
@@ -244,8 +283,7 @@ export function WriteReview() {
           {!done && (
             <div className={s.footer}>
               <span className={s.progress}>
-                {draft.overall ? "Overall rated" : "Overall needed"} · {rated} of 5 axes · community scores
-                appear after you post
+                {rated} {rated === 1 ? "axis" : "axes"} rated · community scores appear after you post
               </span>
               <button type="button" className={ui.btn} disabled={!canPost} onClick={submit}>
                 {busy ? "Posting…" : "Post review"}
@@ -269,7 +307,8 @@ export function WriteReview() {
             </li>
           </ul>
           <p className={s.asideNote}>
-            Skip any axis you haven't tested. Overall stars and text are required.
+            Skip anything you haven't tested; only the text is required. Missing an axis? Add
+            your own at the bottom of the list.
           </p>
         </aside>
       </div>
@@ -285,5 +324,130 @@ function Delta({ mine, avg }: { mine: number | null; avg: number }) {
     <span>
       avg {avg.toFixed(1)} · <span className={cls}>{(d >= 0 ? "+" : "−") + Math.abs(d).toFixed(1)}</span>
     </span>
+  );
+}
+
+function axisSlug(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function AxisRow({
+  name,
+  hint,
+  value,
+  disabled,
+  onChange,
+  right,
+}: {
+  name: string;
+  hint?: string;
+  value: number;
+  disabled?: boolean;
+  onChange: (n: number) => void;
+  right: React.ReactNode;
+}) {
+  return (
+    <div className={s.axisRow}>
+      <div>
+        <div className={s.axisLabel}>{name}</div>
+        {hint && <div className={s.axisHint}>{hint}</div>}
+      </div>
+      <div className={s.numButtons} role="radiogroup" aria-label={name}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            role="radio"
+            aria-checked={value === n}
+            disabled={disabled}
+            className={value === n ? s.numOn : s.numOff}
+            onClick={() => onChange(value === n ? 0 : n)}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      <div className={s.rightCell}>{right}</div>
+    </div>
+  );
+}
+
+/** "+ Rate it on something else": adds a custom axis row to this review. */
+function AddAxis({
+  existing,
+  pending,
+  onAdd,
+}: {
+  existing: { name: string; slug: string }[];
+  pending: string[];
+  onAdd: (name: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [note, setNote] = useState<string | null>(null);
+
+  if (!open) {
+    return (
+      <div className={s.addRow}>
+        <button type="button" className={ui.linkBtn} onClick={() => setOpen(true)}>
+          + Rate it on something else
+        </button>
+      </div>
+    );
+  }
+
+  const add = () => {
+    const clean = name.trim().replace(/\s+/g, " ");
+    const slug = axisSlug(clean);
+    if (clean.length < 2 || clean.length > 40 || !slug) {
+      setNote("Use 2–40 characters.");
+      return;
+    }
+    if (slug === "overall") {
+      setNote("Overall is the star rating above.");
+      return;
+    }
+    const match = existing.find((a) => a.slug === slug);
+    if (match) {
+      setNote(`${match.name} is already on the list above.`);
+      return;
+    }
+    if (pending.some((p) => axisSlug(p) === slug)) {
+      setNote("You've already added that.");
+      return;
+    }
+    onAdd(clean);
+    setName("");
+    setNote(null);
+  };
+
+  return (
+    <form
+      className={s.addRow}
+      onSubmit={(e) => {
+        e.preventDefault();
+        add();
+      }}
+    >
+      <input
+        className={`${ui.input} ${s.addInput}`}
+        value={name}
+        maxLength={40}
+        autoFocus
+        placeholder="Design, dessert recipes, legal questions…"
+        aria-label="New axis name"
+        onChange={(e) => {
+          setName(e.target.value);
+          setNote(null);
+        }}
+      />
+      <button type="submit" className={ui.btnGhost}>
+        Add
+      </button>
+      {note && <span className={s.addNote}>{note}</span>}
+    </form>
   );
 }

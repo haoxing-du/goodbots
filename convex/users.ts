@@ -8,7 +8,10 @@ import {
   publicUser,
   requireUser,
   scoreMapFor,
-  scoresOf,
+  axisIndex,
+  compareAxes,
+  publicAxis,
+  scoresForReview,
   tasteMatch,
   versionLabel,
 } from "./lib";
@@ -45,11 +48,17 @@ export const profile = query({
         .collect()
     ).sort((a, b) => b.updatedAt - a.updatedAt);
 
+    const axes = await axisIndex(ctx);
+    const coreAxes = [...axes.values()]
+      .filter((a) => a.core && a.status === "active")
+      .sort(compareAxes)
+      .map(publicAxis);
     const ratings = await Promise.all(
       reviews.map(async (r) => ({
         _id: r._id,
         version: await versionLabel(ctx, r.versionId),
-        scores: scoresOf(r),
+        overall: r.overall,
+        scores: await scoresForReview(ctx, r._id, axes),
         updatedAt: r.updatedAt,
       })),
     );
@@ -96,6 +105,7 @@ export const profile = query({
       // Email sign-ups have no name until they set one.
       needsName: viewerId === user._id && !user.displayName && !user.name,
       match,
+      coreAxes,
       reviewCount: reviews.length,
       takeCount: takeDocs.length,
       ratings,

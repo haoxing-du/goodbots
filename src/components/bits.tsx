@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { initials } from "../lib/format";
-import { AXES } from "../lib/axes";
+import { AxisScore } from "../lib/axes";
 import s from "./bits.module.css";
 
 export function Stars({ value, size = 15 }: { value: number; size?: number }) {
@@ -58,17 +58,14 @@ export function UserLink({
   );
 }
 
-type ScoreSet = Partial<Record<(typeof AXES)[number]["key"], number>>;
-
-/** Mono "SMARTS 5  TASTE 4 …" line; skipped axes are omitted. */
-export function AxisScores({ scores, stacked }: { scores: ScoreSet; stacked?: boolean }) {
-  const items = AXES.filter((a) => scores[a.key] !== undefined);
-  if (!items.length) return null;
+/** Mono "SMARTS 5  TASTE 4 …" line; only axes the reviewer rated. */
+export function AxisScores({ scores, stacked }: { scores: AxisScore[]; stacked?: boolean }) {
+  if (!scores.length) return null;
   return (
     <div className={stacked ? s.axisStack : s.axisInline}>
-      {items.map((a) => (
-        <span key={a.key} className={s.axisItem}>
-          <span className={s.axisLabel}>{a.label}</span> <span className={s.axisValue}>{scores[a.key]}</span>
+      {scores.map((a) => (
+        <span key={a._id} className={s.axisItem}>
+          <span className={s.axisLabel}>{a.name}</span> <span className={s.axisValue}>{a.score}</span>
         </span>
       ))}
     </div>

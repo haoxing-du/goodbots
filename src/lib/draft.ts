@@ -1,9 +1,8 @@
-import { AxisKey } from "./axes";
-
 /** An in-progress review, shared by the homepage hero and the write page. */
 export type Draft = {
-  overall: number;
-  axes: Partial<Record<AxisKey, number>>;
+  overall: number; // 0 = not rated (optional)
+  scores: Record<string, number>; // axisId → 1–5
+  newAxes: { name: string; score: number }[]; // axes this reviewer is adding
   text: string;
   showSnippet: boolean;
   prompt: string;
@@ -12,7 +11,8 @@ export type Draft = {
 
 export const EMPTY_DRAFT: Draft = {
   overall: 0,
-  axes: {},
+  scores: {},
+  newAxes: [],
   text: "",
   showSnippet: false,
   prompt: "",

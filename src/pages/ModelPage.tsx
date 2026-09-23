@@ -8,7 +8,6 @@ import { Pills } from "../components/Pills";
 import { AxisScores, Avatar, MatchChip, Snippet, Stars, UserLink } from "../components/bits";
 import { Reactions } from "../components/Reactions";
 import { useSignIn } from "../components/SignIn";
-import { AXES } from "../lib/axes";
 import { fmtAvg, fmtCount, timeAgo } from "../lib/format";
 import { NotFound } from "./NotFound";
 import ui from "../components/ui.module.css";
@@ -23,7 +22,7 @@ export function ModelPage() {
   if (data === null) return <NotFound what="model" />;
   if (!data.version) return <NotFound what="version" />;
   const { model, version, versions } = data;
-  const overall = data.axes.find((a) => a.key === "overall")!;
+  const overall = data.overall;
 
   return (
     <div className={ui.page}>
@@ -50,7 +49,7 @@ export function ModelPage() {
         )}
       </header>
 
-      <AxisGrid axes={data.axes} />
+      <AxisGrid axes={data.axes.filter((a) => a.core)} />
 
       <HeadToHead
         versionId={version._id}
@@ -63,7 +62,14 @@ export function ModelPage() {
   );
 }
 
-type AxisStat = { key: string; avg: number | null; count: number; hist: number[] };
+type AxisStat = {
+  _id: string;
+  name: string;
+  hint?: string;
+  avg: number | null;
+  count: number;
+  hist: number[];
+};
 
 function AxisGrid({ axes }: { axes: AxisStat[] }) {
   const [dist, setDist] = useState(() => {
@@ -92,16 +98,15 @@ function AxisGrid({ axes }: { axes: AxisStat[] }) {
         </label>
       </div>
       <div className={s.axes}>
-        {AXES.map((meta) => {
-          const a = axes.find((x) => x.key === meta.key)!;
+        {axes.map((a) => {
           const rounded = a.avg == null ? 0 : Math.round(a.avg);
           const max = Math.max(1, ...a.hist);
           return (
-            <div key={meta.key} className={`${ui.card} ${s.axisCard}`}>
-              <div className={ui.monoLabel}>{meta.label}</div>
+            <div key={a._id} className={`${ui.card} ${s.axisCard}`}>
+              <div className={ui.monoLabel}>{a.name}</div>
               <div className={s.avg}>{fmtAvg(a.avg)}</div>
               {dist ? (
-                <div className={s.hist} aria-label={`${meta.label} distribution`}>
+                <div className={s.hist} aria-label={`${a.name} distribution`}>
                   {a.hist.map((c, i) => (
                     <div key={i} className={s.bin} title={`${i + 1}: ${c}`}>
                       <div className={s.bar} style={{ height: Math.max(3, (c / max) * 38) }} />
@@ -116,9 +121,7 @@ function AxisGrid({ axes }: { axes: AxisStat[] }) {
                   ))}
                 </div>
               )}
-              <div className={s.hint}>
-                {meta.hint}
-              </div>
+              <div className={s.hint}>{a.hint}</div>
             </div>
           );
         })}
@@ -315,7 +318,7 @@ function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
             </div>
             <div className={s.reviewBody}>
               <div className={s.reviewTop}>
-                <Stars value={r.scores.overall} />
+                {r.overall ? <Stars value={r.overall} /> : <span />}
                 <span className={ui.meta}>{timeAgo(r.updatedAt)}</span>
               </div>
               <p className={ui.body}>{r.text}</p>

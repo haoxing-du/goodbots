@@ -94,6 +94,13 @@
 .modelName a:hover {
   text-decoration: underline;
 }
+.customScores {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--olive-text);
+}
 .num {
   font-family: var(--font-mono);
   font-size: 13px;

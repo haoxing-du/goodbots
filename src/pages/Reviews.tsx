@@ -57,7 +57,7 @@ export function Reviews() {
               </div>
               <div className={s.byline}>
                 <UserLink user={r.user} className={s.name} />
-                <Stars value={r.scores.overall} />
+                {r.overall && <Stars value={r.overall} />}
               </div>
               <p className={`${ui.body} ${s.text}`}>{r.text}</p>
               <AxisScores scores={r.scores} />

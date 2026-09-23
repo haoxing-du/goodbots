@@ -1,17 +1,18 @@
 import { query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { avg } from "./lib";
+import { avg, compareAxes, publicAxis } from "./lib";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
-/** A version needs this many reviews to win a "best" card. */
+/** A version needs this many ratings (on that axis) to win a "best" card. */
 export const MIN_REVIEWS_FOR_BEST = 20;
 
+// `slug` is an axis slug, or "overall" for overall stars.
 const BEST_CARDS = [
-  { key: "overall", label: "Overall best", caption: "★ overall" },
-  { key: "vibes", label: "Best vibes", caption: "vibes" },
-  { key: "smarts", label: "Smartest", caption: "smarts" },
-  { key: "taste", label: "Best taste", caption: "taste" },
-  { key: "mom", label: "Most mom-approved", caption: "mom-approved" },
+  { slug: "overall", label: "Overall best", caption: "★ overall" },
+  { slug: "vibes", label: "Best vibes", caption: "vibes" },
+  { slug: "smarts", label: "Smartest", caption: "smarts" },
+  { slug: "taste", label: "Best taste", caption: "taste" },
+  { slug: "mom", label: "Most mom-approved", caption: "mom-approved" },
 ] as const;
 
 /** Everything the homepage needs in one call: hero counts, model picker, six stat cards. */
@@ -44,25 +45,47 @@ export const homeStats = query({
       modelSlug: r.modelSlug,
     });
 
-    const best = BEST_CARDS.map((card) => {
-      let winner: { row: (typeof rows)[number]; value: number } | null = null;
-      for (const row of rows) {
-        if (row.stats.reviewCount < MIN_REVIEWS_FOR_BEST) continue;
-        const value = avg(row.stats[card.key]);
-        if (value === null) continue;
-        // rows are sorted by review count, so ties go to the more-reviewed version
-        if (!winner || value > winner.value) winner = { row, value };
+    const axes = await ctx.db.query("axes").collect();
+    const bySlug = new Map(axes.map((a) => [a.slug, a]));
+    const rowByVersion = new Map(rows.map((r) => [r.version._id, r]));
+
+    const best = [];
+    for (const card of BEST_CARDS) {
+      // Candidate (version, stat) pairs: overall stars, or that axis's axisStats.
+      let candidates: { row: (typeof rows)[number]; stat: { sum: number; count: number } }[];
+      if (card.slug === "overall") {
+        candidates = rows.map((row) => ({ row, stat: row.stats.overall }));
+      } else {
+        const axis = bySlug.get(card.slug);
+        const stats = axis
+          ? await ctx.db
+              .query("axisStats")
+              .withIndex("by_axis", (q) => q.eq("axisId", axis._id))
+              .collect()
+          : [];
+        candidates = stats.flatMap((stat) => {
+          const row = rowByVersion.get(stat.versionId);
+          return row ? [{ row, stat }] : [];
+        });
       }
-      return {
-        key: card.key,
+      let winner: { row: (typeof rows)[number]; value: number; count: number } | null = null;
+      for (const { row, stat } of candidates) {
+        if (stat.count < MIN_REVIEWS_FOR_BEST) continue;
+        const value = avg(stat)!;
+        if (!winner || value > winner.value || (value === winner.value && stat.count > winner.count)) {
+          winner = { row, value, count: stat.count };
+        }
+      }
+      best.push({
+        key: card.slug,
         label: card.label,
         version: winner ? ref(winner.row) : null,
         value: winner ? winner.value.toFixed(1) : null,
         caption: winner
-          ? `${card.caption} · ${winner.row.stats.reviewCount.toLocaleString("en-US")} reviews`
-          : `Needs a model with ${MIN_REVIEWS_FOR_BEST}+ reviews`,
-      };
-    });
+          ? `${card.caption} · ${winner.count.toLocaleString("en-US")} ratings`
+          : `Needs a model with ${MIN_REVIEWS_FOR_BEST}+ ratings`,
+      });
+    }
 
     // Most reviewed this week: reviews posted or updated in the last 7 days.
     const recent = await ctx.db
@@ -91,6 +114,11 @@ export const homeStats = query({
       reviewerCount: site?.reviewerCount ?? 0,
       reviewedModelCount: rows.filter((r) => r.stats.reviewCount > 0).length,
       versions: rows.map(ref), // most-reviewed first; the hero defaults to versions[0]
+      // Axes the hero can suggest: core plus every custom axis anyone has rated on.
+      axes: axes
+        .filter((a) => a.status === "active" && (a.core || a.ratingCount > 0))
+        .sort(compareAxes)
+        .map(publicAxis),
       cards,
     };
   },

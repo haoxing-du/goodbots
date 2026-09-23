@@ -60,15 +60,23 @@ export default defineSchema({
     .index("by_model", ["modelId"])
     .index("by_versionId", ["versionId"]),
 
+  // Things to rate models on. Core axes are seeded; anyone signed in can add more.
+  axes: defineTable({
+    name: v.string(),
+    slug: v.string(), // normalized name, unique
+    hint: v.optional(v.string()),
+    core: v.boolean(),
+    order: v.optional(v.number()), // display order for core axes
+    status: v.union(v.literal("active"), v.literal("hidden")),
+    ratingCount: v.number(), // site-wide number of scores on this axis
+    createdBy: v.optional(v.id("users")),
+    createdAt: v.number(),
+  }).index("by_slug", ["slug"]),
+
   reviews: defineTable({
     userId: v.id("users"),
     versionId: v.id("versions"),
-    overall: v.number(),
-    smarts: v.optional(v.number()),
-    taste: v.optional(v.number()),
-    vibes: v.optional(v.number()),
-    aligned: v.optional(v.number()),
-    mom: v.optional(v.number()),
+    overall: v.optional(v.number()), // 1–5 stars, optional
     reactionCount: v.number(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -84,9 +92,32 @@ export default defineSchema({
     text: v.string(),
     prompt: v.optional(v.string()),
     response: v.optional(v.string()),
-    overallAtTime: v.number(),
+    overallAtTime: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_review", ["reviewId", "createdAt"]),
+
+  // One row per review per rated axis (the review's current scores).
+  reviewScores: defineTable({
+    reviewId: v.id("reviews"),
+    userId: v.id("users"),
+    versionId: v.id("versions"),
+    axisId: v.id("axes"),
+    score: v.number(),
+  })
+    .index("by_review", ["reviewId"])
+    .index("by_user", ["userId"])
+    .index("by_axis", ["axisId"]),
+
+  // Denormalized per-version, per-axis aggregates, updated in the same mutations.
+  axisStats: defineTable({
+    versionId: v.id("versions"),
+    axisId: v.id("axes"),
+    sum: v.number(),
+    count: v.number(),
+    hist: v.array(v.number()), // counts of 1..5
+  })
+    .index("by_version_axis", ["versionId", "axisId"])
+    .index("by_axis", ["axisId"]),
 
   reactions: defineTable({
     reviewId: v.id("reviews"),
@@ -131,12 +162,7 @@ export default defineSchema({
   versionStats: defineTable({
     versionId: v.id("versions"),
     reviewCount: v.number(),
-    overall: axisStat,
-    smarts: axisStat,
-    taste: axisStat,
-    vibes: axisStat,
-    aligned: axisStat,
-    mom: axisStat,
+    overall: axisStat, // overall stars (optional per review)
     takeCount: v.number(),
   }).index("by_version", ["versionId"]),
 });

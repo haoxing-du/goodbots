@@ -4,7 +4,6 @@ import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Avatar, Stars } from "../components/bits";
-import { AXES } from "../lib/axes";
 import { monthYear, shortDate } from "../lib/format";
 import { NotFound } from "./NotFound";
 import ui from "../components/ui.module.css";
@@ -118,8 +117,8 @@ export function Profile() {
               <tr>
                 <th>Model</th>
                 <th>Overall</th>
-                {AXES.map((a) => (
-                  <th key={a.key}>{a.short}</th>
+                {data.coreAxes.map((a) => (
+                  <th key={a._id}>{a.slug === "mom" ? "Mom" : a.name}</th>
                 ))}
                 <th>Updated</th>
               </tr>
@@ -139,13 +138,19 @@ export function Profile() {
                       <VersionLink v={r.version} />
                     </span>
                     <span className={ui.meta}>{r.version?.versionId}</span>
+                    {r.scores.some((x) => !x.core) && (
+                      <span className={s.customScores}>
+                        {r.scores
+                          .filter((x) => !x.core)
+                          .map((x) => `${x.name} ${x.score}`)
+                          .join(" · ")}
+                      </span>
+                    )}
                   </td>
-                  <td>
-                    <Stars value={r.scores.overall} size={13} />
-                  </td>
-                  {AXES.map((a) => (
-                    <td key={a.key} className={s.num}>
-                      {r.scores[a.key] ?? "—"}
+                  <td>{r.overall ? <Stars value={r.overall} size={13} /> : <span className={s.num}>—</span>}</td>
+                  {data.coreAxes.map((a) => (
+                    <td key={a._id} className={s.num}>
+                      {r.scores.find((x) => x._id === a._id)?.score ?? "—"}
                     </td>
                   ))}
                   <td className={s.num}>{shortDate(r.updatedAt)}</td>
@@ -165,13 +170,14 @@ export function Profile() {
                 <span className={s.latestModel}>
                   <VersionLink v={latestReview.version} />
                 </span>
-                <Stars value={latestReview.overall} />
+                {latestReview.overall && <Stars value={latestReview.overall} />}
               </div>
               {latestReview.entries.map((e, i) => {
                 const older = latestReview.entries[i + 1];
                 const isOriginal = !older;
-                const stars =
-                  older && older.overallAtTime !== e.overallAtTime
+                const stars = !e.overallAtTime
+                  ? null
+                  : older?.overallAtTime && older.overallAtTime !== e.overallAtTime
                     ? `${older.overallAtTime}★ → ${e.overallAtTime}★`
                     : `${e.overallAtTime}★`;
                 return (
@@ -181,7 +187,8 @@ export function Profile() {
                   >
                     <div className={s.entryHead}>
                       {isOriginal ? "Original" : "Update"} ·{" "}
-                      {shortDate(e.createdAt)} · {stars}
+                      {shortDate(e.createdAt)}
+                      {stars && ` · ${stars}`}
                     </div>
                     <p className={ui.body}>{e.text}</p>
                   </div>
