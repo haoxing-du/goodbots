@@ -65,15 +65,13 @@
   border-radius: 14px;
   padding: 20px 24px;
   resize: none;
-  transition: border-color 150ms, box-shadow 150ms;
+  transition: border-color 150ms;
 }
 .text:hover {
   border-color: var(--outline);
 }
 .text:focus-visible {
-  outline: none;
   border-color: var(--ink);
-  box-shadow: 0 0 0 3px rgb(23 23 21 / 0.06);
 }
 .text::placeholder {
   color: var(--muted-3);

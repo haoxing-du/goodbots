@@ -16,7 +16,6 @@
   border-color: var(--outline);
 }
 .input:focus-visible {
-  outline: none;
   border-color: var(--ink);
 }
 .input::placeholder {
@@ -56,6 +55,7 @@
 }
 .optionActive {
   background: var(--page);
+  box-shadow: inset 0 0 0 2px var(--ink);
 }
 .name {
   font-size: 15px;
@@ -68,7 +68,7 @@
   white-space: nowrap;
 }
 .empty {
-  padding: 10px;
+  padding: 4px 16px 12px;
   font-size: 14px;
   color: var(--muted-2);
   font-family: var(--font-sans);

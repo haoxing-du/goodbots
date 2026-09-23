@@ -111,10 +111,12 @@ export function ModelPicker({
                 </span>
               </li>
             ))}
-            {debounced.trim() && searched?.length === 0 && (
-              <li className={s.empty}>No models match. You can request it.</li>
-            )}
           </ul>
+          {debounced.trim() && searched?.length === 0 && (
+            <div className={s.empty} role="status">
+              No models match. You can request it.
+            </div>
+          )}
           <div className={s.credit}>
             Model list from{" "}
             <a href="https://openrouter.ai/models" target="_blank" rel="noreferrer">
