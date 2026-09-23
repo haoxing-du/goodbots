@@ -132,3 +132,23 @@ h3,
 p {
   margin: 0;
 }
+
+/* Visible only when focused, so keyboard users can jump past the header. */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  background: var(--ink);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  transform: translateY(-200%);
+}
+.skip-link:focus-visible {
+  transform: none;
+  color: #fff;
+}
+main:focus {
+  outline: none;
+}

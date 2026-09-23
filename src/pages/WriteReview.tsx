@@ -66,9 +66,9 @@ export function WriteReview() {
     return (
       <>
         <MinimalBar />
-        <div className={ui.page}>
+        <main id="main" tabIndex={-1} className={ui.page}>
           <p>No models to review yet.</p>
-        </div>
+        </main>
       </>
     );
   }
@@ -135,7 +135,7 @@ export function WriteReview() {
   return (
     <>
       <MinimalBar />
-      <div className={s.layout}>
+      <main id="main" tabIndex={-1} className={s.layout}>
         <div className={s.main}>
           <h1 className={ui.serifTitle}>Review a model</h1>
 
@@ -332,7 +332,7 @@ export function WriteReview() {
         <aside className={s.aside}>
           <ScaleGuide />
         </aside>
-      </div>
+      </main>
     </>
   );
 }

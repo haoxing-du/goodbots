@@ -17,7 +17,7 @@ function Chrome() {
   return (
     <>
       <TopBar />
-      <main>
+      <main id="main" tabIndex={-1}>
         <Outlet />
       </main>
     </>
@@ -27,6 +27,9 @@ function Chrome() {
 export function App() {
   return (
     <SignInProvider>
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
       <Routes>
         <Route element={<Chrome />}>
           <Route path="/" element={<Home />} />
