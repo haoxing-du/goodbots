@@ -77,7 +77,8 @@ export function ogTree(p: URLSearchParams): Node {
   const stat = p.get("stat");
   const n = Number(p.get("stars") ?? 0);
   const quote = p.get("quote")?.slice(0, 240);
-  const titleSize = title.length > 28 ? 64 : 84;
+  // The home card is just its question, so it fills the card.
+  const titleSize = kind === "site" ? 104 : title.length > 28 ? 64 : 84;
   const tree = h(
     "div",
     {
