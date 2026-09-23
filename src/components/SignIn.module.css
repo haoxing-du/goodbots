@@ -181,3 +181,11 @@
   font-family: var(--font-mono);
   color: var(--muted-3);
 }
+
+/* iOS Safari zooms the page when a focused field's text is under 16px. */
+@media (max-width: 900px) {
+  .email,
+  .handleWrap .email {
+    font-size: 16px;
+  }
+}

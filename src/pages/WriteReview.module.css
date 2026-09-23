@@ -312,3 +312,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* iOS Safari zooms the page when a focused field's text is under 16px. */
+@media (max-width: 900px) {
+  .versionSelect,
+  .monoArea {
+    font-size: 16px;
+  }
+}
