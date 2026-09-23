@@ -12,6 +12,7 @@
 .sectionLabel {
   font-family: var(--font-mono);
   font-size: 12px;
+  font-weight: 400; /* Geist Mono is loaded at 400 only; <h2> would synthesize bold */
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted-1);
