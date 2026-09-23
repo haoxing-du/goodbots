@@ -64,7 +64,7 @@ export function Analytics() {
           <Reactions totals={data.totals} />
           <TopLists top={data.top} />
           <p className={ui.meta}>
-            Counts are by UTC day and refresh hourly. Changes compare with the {days} days before.
+            Counts are by UTC day; today refreshes every 10 minutes. Changes compare with the {days} days before.
           </p>
           <Coverage />
         </div>

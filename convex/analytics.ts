@@ -158,6 +158,14 @@ export const rollupDay = internalMutation({
   },
 });
 
+/** Cron: recount today only, so launch-day numbers stay fresh between full refreshes. */
+export const refreshToday = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    await ctx.scheduler.runAfter(0, internal.analytics.rollupDay, { day: dayKey(Date.now()) });
+  },
+});
+
 /** Cron: recount the last few days, each in its own transaction. */
 export const refresh = internalMutation({
   args: {},
