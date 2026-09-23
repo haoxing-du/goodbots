@@ -129,6 +129,57 @@
   line-height: 1.4;
 }
 
+/* Also rated on (custom axes) */
+.also {
+  margin-top: 28px;
+}
+.alsoLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-1);
+  margin: 0 0 14px;
+}
+.alsoRow {
+  display: grid;
+  grid-template-columns: 220px 64px 180px 1fr;
+  gap: 24px;
+  align-items: center;
+  padding: 14px 24px;
+}
+.alsoName {
+  font-size: 15px;
+}
+.alsoAvg {
+  font-size: 22px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+.alsoPips {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+.alsoHist {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  height: 24px;
+  align-items: end;
+}
+.alsoBar {
+  background: var(--olive-fill);
+  border-radius: 2px 2px 0 0;
+}
+.alsoCount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-2);
+  text-align: right;
+}
+
 /* Head to head */
 .h2h {
   overflow: hidden;
@@ -277,6 +328,16 @@
   }
 }
 @media (max-width: 900px) {
+  .alsoRow {
+    grid-template-columns: 1fr 48px 110px;
+    padding: 12px 16px;
+    gap: 14px;
+  }
+  .alsoCount {
+    grid-column: 1 / -1;
+    text-align: left;
+    margin-top: -6px;
+  }
   .name {
     font-size: 40px;
   }

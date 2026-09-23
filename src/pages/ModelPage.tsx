@@ -49,7 +49,10 @@ export function ModelPage() {
         )}
       </header>
 
-      <AxisGrid axes={data.axes.filter((a) => a.core)} />
+      <AxisGrid
+        axes={data.axes.filter((a) => a.core)}
+        custom={data.axes.filter((a) => !a.core).sort((a, b) => b.count - a.count)}
+      />
 
       <HeadToHead
         versionId={version._id}
@@ -71,7 +74,7 @@ type AxisStat = {
   hist: number[];
 };
 
-function AxisGrid({ axes }: { axes: AxisStat[] }) {
+function AxisGrid({ axes, custom }: { axes: AxisStat[]; custom: AxisStat[] }) {
   const [dist, setDist] = useState(() => {
     try {
       return sessionStorage.getItem("gb.dist") === "1";
@@ -126,6 +129,44 @@ function AxisGrid({ axes }: { axes: AxisStat[] }) {
           );
         })}
       </div>
+      {custom.length > 0 && (
+        <div className={s.also}>
+          <h3 className={s.alsoLabel}>Also rated on</h3>
+          <div className={`${ui.card} ${ui.rows}`}>
+            {custom.map((a) => {
+              const rounded = a.avg == null ? 0 : Math.round(a.avg);
+              const max = Math.max(1, ...a.hist);
+              return (
+                <div key={a._id} className={s.alsoRow}>
+                  <span className={s.alsoName}>{a.name}</span>
+                  <span className={s.alsoAvg}>{fmtAvg(a.avg)}</span>
+                  {dist ? (
+                    <span className={s.alsoHist} aria-label={`${a.name} distribution`}>
+                      {a.hist.map((c, i) => (
+                        <span
+                          key={i}
+                          className={s.alsoBar}
+                          title={`${i + 1}: ${c}`}
+                          style={{ height: Math.max(2, (c / max) * 24) }}
+                        />
+                      ))}
+                    </span>
+                  ) : (
+                    <span className={s.alsoPips} aria-hidden>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <span key={n} className={n <= rounded ? s.pipOn : s.pipOff} />
+                      ))}
+                    </span>
+                  )}
+                  <span className={s.alsoCount}>
+                    {fmtCount(a.count)} {a.count === 1 ? "rating" : "ratings"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
