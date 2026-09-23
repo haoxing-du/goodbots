@@ -197,11 +197,17 @@ export function Home() {
             type="button"
             className={s.continue}
             disabled={!started}
+            aria-describedby={started ? undefined : "finish-hint"}
             onClick={onFinish}
           >
             Finish your review →
           </button>
         </div>
+        {!started && (
+          <p id="finish-hint" className={s.axisHint}>
+            Write something or give it a rating to continue.
+          </p>
+        )}
 
         {/* Hold the line's height while loading so the hero doesn't jump. */}
         {data === undefined && <p className={s.count}>{"\u00a0"}</p>}

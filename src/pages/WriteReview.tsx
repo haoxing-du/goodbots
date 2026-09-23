@@ -141,7 +141,7 @@ export function WriteReview() {
       <MinimalBar />
       <main id="main" tabIndex={-1} className={s.layout}>
         <div className={s.main}>
-          <h1 className={ui.serifTitle}>Review a model</h1>
+          <h1 className={ui.serifTitle}>Write a review</h1>
 
           <div className={s.modelRow}>
             <div className={s.chosen} aria-live="polite">
@@ -241,7 +241,7 @@ export function WriteReview() {
                 ) : draft.overall ? (
                   `${draft.overall} of 5`
                 ) : (
-                  "optional"
+                  "—"
                 )}
               </div>
             </div>
@@ -336,10 +336,17 @@ export function WriteReview() {
 
           {!done && (
             <div className={s.footer}>
-              <span className={s.progress}>
+              <span className={s.progress} id="post-status">
+                {draft.text.trim() ? "" : "Write a few words to post · "}
                 {rated} {rated === 1 ? "axis" : "axes"} rated · community scores appear after you post
               </span>
-              <button type="button" className={ui.btn} disabled={!canPost} onClick={submit}>
+              <button
+                type="button"
+                className={ui.btn}
+                disabled={!canPost}
+                aria-describedby="post-status"
+                onClick={submit}
+              >
                 {busy ? "Posting…" : "Post review"}
               </button>
             </div>

@@ -168,7 +168,7 @@ function Grid({ versions }: { versions: Version[] }) {
             {v.overall != null ? (
               <Stars value={v.overall} size={14} />
             ) : (
-              <span className={ui.meta}>no ratings yet</span>
+              <span className={ui.meta}>No ratings yet</span>
             )}
           </div>
           <div className={s.axes}>
