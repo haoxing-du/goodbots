@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation } from "./_generated/server";
-import { bumpTakeCount, deleteTake, isAdmin, requireMember } from "./lib";
+import { createTake, deleteTake, isAdmin, requireMember } from "./lib";
 
 export const create = mutation({
   args: {
@@ -10,24 +10,12 @@ export const create = mutation({
   },
   handler: async (ctx, { winnerVersionId, loserVersionId, reason }) => {
     const user = await requireMember(ctx);
-    if (winnerVersionId === loserVersionId) {
-      throw new ConvexError("Pick two different models.");
-    }
     const [a, b] = await Promise.all([
       ctx.db.get(winnerVersionId),
       ctx.db.get(loserVersionId),
     ]);
     if (!a || !b) throw new ConvexError("Unknown model.");
-    const trimmed = reason?.trim().slice(0, 200);
-    await ctx.db.insert("takes", {
-      userId: user._id,
-      winnerVersionId,
-      loserVersionId,
-      reason: trimmed || undefined,
-      createdAt: Date.now(),
-    });
-    await bumpTakeCount(ctx, winnerVersionId, 1);
-    await bumpTakeCount(ctx, loserVersionId, 1);
+    await createTake(ctx, user._id, winnerVersionId, loserVersionId, reason);
   },
 });
 

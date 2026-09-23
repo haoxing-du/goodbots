@@ -10,6 +10,7 @@ import {
   bumpReviewerCount,
   checkScore,
   compareAxes,
+  createTake,
   deleteReviewCascade,
   findOrActivateVersion,
   isAdmin,
@@ -105,6 +106,8 @@ export const upsert = mutation({
     text: v.string(),
     image: v.optional(v.id("_storage")), // a screenshot from uploads.register
     imageCaption: v.optional(v.string()),
+    // Optional head-to-head posted with the review: this model vs. another on the site.
+    versus: v.optional(v.object({ versionId: v.id("versions"), reviewedWins: v.boolean() })),
   },
   handler: async (ctx, args) => {
     const user = await requireMember(ctx);
@@ -116,6 +119,10 @@ export const upsert = mutation({
     const version = await findOrActivateVersion(ctx, args.versionId);
     if (!version) throw new ConvexError("That model isn’t available to review.");
     const versionId = version._id;
+    const opponent = args.versus ? await ctx.db.get(args.versus.versionId) : null;
+    if (args.versus && opponent?.status !== "active") {
+      throw new ConvexError("That model isn’t available for a head-to-head.");
+    }
     const text = args.text.trim();
     const scores = await resolveScores(ctx, user._id, args.scores);
 
@@ -184,6 +191,13 @@ export const upsert = mutation({
       }
     } else {
       await ctx.db.insert("reviewEntries", { reviewId, ...entry, createdAt: now });
+    }
+    if (args.versus && opponent) {
+      // An edit re-posted within the window replaces its take rather than adding another.
+      const [winner, loser] = args.versus.reviewedWins
+        ? [versionId, opponent._id]
+        : [opponent._id, versionId];
+      await createTake(ctx, user._id, winner, loser, undefined, EDIT_WINDOW);
     }
     return reviewId;
   },

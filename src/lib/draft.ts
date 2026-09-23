@@ -6,6 +6,7 @@ export type Draft = {
   text: string;
   image: { id: string; url: string } | null; // an uploaded, not yet posted screenshot
   imageCaption: string;
+  versus: { versionId: string; reviewedWins: boolean } | null; // optional head-to-head (versions _id)
 };
 
 export const EMPTY_DRAFT: Draft = {
@@ -15,6 +16,7 @@ export const EMPTY_DRAFT: Draft = {
   text: "",
   image: null,
   imageCaption: "",
+  versus: null,
 };
 
 const KEY = "gb.drafts"; // { [versionId]: { savedAt, draft } }

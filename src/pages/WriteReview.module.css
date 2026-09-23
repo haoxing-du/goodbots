@@ -228,6 +228,51 @@
 .textarea::placeholder {
   color: var(--muted-3);
 }
+.h2hRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-4) var(--s-5);
+}
+.h2hPair {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-5);
+}
+.h2hModel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px var(--s-5);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--ink);
+  transition: border-color 120ms;
+}
+.h2hModel:disabled {
+  cursor: default;
+}
+@media (hover: hover) {
+  .h2hModel:hover:not(:disabled) {
+    border-color: var(--ink);
+  }
+}
+.swapIcon {
+  margin-inline-start: var(--s-2);
+  font-weight: 400;
+  color: var(--muted-3);
+}
+.h2hGt {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  color: var(--muted-1);
+}
+.h2hSelect {
+  flex: 0 1 18rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .shot {
   display: flex;
   flex-direction: column;
@@ -362,6 +407,7 @@
 /* iOS Safari zooms the page when a focused field's text is under 16px. */
 @media (max-width: 900px) {
   .versionSelect,
+  .h2hSelect,
   .shotSide input {
     font-size: var(--text-lg);
   }

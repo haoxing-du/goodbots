@@ -308,6 +308,38 @@ export async function deleteReviewCascade(ctx: MutationCtx, review: Doc<"reviews
   if (!another) await bumpReviewerCount(ctx, -1);
 }
 
+/** Post an "A > B" take. Re-posting the same pair within `replaceWithin` ms replaces it. */
+export async function createTake(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  winnerVersionId: Id<"versions">,
+  loserVersionId: Id<"versions">,
+  reason?: string,
+  replaceWithin = 0,
+) {
+  if (winnerVersionId === loserVersionId) throw new ConvexError("Pick two different models.");
+  if (replaceWithin > 0) {
+    const pair = new Set([winnerVersionId, loserVersionId]);
+    const recent = await ctx.db
+      .query("takes")
+      .withIndex("by_user", (q) => q.eq("userId", userId).gte("createdAt", Date.now() - replaceWithin))
+      .collect();
+    for (const t of recent) {
+      if (pair.has(t.winnerVersionId) && pair.has(t.loserVersionId)) await deleteTake(ctx, t);
+    }
+  }
+  const trimmed = reason?.trim().slice(0, 200);
+  await ctx.db.insert("takes", {
+    userId,
+    winnerVersionId,
+    loserVersionId,
+    reason: trimmed || undefined,
+    createdAt: Date.now(),
+  });
+  await bumpTakeCount(ctx, winnerVersionId, 1);
+  await bumpTakeCount(ctx, loserVersionId, 1);
+}
+
 export async function deleteTake(ctx: MutationCtx, take: Doc<"takes">) {
   await bumpTakeCount(ctx, take.winnerVersionId, -1);
   await bumpTakeCount(ctx, take.loserVersionId, -1);

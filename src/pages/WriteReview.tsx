@@ -23,6 +23,7 @@ export function WriteReview() {
   const [params, setParams] = useSearchParams();
   const data = useQuery(api.reviews.forWrite, { v: params.get("v") ?? undefined });
   const upsert = useMutation(api.reviews.upsert);
+  const allVersions = useQuery(api.models.allVersions);
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { open, requireAuth } = useSignIn();
 
@@ -103,6 +104,10 @@ export function WriteReview() {
   const rated =
     data.axes.filter((a) => valueFor(a) > 0).length + pendingAxes.filter((a) => a.score > 0).length;
   const canPost = draft.text.trim().length > 0 && !busy;
+  // Ignore a saved opponent that's no longer on the site (or is this model).
+  const opponents = (allVersions ?? []).filter((m) => m.versionId !== selected.versionId);
+  const versus =
+    draft.versus && opponents.some((m) => m._id === draft.versus!.versionId) ? draft.versus : null;
 
   const submit = () =>
     requireAuth(async () => {
@@ -126,6 +131,9 @@ export function WriteReview() {
           text: draft.text,
           image: draft.image ? (draft.image.id as Id<"_storage">) : undefined,
           imageCaption: draft.image ? draft.imageCaption : undefined,
+          versus: versus
+            ? { versionId: versus.versionId as Id<"versions">, reviewedWins: versus.reviewedWins }
+            : undefined,
         });
         setPosted(selected.versionId);
         saveDraft(selected.versionId, null);
@@ -301,6 +309,14 @@ export function WriteReview() {
             />
           </label>
 
+          <HeadToHead
+            model={selected.displayName}
+            opponents={opponents}
+            value={versus}
+            disabled={done}
+            onChange={(v) => set({ versus: v })}
+          />
+
           <Screenshot
             image={draft.image}
             caption={draft.imageCaption}
@@ -424,6 +440,96 @@ function AxisRow({
         ))}
       </div>
       <div className={s.rightCell}>{right}</div>
+    </div>
+  );
+}
+
+/** Optional "this model > another" take, posted with the review. */
+function HeadToHead({
+  model,
+  opponents,
+  value,
+  disabled,
+  onChange,
+}: {
+  model: string;
+  opponents: { _id: string; displayName: string }[];
+  value: Draft["versus"];
+  disabled: boolean;
+  onChange: (v: Draft["versus"]) => void;
+}) {
+  if (opponents.length === 0) return null;
+  const reviewedWins = value?.reviewedWins ?? true;
+  const chip = (
+    <button
+      type="button"
+      className={s.h2hModel}
+      disabled={disabled || !value}
+      aria-label={`${model}, swap sides`}
+      title={value ? "Swap sides" : undefined}
+      onClick={() => value && onChange({ ...value, reviewedWins: !value.reviewedWins })}
+    >
+      {model}
+      {value && !disabled && (
+        <span className={s.swapIcon} aria-hidden>
+          ⇄
+        </span>
+      )}
+    </button>
+  );
+  const select = (
+    <select
+      className={`${ui.input} ${s.h2hSelect}`}
+      value={value?.versionId ?? ""}
+      disabled={disabled}
+      aria-label="Model to compare with"
+      onChange={(e) =>
+        onChange(e.target.value ? { versionId: e.target.value, reviewedWins } : null)
+      }
+    >
+      <option value="">Pick a model to compare…</option>
+      {opponents.map((m) => (
+        <option key={m._id} value={m._id}>
+          {m.displayName}
+        </option>
+      ))}
+    </select>
+  );
+  // The ">" stays with the chip so a narrow screen never strands it at a line end.
+  const gt = (
+    <>
+      <span className={s.h2hGt} aria-hidden>
+        &gt;
+      </span>
+      <span className={ui.srOnly}>is better than</span>
+    </>
+  );
+  return (
+    <div className={s.field}>
+      <span className={ui.sectionLabel}>Head-to-head · optional</span>
+      <div className={s.h2hRow}>
+        {reviewedWins ? (
+          <span className={s.h2hPair}>
+            {chip}
+            {gt}
+          </span>
+        ) : (
+          select
+        )}
+        {reviewedWins ? (
+          select
+        ) : (
+          <span className={s.h2hPair}>
+            {gt}
+            {chip}
+          </span>
+        )}
+        {value && !disabled && (
+          <button type="button" className={ui.linkBtn} onClick={() => onChange(null)}>
+            Clear
+          </button>
+        )}
+      </div>
     </div>
   );
 }
