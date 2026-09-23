@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation } from "./_generated/server";
-import { bumpTakeCount, requireMember } from "./lib";
+import { bumpTakeCount, deleteTake, isAdmin, requireMember } from "./lib";
 
 export const create = mutation({
   args: {
@@ -28,5 +28,19 @@ export const create = mutation({
     });
     await bumpTakeCount(ctx, winnerVersionId, 1);
     await bumpTakeCount(ctx, loserVersionId, 1);
+  },
+});
+
+/** Delete your own take (admins can delete any). */
+export const remove = mutation({
+  args: { takeId: v.id("takes") },
+  handler: async (ctx, { takeId }) => {
+    const user = await requireMember(ctx);
+    const take = await ctx.db.get(takeId);
+    if (!take) return;
+    if (take.userId !== user._id && !isAdmin(user)) {
+      throw new ConvexError("You can only delete your own takes.");
+    }
+    await deleteTake(ctx, take);
   },
 });

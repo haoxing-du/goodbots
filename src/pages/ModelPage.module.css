@@ -314,6 +314,11 @@
   gap: 14px;
   min-width: 0;
 }
+.reviewMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
 .reviewTop {
   display: flex;
   justify-content: space-between;

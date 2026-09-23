@@ -104,3 +104,17 @@
 .snipModel {
   color: var(--olive-text);
 }
+
+.deleteLink {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-3);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.deleteLink:hover {
+  color: var(--rust-text);
+}

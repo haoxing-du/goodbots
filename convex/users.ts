@@ -7,6 +7,8 @@ import {
   getViewer,
   isAdmin,
   publicUser,
+  deleteReviewCascade,
+  deleteTake,
   requireUser,
   scoreMapFor,
   axisIndex,
@@ -68,6 +70,7 @@ export const profile = query({
     const latest = reviews[0];
     const latestReview = latest
       ? {
+          _id: latest._id,
           version: await versionLabel(ctx, latest.versionId),
           overall: latest.overall,
           entries: (
@@ -182,5 +185,78 @@ export const updateProfile = mutation({
       handleLower,
     });
     return handle;
+  },
+});
+
+/**
+ * Permanently deletes the signed-in user: their reviews (with history, scores
+ * and stats), takes, reactions, model requests, sign-in accounts and sessions.
+ * Axes they created stay (other people rate on them).
+ */
+export const deleteAccount = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireUser(ctx);
+    const userId = user._id;
+
+    for (const review of await ctx.db
+      .query("reviews")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect()) {
+      await deleteReviewCascade(ctx, review);
+    }
+    for (const take of await ctx.db
+      .query("takes")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect()) {
+      await deleteTake(ctx, take);
+    }
+    for (const reaction of await ctx.db
+      .query("reactions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect()) {
+      const review = await ctx.db.get(reaction.reviewId);
+      if (review) await ctx.db.patch(review._id, { reactionCount: Math.max(0, review.reactionCount - 1) });
+      await ctx.db.delete(reaction._id);
+    }
+    for (const req of await ctx.db
+      .query("modelRequests")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect()) {
+      await ctx.db.delete(req._id);
+    }
+    for (const axis of await ctx.db
+      .query("axes")
+      .withIndex("by_creator", (q) => q.eq("createdBy", userId))
+      .collect()) {
+      await ctx.db.patch(axis._id, { createdBy: undefined });
+    }
+
+    // Sign-in records: sessions (+ refresh tokens), linked accounts, pending codes.
+    for (const session of await ctx.db
+      .query("authSessions")
+      .withIndex("userId", (q) => q.eq("userId", userId))
+      .collect()) {
+      for (const token of await ctx.db
+        .query("authRefreshTokens")
+        .withIndex("sessionId", (q) => q.eq("sessionId", session._id))
+        .collect()) {
+        await ctx.db.delete(token._id);
+      }
+      await ctx.db.delete(session._id);
+    }
+    for (const account of await ctx.db
+      .query("authAccounts")
+      .withIndex("userIdAndProvider", (q) => q.eq("userId", userId))
+      .collect()) {
+      for (const code of await ctx.db
+        .query("authVerificationCodes")
+        .withIndex("accountId", (q) => q.eq("accountId", account._id))
+        .collect()) {
+        await ctx.db.delete(code._id);
+      }
+      await ctx.db.delete(account._id);
+    }
+    await ctx.db.delete(userId);
   },
 });

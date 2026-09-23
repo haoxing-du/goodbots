@@ -259,3 +259,23 @@
   display: flex;
   gap: 8px;
 }
+
+.headDelete {
+  margin-left: auto;
+}
+.takeMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.deleteAccount {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--rust-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

@@ -1,4 +1,9 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { initials } from "../lib/format";
 import { AxisScore } from "../lib/axes";
 import s from "./bits.module.css";
@@ -87,5 +92,50 @@ export function Snippet({ prompt, response }: { prompt?: string; response?: stri
         </div>
       )}
     </div>
+  );
+}
+
+/** Small "Delete" link on a review, shown to its author (and admins). */
+export function DeleteReview({ reviewId, authorId }: { reviewId: Id<"reviews">; authorId?: string }) {
+  const me = useQuery(api.users.me);
+  const remove = useMutation(api.reviews.remove);
+  if (!me || (me._id !== authorId && !me.isAdmin)) return null;
+  return (
+    <ConfirmDelete
+      label="Delete"
+      question="Delete this review and its history? This can't be undone."
+      run={() => remove({ reviewId })}
+    />
+  );
+}
+
+export function ConfirmDelete({
+  label,
+  question,
+  run,
+}: {
+  label: string;
+  question: string;
+  run: () => Promise<unknown>;
+}) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      className={s.deleteLink}
+      disabled={busy}
+      onClick={async () => {
+        if (!window.confirm(question)) return;
+        setBusy(true);
+        try {
+          await run();
+        } catch (e) {
+          window.alert(e instanceof ConvexError ? String(e.data) : "Couldn't delete that.");
+          setBusy(false);
+        }
+      }}
+    >
+      {busy ? "Deleting…" : label}
+    </button>
   );
 }

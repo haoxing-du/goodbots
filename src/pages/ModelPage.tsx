@@ -5,7 +5,15 @@ import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { Pills } from "../components/Pills";
-import { AxisScores, Avatar, MatchChip, Snippet, Stars, UserLink } from "../components/bits";
+import {
+  AxisScores,
+  Avatar,
+  DeleteReview,
+  MatchChip,
+  Snippet,
+  Stars,
+  UserLink,
+} from "../components/bits";
 import { Reactions } from "../components/Reactions";
 import { useSignIn } from "../components/SignIn";
 import { fmtAvg, fmtCount, timeAgo } from "../lib/format";
@@ -351,7 +359,10 @@ function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
             <div className={s.reviewBody}>
               <div className={s.reviewTop}>
                 {r.overall ? <Stars value={r.overall} /> : <span />}
-                <span className={ui.meta}>{timeAgo(r.updatedAt)}</span>
+                <span className={s.reviewMeta}>
+                  <DeleteReview reviewId={r._id} authorId={r.user?._id} />
+                  <span className={ui.meta}>{timeAgo(r.updatedAt)}</span>
+                </span>
               </div>
               <p className={ui.body}>{r.text}</p>
               <Snippet prompt={r.prompt} response={r.response} />

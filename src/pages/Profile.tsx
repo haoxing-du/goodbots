@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../convex/_generated/api";
-import { Avatar, Stars } from "../components/bits";
+import { Avatar, ConfirmDelete, DeleteReview, Stars } from "../components/bits";
 import { monthYear, shortDate } from "../lib/format";
 import { versionPath } from "../lib/paths";
 import { NotFound } from "./NotFound";
@@ -24,6 +25,7 @@ function VersionLink({ v }: { v: VersionRef }) {
 export function Profile() {
   const { handle = "" } = useParams();
   const data = useQuery(api.users.profile, { handle });
+  const removeTake = useMutation(api.takes.remove);
   const [editing, setEditing] = useState(false);
 
   if (data === undefined) return <div className={ui.page} />;
@@ -172,6 +174,11 @@ export function Profile() {
                   <VersionLink v={latestReview.version} />
                 </span>
                 {latestReview.overall && <Stars value={latestReview.overall} />}
+                {data.isMe && (
+                  <span className={s.headDelete}>
+                    <DeleteReview reviewId={latestReview._id} authorId={user._id} />
+                  </span>
+                )}
               </div>
               {latestReview.entries.map((e, i) => {
                 const older = latestReview.entries[i + 1];
@@ -215,7 +222,16 @@ export function Profile() {
                     <span className={s.gt}>&gt;</span>{" "}
                     <VersionLink v={t.loser} />
                   </span>
-                  <span className={ui.meta}>{shortDate(t.createdAt)}</span>
+                  <span className={s.takeMeta}>
+                    {data.isMe && (
+                      <ConfirmDelete
+                        label="Delete"
+                        question="Delete this take?"
+                        run={() => removeTake({ takeId: t._id })}
+                      />
+                    )}
+                    <span className={ui.meta}>{shortDate(t.createdAt)}</span>
+                  </span>
                 </div>
                 {t.reason && <p className={s.reason}>{t.reason}</p>}
               </div>
@@ -237,6 +253,8 @@ function EditProfile({
   onDone: () => void;
 }) {
   const update = useMutation(api.users.updateProfile);
+  const deleteAccount = useMutation(api.users.deleteAccount);
+  const { signOut } = useAuthActions();
   const navigate = useNavigate();
   const [name, setName] = useState(initialName);
   const [handle, setHandle] = useState(initialHandle);
@@ -304,6 +322,29 @@ function EditProfile({
           Cancel
         </button>
       </div>
+      <button
+        type="button"
+        className={s.deleteAccount}
+        onClick={async () => {
+          const typed = window.prompt(
+            `This permanently deletes your account, reviews, takes and reactions.\n\nType your handle (${initialHandle}) to confirm.`,
+          );
+          if (typed === null) return;
+          if (typed.trim().replace(/^@/, "") !== initialHandle) {
+            window.alert("That didn't match your handle. Nothing was deleted.");
+            return;
+          }
+          try {
+            await deleteAccount();
+            await signOut();
+            navigate("/", { replace: true });
+          } catch (err) {
+            setError(err instanceof ConvexError ? String(err.data) : "Couldn't delete your account.");
+          }
+        }}
+      >
+        Delete account…
+      </button>
     </form>
   );
 }

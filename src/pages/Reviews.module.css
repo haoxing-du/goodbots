@@ -54,6 +54,9 @@
 }
 .when {
   margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
 }
 .byline {
   display: flex;

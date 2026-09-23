@@ -9,6 +9,8 @@ import {
   bumpReviewerCount,
   checkScore,
   compareAxes,
+  deleteReviewCascade,
+  isAdmin,
   matcherFor,
   publicAxis,
   publicUser,
@@ -160,6 +162,20 @@ export const upsert = mutation({
       createdAt: now,
     });
     return reviewId;
+  },
+});
+
+/** Delete your own review (admins can delete any). */
+export const remove = mutation({
+  args: { reviewId: v.id("reviews") },
+  handler: async (ctx, { reviewId }) => {
+    const user = await requireMember(ctx);
+    const review = await ctx.db.get(reviewId);
+    if (!review) return;
+    if (review.userId !== user._id && !isAdmin(user)) {
+      throw new ConvexError("You can only delete your own reviews.");
+    }
+    await deleteReviewCascade(ctx, review);
   },
 });
 

@@ -272,9 +272,43 @@ export async function replaceReviewScores(
   }
 }
 
+/** Deletes a review with its entries, scores and reactions, keeping every stat in sync. */
+export async function deleteReviewCascade(ctx: MutationCtx, review: Doc<"reviews">) {
+  await replaceReviewScores(ctx, review, new Map());
+  const stats = await getOrCreateStats(ctx, review.versionId);
+  await ctx.db.patch(stats._id, {
+    reviewCount: Math.max(0, stats.reviewCount - 1),
+    overall: review.overall ? bump(stats.overall, review.overall, -1) : stats.overall,
+  });
+  for (const e of await ctx.db
+    .query("reviewEntries")
+    .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+    .collect()) {
+    await ctx.db.delete(e._id);
+  }
+  for (const r of await ctx.db
+    .query("reactions")
+    .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+    .collect()) {
+    await ctx.db.delete(r._id);
+  }
+  await ctx.db.delete(review._id);
+  const another = await ctx.db
+    .query("reviews")
+    .withIndex("by_user", (q) => q.eq("userId", review.userId))
+    .first();
+  if (!another) await bumpReviewerCount(ctx, -1);
+}
+
+export async function deleteTake(ctx: MutationCtx, take: Doc<"takes">) {
+  await bumpTakeCount(ctx, take.winnerVersionId, -1);
+  await bumpTakeCount(ctx, take.loserVersionId, -1);
+  await ctx.db.delete(take._id);
+}
+
 export async function bumpReviewerCount(ctx: MutationCtx, by: number) {
   const row = await ctx.db.query("siteStats").first();
-  if (row) await ctx.db.patch(row._id, { reviewerCount: row.reviewerCount + by });
+  if (row) await ctx.db.patch(row._id, { reviewerCount: Math.max(0, row.reviewerCount + by) });
   else await ctx.db.insert("siteStats", { reviewerCount: Math.max(0, by) });
 }
 

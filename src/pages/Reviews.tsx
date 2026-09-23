@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Pills } from "../components/Pills";
-import { AxisScores, Avatar, MatchChip, Stars, UserLink } from "../components/bits";
+import { AxisScores, Avatar, DeleteReview, MatchChip, Stars, UserLink } from "../components/bits";
 import { Reactions } from "../components/Reactions";
 import { fmtAvg, timeAgo } from "../lib/format";
 import ui from "../components/ui.module.css";
@@ -54,7 +54,10 @@ export function Reviews() {
                   </Link>
                 )}
                 <MatchChip match={r.match} />
-                <span className={`${ui.meta} ${s.when}`}>{timeAgo(r.updatedAt)}</span>
+                <span className={s.when}>
+                  <DeleteReview reviewId={r._id} authorId={r.user?._id} />
+                  <span className={ui.meta}>{timeAgo(r.updatedAt)}</span>
+                </span>
               </div>
               <div className={s.byline}>
                 <UserLink user={r.user} className={s.name} />

@@ -25,6 +25,7 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 ## Rules
 - **One review per user per model version.** Posting again on the same version adds a dated **update**: new text entry + new scores that replace the current scores. Earlier entries stay visible as history (see 4d).
 - **Head-to-head takes**: separate post type, `A > B` on overall, optional one-line reason. Unlimited per user. Model page shows per-opponent win %, counting only each person's most recent take on that pair (one vote per person), and the number of people.
+- **Deletion**: people can delete their own reviews (with history) and takes, and their whole account (reviews, takes, reactions, model requests and sign-in records; axes they created stay). All stats are updated in the same mutation. Admins can delete any review or take.
 - **Reactions**: Agree, Disagree, Useful, Hot take, Lol. Toggle; a user may hold several on one review.
 - **Model catalog**: admin-curated. Users can submit a request (family, version id, provider, link); admin approves in a simple admin view.
 - **No moderation, verification, screenshots, tweet embeds, divisive badges, or reviewer filter in v1.**

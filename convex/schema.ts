@@ -129,6 +129,7 @@ export default defineSchema({
   })
     .index("by_review_user_kind", ["reviewId", "userId", "kind"])
     .index("by_review", ["reviewId"])
+    .index("by_user", ["userId"])
     .index("by_createdAt", ["createdAt"]),
 
   takes: defineTable({
@@ -154,7 +155,9 @@ export default defineSchema({
       v.literal("rejected"),
     ),
     createdAt: v.number(),
-  }).index("by_status", ["status"]),
+  })
+    .index("by_status", ["status"])
+    .index("by_user", ["userId"]),
 
   // Singleton row of site-wide counters.
   siteStats: defineTable({
