@@ -79,7 +79,16 @@
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--ink);
+  color: var(--axis, var(--ink));
+}
+.groupHead {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-2);
+  background: var(--raised);
+  padding: var(--s-4) var(--s-8);
 }
 .axisHint {
   font-size: var(--text-sm);
@@ -142,8 +151,8 @@
   }
 }
 .numOn {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--axis, var(--ink));
+  border-color: var(--axis, var(--ink));
   color: var(--on-ink);
 }
 .rightCell {

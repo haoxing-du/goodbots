@@ -14,6 +14,7 @@ import s from "./WriteReview.module.css";
 import { versionPath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
 import { radioGroupKeys, radioTabIndex } from "../lib/radioGroup";
+import { axisVars } from "../lib/axes";
 
 /** Matches EDIT_WINDOW in convex/reviews.ts. */
 const EDIT_WINDOW_MS = 10 * 60 * 1000;
@@ -100,6 +101,26 @@ export function WriteReview() {
     });
   const setNewScore = (name: string, n: number) =>
     set({ newAxes: draft.newAxes.map((x) => (x.name === name ? { ...x, score: n } : x)) });
+
+  // The four core axes (in their colors) come first; reviewer-added ones follow in their own group.
+  const coreAxes = data.axes.filter((a) => a.core);
+  const customAxes = data.axes.filter((a) => !a.core);
+  const axisRow = (a: (typeof data.axes)[number]) => {
+    const v = valueFor(a);
+    const avg = community?.axes[a._id];
+    return (
+      <AxisRow
+        key={a._id}
+        name={a.name}
+        slug={a.core ? a.slug : undefined}
+        hint={a.hint}
+        value={v}
+        disabled={done}
+        onChange={(n) => setScore(a, n)}
+        right={done && avg != null ? <Delta mine={v || null} avg={avg} /> : "optional"}
+      />
+    );
+  };
 
   const rated =
     data.axes.filter((a) => valueFor(a) > 0).length + pendingAxes.filter((a) => a.score > 0).length;
@@ -208,98 +229,6 @@ export function WriteReview() {
             </div>
           )}
 
-          <div className={s.guideInline}>
-            <ScaleGuide />
-          </div>
-
-          <div className={`${ui.card} ${ui.rows} ${s.ratingCard}`}>
-            <div className={s.overallRow}>
-              <div>
-                <div className={s.axisLabel}>Overall</div>
-                <div className={s.axisHint}>Optional</div>
-              </div>
-              <div
-                className={s.starButtons}
-                role="radiogroup"
-                aria-label="Overall stars"
-                onKeyDown={radioGroupKeys(
-                  SCORES,
-                  (n) => set({ overall: n }),
-                  () => set({ overall: 0 }),
-                )}
-              >
-                {SCORES.map((n, i) => {
-                  const v = done ? (community?.mine.overall ?? 0) : draft.overall;
-                  return (
-                    <button
-                      key={n}
-                      type="button"
-                      role="radio"
-                      aria-checked={v === n}
-                      tabIndex={radioTabIndex(SCORES, v, i)}
-                      aria-label={`${n} star${n > 1 ? "s" : ""}`}
-                      disabled={done}
-                      className={n <= v ? s.starOn : s.starOff}
-                      onClick={() => set({ overall: draft.overall === n ? 0 : n })}
-                    >
-                      {n <= v ? "★" : "☆"}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className={s.rightCell}>
-                {done && community?.overall != null ? (
-                  <Delta mine={community.mine.overall ?? null} avg={community.overall} />
-                ) : draft.overall ? (
-                  `${draft.overall} of 5`
-                ) : (
-                  "—"
-                )}
-              </div>
-            </div>
-            {data.axes.map((a) => {
-              const v = valueFor(a);
-              const avg = community?.axes[a._id];
-              return (
-                <AxisRow
-                  key={a._id}
-                  name={a.name}
-                  hint={a.hint ?? (a.core ? undefined : "Added by reviewers")}
-                  value={v}
-                  disabled={done}
-                  onChange={(n) => setScore(a, n)}
-                  right={done && avg != null ? <Delta mine={v || null} avg={avg} /> : "optional"}
-                />
-              );
-            })}
-            {!done &&
-              pendingAxes.map((x) => (
-                <AxisRow
-                  key={x.name}
-                  name={x.name}
-                  hint={x.hint ?? "New axis"}
-                  value={x.score}
-                  onChange={(n) => setNewScore(x.name, n)}
-                  right={
-                    <button
-                      type="button"
-                      className={s.removeAxis}
-                      onClick={() => set({ newAxes: draft.newAxes.filter((y) => y.name !== x.name) })}
-                    >
-                      Remove
-                    </button>
-                  }
-                />
-              ))}
-            {!done && (
-              <AddAxis
-                existing={data.axes}
-                pending={pendingAxes.map((x) => x.name)}
-                onAdd={(name, hint) => set({ newAxes: [...draft.newAxes, { name, hint, score: 0 }] })}
-              />
-            )}
-          </div>
-
           <label className={s.field}>
             <span className={ui.sectionLabel}>Your review</span>
             <textarea
@@ -313,6 +242,14 @@ export function WriteReview() {
             />
           </label>
 
+          <Screenshot
+            image={draft.image}
+            caption={draft.imageCaption}
+            disabled={done}
+            onChange={(image) => set({ image, imageCaption: image ? draft.imageCaption : "" })}
+            onCaptionChange={(imageCaption) => set({ imageCaption })}
+          />
+
           <HeadToHead
             model={selected.displayName}
             opponents={opponents}
@@ -321,13 +258,90 @@ export function WriteReview() {
             onChange={(v) => set({ versus: v })}
           />
 
-          <Screenshot
-            image={draft.image}
-            caption={draft.imageCaption}
-            disabled={done}
-            onChange={(image) => set({ image, imageCaption: image ? draft.imageCaption : "" })}
-            onCaptionChange={(imageCaption) => set({ imageCaption })}
-          />
+          <div className={s.guideInline}>
+            <ScaleGuide />
+          </div>
+
+          <div className={s.field}>
+            <h2 className={ui.sectionLabel}>Ratings</h2>
+            <div className={`${ui.card} ${ui.rows} ${s.ratingCard}`}>
+              <div className={s.overallRow}>
+                <div>
+                  <div className={s.axisLabel}>Overall</div>
+                  <div className={s.axisHint}>Optional</div>
+                </div>
+                <div
+                  className={s.starButtons}
+                  role="radiogroup"
+                  aria-label="Overall stars"
+                  onKeyDown={radioGroupKeys(
+                    SCORES,
+                    (n) => set({ overall: n }),
+                    () => set({ overall: 0 }),
+                  )}
+                >
+                  {SCORES.map((n, i) => {
+                    const v = done ? (community?.mine.overall ?? 0) : draft.overall;
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        role="radio"
+                        aria-checked={v === n}
+                        tabIndex={radioTabIndex(SCORES, v, i)}
+                        aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                        disabled={done}
+                        className={n <= v ? s.starOn : s.starOff}
+                        onClick={() => set({ overall: draft.overall === n ? 0 : n })}
+                      >
+                        {n <= v ? "★" : "☆"}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className={s.rightCell}>
+                  {done && community?.overall != null ? (
+                    <Delta mine={community.mine.overall ?? null} avg={community.overall} />
+                  ) : draft.overall ? (
+                    `${draft.overall} of 5`
+                  ) : (
+                    "—"
+                  )}
+                </div>
+              </div>
+              {coreAxes.map(axisRow)}
+              {(customAxes.length > 0 || (!done && pendingAxes.length > 0)) && (
+                <div className={s.groupHead}>Added by reviewers</div>
+              )}
+              {customAxes.map(axisRow)}
+              {!done &&
+                pendingAxes.map((x) => (
+                  <AxisRow
+                    key={x.name}
+                    name={x.name}
+                    hint={x.hint ?? "New axis"}
+                    value={x.score}
+                    onChange={(n) => setNewScore(x.name, n)}
+                    right={
+                      <button
+                        type="button"
+                        className={s.removeAxis}
+                        onClick={() => set({ newAxes: draft.newAxes.filter((y) => y.name !== x.name) })}
+                      >
+                        Remove
+                      </button>
+                    }
+                  />
+                ))}
+              {!done && (
+                <AddAxis
+                  existing={data.axes}
+                  pending={pendingAxes.map((x) => x.name)}
+                  onAdd={(name, hint) => set({ newAxes: [...draft.newAxes, { name, hint, score: 0 }] })}
+                />
+              )}
+            </div>
+          </div>
 
           {!done && (
             <div className={s.footer}>
@@ -403,6 +417,7 @@ function axisSlug(name: string) {
 
 function AxisRow({
   name,
+  slug,
   hint,
   value,
   disabled,
@@ -410,6 +425,7 @@ function AxisRow({
   right,
 }: {
   name: string;
+  slug?: string; // core axes only: colors the row with the axis hue
   hint?: string;
   value: number;
   disabled?: boolean;
@@ -417,7 +433,7 @@ function AxisRow({
   right: React.ReactNode;
 }) {
   return (
-    <div className={s.axisRow}>
+    <div className={s.axisRow} style={axisVars(slug)}>
       <div>
         <div className={s.axisLabel}>{name}</div>
         {hint && <div className={s.axisHint}>{hint}</div>}
