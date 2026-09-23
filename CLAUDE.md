@@ -1,8 +1,12 @@
 # Working in this repo
 
+- **Work on `dev`, never push to `main`.** `main` is production: every push to it
+  deploys www.goodbots.review (site and Convex backend) via Vercel. Do all work on
+  the `dev` branch (`git switch dev && git pull`).
 - **Commit and push after each change.** When a requested change is done and
   typechecks (`npm run typecheck`), commit it with a descriptive message and
-  push to `origin main`. One commit per change; don't batch unrelated work.
+  push to `origin dev`. One commit per change; don't batch unrelated work.
+  Vercel builds a preview of `dev`; the owner merges `dev` into `main` to ship.
 - Local dev: `npx convex dev` + `npx vite`. See `SETUP.md`.
 - `design/` holds local design mockups and is git-ignored; don't commit it.
 

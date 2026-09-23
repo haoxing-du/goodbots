@@ -96,7 +96,7 @@ Dev and prod deployments have different `.convex.site` URLs, so register both ca
 1. **Convex production deployment.** In the Convex dashboard, open your project's Production deployment and set the env vars above (`SITE_URL` = your Vercel URL). Run `generateKeys.mjs` against prod: `CONVEX_DEPLOY_KEY=<prod key> node scripts/generateKeys.mjs`, or paste the values into the dashboard. Don't set `DEMO_LOGIN`.
 2. **Deploy key.** Dashboard → Production → Settings → generate a **Production deploy key**.
 3. **Vercel.** Import the repo, framework preset **Vite**, then:
-   - Build command: `npx convex deploy --cmd 'npm run build'`
+   - Build command: set by `vercel.json` (`sh scripts/vercel-build.sh`); leave the dashboard override off
    - Output directory: `dist`
    - Environment variables:
      - `CONVEX_DEPLOY_KEY` = the production deploy key
@@ -106,3 +106,11 @@ Dev and prod deployments have different `.convex.site` URLs, so register both ca
 4. **SPA routing.** `vercel.json` rewrites every path except `/api/*` to `index.html` so deep links like `/m/claude-opus-4-1` work.
    **Link previews:** when X, Slack, iMessage and similar crawlers fetch `/`, `/m/…`, `/u/…` or `/r/…`, `middleware.ts` asks Convex (`GET <CONVEX_SITE_URL>/meta?path=…`) for the page's title and description and adds Open Graph/Twitter tags pointing at `/api/og?…` for the image. Regular visitors aren't affected. Check with X's or LinkedIn's post inspector after deploying.
 5. **First-deploy setup.** Run `npx convex run setup:init --prod` once. It creates the core axes and fills the model catalog from OpenRouter right away (the 6-hourly cron keeps both up to date afterwards). Production starts with no reviews — don't seed it (the seed refuses to run without `ALLOW_SEED`). The homepage headline shows the default featured models until you change them in `/admin`.
+
+## Branches and previews
+
+- `main` is production. Merging into `main` deploys the site and the Convex backend.
+- Work happens on `dev` (and other branches). Vercel builds a **preview** for each push.
+- `scripts/vercel-build.sh` keeps previews away from production data. A preview only gets a backend if Vercel's **Preview** environment has a Convex **preview deploy key** (Convex dashboard → project settings → deploy keys). In that case each branch gets its own throwaway Convex deployment, set up with `setup:init`. Without one, previews build the frontend only.
+- In Vercel, scope `CONVEX_DEPLOY_KEY` (the production key) to the **Production** environment only.
+
