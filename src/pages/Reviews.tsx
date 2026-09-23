@@ -20,6 +20,11 @@ import ui from "../components/ui.module.css";
 import s from "./Reviews.module.css";
 import { versionPath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
+import { useMasonry } from "../lib/useMasonry";
+
+// Masonry grid: 4px rows, 16px between cards (matches .board in the CSS).
+const BOARD_ROW = 4;
+const BOARD_GAP = 16;
 
 export function Reviews() {
   useTitle("Reviews");
@@ -34,6 +39,7 @@ export function Reviews() {
         : latest.results
       : top;
   const summary = useQuery(api.reviews.feedSummary);
+  const board = useMasonry<HTMLDivElement>(BOARD_ROW, BOARD_GAP);
 
   return (
     <div className={s.layout}>
@@ -62,7 +68,7 @@ export function Reviews() {
           />
         </header>
 
-        <div className={s.board}>
+        <div className={s.board} ref={board}>
           {feed === undefined && (
             <div className={`${ui.card} ${ui.skelCard} ${s.wide}`} aria-busy="true" />
           )}

@@ -35,8 +35,38 @@
 }
 /* Feed board: pill-shaped emoji + count. */
 .compact {
+  position: relative;
   border-radius: var(--r-pill);
   padding: var(--s-1) var(--s-4);
+}
+/* The label as a quick tooltip; the native title tooltip waits ~1s+. */
+.compact::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 5;
+  bottom: calc(100% + 6px);
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  padding: 3px var(--s-3);
+  border-radius: var(--r-sm);
+  background: var(--ink);
+  color: var(--on-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 80ms;
+}
+.compact:focus-visible::after {
+  opacity: 1;
+}
+@media (hover: hover) {
+  .compact:hover::after {
+    opacity: 1;
+    transition-delay: 120ms;
+  }
 }
 .compact.off {
   background: transparent;

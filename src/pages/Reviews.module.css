@@ -22,12 +22,14 @@
   color: var(--muted-2);
   margin-top: var(--s-5);
 }
-/* Board of review cards: text first, everything else small. Cards keep
-   their natural height; long reviews clamp and link to the full page. */
+/* Board of review cards: text first, everything else small. Masonry via
+   useMasonry: 4px rows, each card spans its height + 16px, so there are no
+   holes under short cards. Long reviews clamp and link to the full page. */
 .board {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
-  gap: var(--s-7);
+  grid-auto-rows: 4px;
+  column-gap: var(--s-7);
   align-items: start;
 }
 .board > .wide {

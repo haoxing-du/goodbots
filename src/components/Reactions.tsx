@@ -52,7 +52,7 @@ export function Reactions({
             className={`${on ? s.on : s.off} ${compact ? s.compact : ""}`}
             aria-pressed={on}
             aria-label={compact ? `${label}, ${n}` : undefined}
-            title={compact ? label : undefined}
+            data-tip={compact ? label : undefined}
             onClick={() => onClick(kind)}
           >
             <span className={s.emoji} aria-hidden>
