@@ -175,7 +175,7 @@ p {
 .skip-link {
   position: absolute;
   top: 8px;
-  left: 8px;
+  inset-inline-start: 8px;
   z-index: 100;
   background: var(--ink);
   color: var(--on-ink);

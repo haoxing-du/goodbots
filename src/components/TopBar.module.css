@@ -142,7 +142,7 @@
 }
 .menuList {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: calc(100% + 8px);
   background: var(--card);
   border: 1px solid var(--border);
@@ -156,7 +156,7 @@
 }
 .menuList a,
 .menuList button {
-  text-align: left;
+  text-align: start;
   background: none;
   border: 0;
   padding: 8px 10px;
@@ -195,13 +195,13 @@
     flex: 1 1 12rem;
   }
   .cancel {
-    margin-left: auto;
+    margin-inline-start: auto;
   }
   .search {
     width: 100%;
   }
   .write {
-    margin-left: auto;
+    margin-inline-start: auto;
   }
 }
 

@@ -64,7 +64,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted-3);
-  text-align: left;
+  text-align: start;
   padding: 12px 20px;
   border-bottom: 1px solid var(--divider);
 }
@@ -137,8 +137,8 @@
 }
 .entryLatest,
 .entryOld {
-  padding-left: 16px;
-  border-left: 2px solid;
+  padding-inline-start: 16px;
+  border-inline-start: 2px solid;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -251,7 +251,7 @@
   }
   .table td[data-label]::before {
     content: attr(data-label);
-    margin-right: 6px;
+    margin-inline-end: 6px;
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
     text-transform: uppercase;
@@ -316,7 +316,7 @@
 }
 
 .headDelete {
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 .takeMeta {
   display: flex;

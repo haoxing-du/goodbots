@@ -150,7 +150,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--muted-3);
-  text-align: right;
+  text-align: end;
   white-space: nowrap;
 }
 .deltaUp {
@@ -322,7 +322,7 @@
     padding: 14px 16px;
   }
   .rightCell {
-    text-align: left;
+    text-align: start;
   }
   .snippet {
     grid-template-columns: 1fr;
