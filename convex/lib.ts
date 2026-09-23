@@ -199,7 +199,7 @@ export async function applyOverallToStats(
   });
 }
 
-async function bumpAxis(
+export async function bumpAxis(
   ctx: MutationCtx,
   versionId: Id<"versions">,
   axisId: Id<"axes">,

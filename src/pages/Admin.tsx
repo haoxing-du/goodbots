@@ -29,6 +29,7 @@ export function Admin() {
       <h1 className={ui.serifTitle}>Admin</h1>
       <Requests />
       <AddVersion />
+      <Axes />
     </div>
   );
 }
@@ -148,6 +149,101 @@ function AddVersion() {
           </button>
         </div>
       </form>
+    </section>
+  );
+}
+
+function Axes() {
+  const axes = useQuery(api.admin.axes);
+  const setStatus = useMutation(api.admin.setAxisStatus);
+  const merge = useMutation(api.admin.mergeAxis);
+  const [targets, setTargets] = useState<Record<string, string>>({});
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const run = async (fn: () => Promise<string>) => {
+    setMsg(null);
+    try {
+      setMsg({ ok: true, text: await fn() });
+    } catch (e) {
+      setMsg({ ok: false, text: errText(e, "Couldn't update that axis.") });
+    }
+  };
+
+  return (
+    <section>
+      <h2 className={ui.sectionLabel}>Axes</h2>
+      <div className={`${ui.card} ${ui.rows}`}>
+        {axes?.map((a) => (
+          <div key={a._id} className={s.axis}>
+            <div>
+              <div className={a.status === "hidden" ? s.axisHidden : s.reqTitle}>
+                {a.name}{" "}
+                <span className={ui.meta}>
+                  {a.core ? "core" : "custom"}
+                  {a.status === "hidden" && " · hidden"}
+                </span>
+              </div>
+              <div className={ui.meta}>
+                {a.ratingCount} {a.ratingCount === 1 ? "rating" : "ratings"}
+                {a.createdBy && (
+                  <>
+                    {" "}
+                    · added by <UserLink user={a.createdBy} />
+                  </>
+                )}
+              </div>
+            </div>
+            {!a.core && (
+              <div className={s.actions}>
+                <button
+                  type="button"
+                  className={ui.btnGhost}
+                  onClick={() =>
+                    void run(async () => {
+                      const status = a.status === "hidden" ? "active" : "hidden";
+                      await setStatus({ axisId: a._id, status });
+                      return `${a.name} is now ${status === "hidden" ? "hidden" : "visible"}.`;
+                    })
+                  }
+                >
+                  {a.status === "hidden" ? "Unhide" : "Hide"}
+                </button>
+                <select
+                  className={ui.input}
+                  aria-label={`Merge ${a.name} into`}
+                  value={targets[a._id] ?? ""}
+                  onChange={(e) => setTargets({ ...targets, [a._id]: e.target.value })}
+                >
+                  <option value="">Merge into…</option>
+                  {axes
+                    .filter((b) => b._id !== a._id && b.status === "active")
+                    .map((b) => (
+                      <option key={b._id} value={b._id}>
+                        {b.name}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  type="button"
+                  className={ui.btnGhost}
+                  disabled={!targets[a._id]}
+                  onClick={() => {
+                    const into = axes.find((b) => b._id === targets[a._id]);
+                    if (!into || !window.confirm(`Merge ${a.name} into ${into.name}? This can't be undone.`)) return;
+                    void run(async () => {
+                      const r = await merge({ fromId: a._id, intoId: into._id });
+                      return `Merged ${a.name} into ${into.name}: ${r.moved} scores moved, ${r.dropped} duplicates dropped.`;
+                    });
+                  }}
+                >
+                  Merge
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
     </section>
   );
 }

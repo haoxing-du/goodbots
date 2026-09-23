@@ -9,9 +9,25 @@
   font-size: 15px;
   margin-bottom: 4px;
 }
+.axis {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+}
+.axisHidden {
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: var(--muted-3);
+  text-decoration: line-through;
+}
 .actions {
   display: flex;
+  align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 @media (max-width: 900px) {
   .request {
