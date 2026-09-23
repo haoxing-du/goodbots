@@ -21,7 +21,7 @@ const SITE: PageMeta = {
   title: "GoodBots — reviews of AI models, by the people who use them",
   description:
     "Rate AI models on smarts, taste, vibes and whatever else you care about. Opinionated reviews, head-to-head takes, and reviewers whose taste matches yours.",
-  image: { kind: "site", title: "What did you think of your model?", sub: "Reviews of AI models, by the people who use them" },
+  image: { kind: "site", title: "What do you think of your model?", sub: "Reviews of AI models, by the people who use them" },
 };
 
 /** Meta for a path: "/", "/m/<provider>/<model>", "/u/<handle>" or "/r/<reviewId>". Null if unknown. */

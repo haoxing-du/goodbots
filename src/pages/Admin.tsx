@@ -424,7 +424,7 @@ function HomepageModels() {
       <h2 className={ui.sectionLabel}>Homepage models</h2>
       <div className={`${ui.card} ${f.cardPad} ${f.form}`}>
         <p className={f.hint}>
-          The models in the homepage headline (&ldquo;What did you think of
+          The models in the homepage headline (&ldquo;What do you think of
           …?&rdquo;), in order; the first is selected by default. Any catalog
           model works, reviewed or not.
           {data?.isDefault &&
