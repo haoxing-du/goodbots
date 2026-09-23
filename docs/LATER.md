@@ -26,7 +26,7 @@ Most of these compute on read what could be stored and updated in the same mutat
 
 ## Model catalog
 
-- **Check OpenRouter's terms** for using their model list (we credit them in the picker). The sync uses the public, keyless `/api/v1/models` endpoint.
+- **OpenRouter terms:** the sync calls the documented `/api/v1/models` endpoint with an API key and stores only basic facts (id, name, provider, dates), crediting OpenRouter in the picker. Their terms don't expressly license republishing the list (only the separate CC BY 4.0 Data API is), which we've accepted for now. If that changes, the fallback is the CC BY rankings data plus manual adds.
 - **Open-weight coverage:** OpenRouter lists the popular open models, not the long tail of Hugging Face fine-tunes. A Hugging Face source could be added to the same `catalog` table (there's already an `hfId` field).
 - **"Latest" aliases** (`~anthropic/claude-opus-latest` etc.) are filtered out today; they could power "I used ChatGPT → which version is that?" suggestions.
 - **No alert if the sync breaks** (OpenRouter changes its format or is down). The action logs and throws; add monitoring.

@@ -43,6 +43,7 @@ npx convex env set SITE_URL http://localhost:5173
 npx convex env set DEMO_LOGIN true                  # optional: sign in without OAuth keys
 npx convex env set ADMIN_EMAILS demo@goodbots.local # optional: demo user can use /admin
 npx convex run seed:run                             # 7 models, 41 reviewers, 144 reviews, takes, reactions
+npx convex env set OPENROUTER_API_KEY sk-or-...     # for the model-catalog sync
 npx convex run catalog:sync                         # optional: fill the model catalog now (the cron also runs it)
 npx vite
 ```
@@ -68,6 +69,7 @@ All of these are set on the **Convex deployment** (`npx convex env set NAME valu
 | `AUTH_RESEND_KEY` | [Resend](https://resend.com) API key for sending magic links. Unset = links are logged instead of emailed (local dev only). |
 | `AUTH_EMAIL_FROM` | Sender, e.g. `GoodBots <login@yourdomain.com>`. The domain must be verified in Resend. Defaults to `GoodBots <onboarding@resend.dev>`, Resend's test sender, which can only deliver to your own Resend account's address. |
 | `AUTH_TWITTER_ID`, `AUTH_TWITTER_SECRET` | X OAuth 2.0 client. |
+| `OPENROUTER_API_KEY` | OpenRouter API key for the model-catalog sync (`catalog:sync`, every 6 hours). Listing models is free; any key from openrouter.ai → Keys works. |
 | `ADMIN_EMAILS` | Comma-separated emails allowed to use `/admin`. Matched against the signed-in user's email, so admins sign in with the email link (X doesn't share email). |
 | `DEMO_LOGIN` | `true` enables the local demo sign-in. Dev only. |
 

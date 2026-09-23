@@ -2,8 +2,9 @@ import { v } from "convex/values";
 import { internalAction, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 
-// Syncs OpenRouter's public model list into the `catalog` table.
-// https://openrouter.ai/api/v1/models (no key needed). Runs every 6 hours (crons.ts).
+// Syncs OpenRouter's model list into the `catalog` table.
+// https://openrouter.ai/api/v1/models, authenticated with OPENROUTER_API_KEY as the
+// docs require (listing models is free). Runs every 6 hours (crons.ts).
 
 const SOURCE = "https://openrouter.ai/api/v1/models";
 
@@ -67,7 +68,9 @@ export function normalize(models: OpenRouterModel[]): Entry[] {
 export const sync = internalAction({
   args: {},
   handler: async (ctx) => {
-    const res = await fetch(SOURCE);
+    const key = process.env.OPENROUTER_API_KEY;
+    if (!key) console.warn("[catalog] OPENROUTER_API_KEY is not set; calling the models endpoint without a key");
+    const res = await fetch(SOURCE, key ? { headers: { Authorization: `Bearer ${key}` } } : undefined);
     if (!res.ok) throw new Error(`OpenRouter models: HTTP ${res.status}`);
     const { data } = (await res.json()) as { data: OpenRouterModel[] };
     const entries = normalize(data);
