@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation } from "convex/react";
+import { ModelPicker } from "../components/ModelPicker";
+import { writePath } from "../lib/paths";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { useSignIn } from "../components/SignIn";
@@ -15,9 +18,16 @@ export function RequestModel() {
   const { requireAuth } = useSignIn();
   const [form, setForm] = useState(EMPTY);
   const [sent, setSent] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
-  const field = (key: keyof typeof EMPTY, label: string, placeholder: string, required = true) => (
+  const field = (
+    key: keyof typeof EMPTY,
+    label: string,
+    placeholder: string,
+    required = true,
+  ) => (
     <label className={f.field}>
       <span className={f.label}>
         {label}
@@ -38,43 +48,69 @@ export function RequestModel() {
       <div>
         <h1 className={ui.serifTitle}>Request a model</h1>
         <p className={f.lede}>
-          The catalog is curated. Tell us which model version is missing and an admin will add it.
+          Most models are already here: we list everything on OpenRouter,
+          updated every few hours. Search first, and if it's there you can
+          review it right away.
         </p>
       </div>
-      <form
-        className={f.form}
-        onSubmit={(e) => {
-          e.preventDefault();
-          requireAuth(async () => {
-            setError(null);
-            try {
-              await create(form);
-              setForm(EMPTY);
-              setSent(true);
-            } catch (err) {
-              setError(err instanceof ConvexError ? String(err.data) : "Couldn't send the request.");
-            }
-          }, "Sign in to request a model.");
-        }}
-      >
-        {sent && (
-          <div className={f.ok} role="status">
-            Request sent. An admin will review it.
+      <div className={f.form}>
+        <ModelPicker
+          label="Search for the model"
+          placeholder="Search models…"
+          onPick={(m) => navigate(writePath(m.versionId))}
+        />
+        {!showForm && (
+          <div>
+            <button
+              type="button"
+              className={ui.linkBtn}
+              onClick={() => setShowForm(true)}
+            >
+              It's not listed. Request it.
+            </button>
           </div>
         )}
-        <div className={f.row}>
-          {field("name", "Model name", "Claude Sonnet 5")}
-          {field("provider", "Provider", "Anthropic")}
-        </div>
-        {field("versionId", "Version id", "claude-sonnet-4-5")}
-        {field("link", "Link", "Announcement or docs URL", false)}
-        {error && <p className={ui.error}>{error}</p>}
-        <div>
-          <button type="submit" className={ui.btn}>
-            Send request
-          </button>
-        </div>
-      </form>
+      </div>
+      {showForm && (
+        <form
+          className={f.form}
+          onSubmit={(e) => {
+            e.preventDefault();
+            requireAuth(async () => {
+              setError(null);
+              try {
+                await create(form);
+                setForm(EMPTY);
+                setSent(true);
+              } catch (err) {
+                setError(
+                  err instanceof ConvexError
+                    ? String(err.data)
+                    : "Couldn't send the request.",
+                );
+              }
+            }, "Sign in to request a model.");
+          }}
+        >
+          {sent && (
+            <div className={f.ok} role="status">
+              Request sent. An admin will review it.
+            </div>
+          )}
+          <div className={f.row}>
+            {field("name", "Model name", "Claude Sonnet 5")}
+            {field("provider", "Provider", "Anthropic")}
+          </div>
+          {field("versionId", "Version id", "claude-sonnet-4-5")}
+          {field("link", "Link", "Announcement or docs URL", false)}
+          {error && <p className={ui.error}>{error}</p>}
+          <div>
+            <button type="submit" className={ui.btn}>
+              Send request
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
