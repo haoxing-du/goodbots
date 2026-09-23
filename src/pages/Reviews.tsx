@@ -22,12 +22,9 @@ import { useTitle } from "../lib/useTitle";
 export function Reviews() {
   useTitle("Reviews");
   const [tab, setTab] = useState<"latest" | "top">("latest");
-  const latest = usePaginatedQuery(
-    api.reviews.feedLatest,
-    tab === "latest" ? {} : "skip",
-    { initialNumItems: 20 },
-  );
-  const top = useQuery(api.reviews.feedTop, tab === "top" ? {} : "skip");
+  // Both feeds stay subscribed so switching tabs doesn't blank the list.
+  const latest = usePaginatedQuery(api.reviews.feedLatest, {}, { initialNumItems: 20 });
+  const top = useQuery(api.reviews.feedTop, {});
   const feed =
     tab === "latest"
       ? latest.status === "LoadingFirstPage"
@@ -64,6 +61,7 @@ export function Reviews() {
         </header>
 
         <div className={s.cards}>
+          {feed === undefined && <div className={`${ui.card} ${ui.skelCard}`} aria-busy="true" />}
           {feed && feed.length === 0 && (
             <div className={`${ui.card} ${ui.empty}`}>
               {tab === "top" ? (

@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import { UserLink } from "../components/bits";
+import { UserLink, PageLoading } from "../components/bits";
 import { ModelPicker, PickedModel } from "../components/ModelPicker";
 import { shortDate } from "../lib/format";
 import ui from "../components/ui.module.css";
@@ -18,7 +18,7 @@ function errText(e: unknown, fallback: string) {
 export function Admin() {
   useTitle("Admin");
   const me = useQuery(api.users.me);
-  if (me === undefined) return <div className={ui.page} />;
+  if (me === undefined) return <PageLoading />;
   if (!me?.isAdmin) {
     return (
       <div className={ui.page}>

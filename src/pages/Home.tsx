@@ -128,25 +128,27 @@ export function Home() {
         />
 
         <div className={s.action}>
-          {axis && (
-            <div className={s.axisPick}>
-              <div className={s.axisName}>
-                <span>{axis.name}</span>
-                <button
-                  type="button"
-                  className={s.shuffle}
-                  onClick={shuffle}
-                  aria-label="Suggest a different axis"
-                  title="Suggest a different axis"
-                >
-                  ↻
-                </button>
-              </div>
-              <div className={s.axisHint}>
-                {axis.hint ? `${axis.hint} · optional` : "optional"}
-              </div>
-            </div>
-          )}
+          <div className={s.axisPick}>
+            {axis && (
+              <>
+                <div className={s.axisName}>
+                  <span>{axis.name}</span>
+                  <button
+                    type="button"
+                    className={s.shuffle}
+                    onClick={shuffle}
+                    aria-label="Suggest a different axis"
+                    title="Suggest a different axis"
+                  >
+                    ↻
+                  </button>
+                </div>
+                <div className={s.axisHint}>
+                  {axis.hint ? `${axis.hint} · optional` : "optional"}
+                </div>
+              </>
+            )}
+          </div>
           <div
             className={s.stars}
             role="radiogroup"
@@ -186,6 +188,8 @@ export function Home() {
           </button>
         </div>
 
+        {/* Hold the line's height while loading so the hero doesn't jump. */}
+        {data === undefined && <p className={s.count}>{"\u00a0"}</p>}
         {data && data.reviewerCount > 0 && (
           <p className={s.count}>
             {fmtCount(data.reviewerCount)}{" "}

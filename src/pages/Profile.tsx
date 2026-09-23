@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../convex/_generated/api";
-import { Avatar, ConfirmDelete, DeleteReview, Stars } from "../components/bits";
+import { Avatar, ConfirmDelete, DeleteReview, Stars, PageLoading } from "../components/bits";
 import { monthYear, shortDate } from "../lib/format";
 import { versionPath } from "../lib/paths";
 import { NotFound } from "./NotFound";
@@ -29,7 +29,7 @@ export function Profile() {
   const removeTake = useMutation(api.takes.remove);
   const [editing, setEditing] = useState(false);
 
-  if (data === undefined) return <div className={ui.page} />;
+  if (data === undefined) return <PageLoading />;
   if (data === null) return <NotFound what="reviewer" />;
   const { user, latestReview } = data;
 

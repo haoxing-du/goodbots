@@ -7,6 +7,20 @@ import { Id } from "../../convex/_generated/dataModel";
 import { initials } from "../lib/format";
 import { AxisScore } from "../lib/axes";
 import s from "./bits.module.css";
+import ui from "./ui.module.css";
+
+/** Page-shaped placeholder while a page's main query loads; announced once. */
+export function PageLoading() {
+  return (
+    <div className={ui.page} aria-busy="true">
+      <span className={ui.srOnly} role="status">
+        Loading…
+      </span>
+      <div className={ui.skelTitle} />
+      <div className={`${ui.card} ${ui.skelCard}`} />
+    </div>
+  );
+}
 
 export function Stars({ value, size = 15 }: { value: number; size?: number }) {
   const n = Math.round(value);

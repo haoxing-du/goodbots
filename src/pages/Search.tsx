@@ -20,6 +20,7 @@ export function Search() {
       </h1>
       <section>
         <h2 className={ui.sectionLabel}>Models</h2>
+        {!results && <div className={`${ui.card} ${ui.skelRow}`} aria-busy="true" />}
         {results?.models.length === 0 && <div className={`${ui.card} ${ui.empty}`}>No models match.</div>}
         <div className={s.grid}>
           {results?.models.map((m) => (
@@ -37,6 +38,7 @@ export function Search() {
       </section>
       <section>
         <h2 className={ui.sectionLabel}>Reviewers</h2>
+        {!results && <div className={`${ui.card} ${ui.skelRow}`} aria-busy="true" />}
         {results?.reviewers.length === 0 && <div className={`${ui.card} ${ui.empty}`}>No reviewers match.</div>}
         <div className={s.grid}>
           {results?.reviewers.map((u) => (

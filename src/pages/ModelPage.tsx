@@ -5,7 +5,7 @@ import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { Pills } from "../components/Pills";
-import { LoadMore, UserLink } from "../components/bits";
+import { LoadMore, UserLink, PageLoading } from "../components/bits";
 import { ReviewCard } from "../components/ReviewCard";
 import { useSignIn } from "../components/SignIn";
 import { fmtAvg, fmtCount } from "../lib/format";
@@ -23,7 +23,7 @@ export function ModelPage() {
     data?.kind === "page" ? data.version.displayName : data?.kind === "catalog" ? data.entry.name : undefined,
   );
 
-  if (data === undefined) return <div className={ui.page} />;
+  if (data === undefined) return <PageLoading />;
   if (data === null) return <NotFound what="model" />;
   if (data.kind === "redirect") return <Navigate to={versionPath(data.to)} replace />;
   if (data.kind === "catalog") return <UnreviewedModel entry={data.entry} />;
@@ -354,6 +354,7 @@ function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
         />
       </div>
       <div className={s.reviewCards}>
+        {status === "LoadingFirstPage" && <div className={`${ui.card} ${ui.skelCard}`} aria-busy="true" />}
         {status !== "LoadingFirstPage" && reviews.length === 0 && (
           <div className={`${ui.card} ${ui.empty}`}>
             {stars ? `No ${stars}★ reviews yet.` : "No reviews yet. Write the first one."}
