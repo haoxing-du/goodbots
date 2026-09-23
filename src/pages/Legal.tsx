@@ -4,6 +4,7 @@ import { useTitle } from "../lib/useTitle";
 import s from "./Legal.module.css";
 
 const CONTACT = "hello@goodbots.review";
+export const SOURCE = "https://github.com/haoxing-du/goodbots";
 const UPDATED = "September 23, 2026";
 
 function Mail({ children }: { children: React.ReactNode }) {
@@ -19,6 +20,9 @@ export function About() {
         <p>GoodBots is made by <a href="https://x.com/haoxingdu">Haoxing Du</a>.</p>
         <p>
           Questions or feedback? <Mail>Email me</Mail> or <a href="https://x.com/haoxingdu">get in touch on X</a>.
+        </p>
+        <p>
+          GoodBots is open source. The code is <a href={SOURCE}>on GitHub</a>.
         </p>
       </article>
     </div>
@@ -51,19 +55,34 @@ export function Privacy() {
 
         <h2>How we use it</h2>
         <p>
-          Only to run the site. We don’t sell your data, show ads, or use analytics or tracking. Your
-          browser stores a sign-in token to keep you signed in.
+          To run and improve the site. Your browser stores a sign-in token to keep you signed in.
+        </p>
+        <p>
+          We may also analyze site data, for example for research about AI models, and share, license or
+          sell it, for example as a dataset. This covers what you post, which is already public, and
+          aggregate statistics. We may add analytics tools to see how the site is used.
+        </p>
+        <p>
+          Your email address stays private. We don’t sell it or share it, except with the services below
+          to run the site, or if the law requires it.
         </p>
 
         <h2>Who else handles it</h2>
         <p>
-          Convex (database), Vercel (hosting), Resend (sign-in emails) and X (if you sign in with X).
+          Convex (database), Vercel (hosting), Resend (sign-in emails) and X (if you sign in with X). Anyone
+          we share or license data to, as described above.
         </p>
 
         <h2>Deleting your data</h2>
         <p>
           On your profile, choose “Edit profile”, then “Delete account” to permanently remove your
-          account and everything you posted. You can also <Mail>email us</Mail>.
+          account and everything you posted. You can also <Mail>email us</Mail>. Deleting removes your
+          data from GoodBots, but not from copies already shared or published before you deleted it.
+        </p>
+
+        <h2>Changes</h2>
+        <p>
+          We may update this policy. We’ll change the date above when we do.
         </p>
 
         <h2>Contact</h2>
@@ -85,7 +104,10 @@ export function Terms() {
         <ul>
           <li>You must be at least 13 to create an account.</li>
           <li>
-            You own what you post. You let GoodBots display it on the site until you delete it.
+            You own what you post. You give GoodBots a free, worldwide, permanent license to use, copy,
+            display, modify and distribute it, and to let others do the same, including in datasets we
+            share, license or sell. Deleting your content removes it from the site, but not from copies
+            already shared.
           </li>
           <li>
             Don’t post anything illegal, harassing or spammy, or anyone else’s private information. Check
