@@ -116,7 +116,7 @@ export function ogTree(p: URLSearchParams): Node {
           { borderLeft: `4px solid ${C.olive}`, paddingLeft: 24, fontFamily: "Newsreader", fontSize: 34, lineHeight: 1.35, color: C.ink },
           `“${quote}”`,
         )
-      : h("div", { fontFamily: "Geist Mono", fontSize: 22, color: C.faint }, "Reviews of AI models, by the people who use them"),
+      : h("div", { fontFamily: "Geist Mono", fontSize: 22, color: C.faint }, "Reviews of AI models, by the humans who interact with them"),
   );
 
   return tree;

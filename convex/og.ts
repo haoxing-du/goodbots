@@ -18,10 +18,10 @@ export type PageMeta = {
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 const SITE: PageMeta = {
-  title: "GoodBots — reviews of AI models, by the people who use them",
+  title: "GoodBots — Reviews of AI models, by the humans who interact with them",
   description:
-    "Rate AI models on smarts, taste, vibes and whatever else you care about. Opinionated reviews, head-to-head takes, and reviewers whose taste matches yours.",
-  image: { kind: "site", title: "What do you think of your model?", sub: "Reviews of AI models, by the people who use them" },
+    "Rate models on smarts, taste, vibes and whatever else you care about. See all the opinionated reviews, head-to-head takes, and reviewers whose taste matches yours.",
+  image: { kind: "site", title: "So what do you think of Opus 5.5?" },
 };
 
 /** Meta for a path: "/", "/m/<provider>/<model>", "/u/<handle>" or "/r/<reviewId>". Null if unknown. */
