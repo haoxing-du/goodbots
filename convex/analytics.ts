@@ -3,6 +3,7 @@ import { internalMutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { publicUser, requireAdmin } from "./lib";
+import { featuredModels } from "./featured";
 
 const DAY = 24 * 60 * 60 * 1000;
 // A signup counts as "activated" if they post a review within this long.
@@ -346,5 +347,54 @@ export const overview = query({
         capped: reviews.length === TOP_SCAN,
       },
     };
+  },
+});
+
+const THIN_MAX = 1; // model pages with this many reviews or fewer need more
+const THIN_SHOWN = 10;
+
+/** Where reviews are missing: homepage models' review counts, and the newest thinly reviewed model pages. */
+export const coverage = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+    const reviewCount = async (versionId: Id<"versions">) =>
+      (
+        await ctx.db
+          .query("versionStats")
+          .withIndex("by_version", (q) => q.eq("versionId", versionId))
+          .unique()
+      )?.reviewCount ?? 0;
+
+    const featured = await Promise.all(
+      (await featuredModels(ctx)).map(async (m) => {
+        const version = await ctx.db
+          .query("versions")
+          .withIndex("by_versionId", (q) => q.eq("versionId", m.versionId))
+          .unique();
+        return {
+          versionId: m.versionId,
+          displayName: m.displayName,
+          reviews: version?.status === "active" ? await reviewCount(version._id) : 0,
+        };
+      }),
+    );
+
+    const thin = [];
+    for await (const version of ctx.db.query("versions")) {
+      if (version.status !== "active") continue;
+      const reviews = await reviewCount(version._id);
+      if (reviews <= THIN_MAX) {
+        thin.push({
+          versionId: version.versionId,
+          displayName: version.displayName,
+          releasedAt: version.releasedAt ?? version._creationTime,
+          reviews,
+        });
+      }
+    }
+    thin.sort((a, b) => b.releasedAt - a.releasedAt);
+
+    return { featured, thin: thin.slice(0, THIN_SHOWN), thinTotal: thin.length };
   },
 });

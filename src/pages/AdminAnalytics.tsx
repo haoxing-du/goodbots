@@ -6,7 +6,7 @@ import { FunctionReturnType } from "convex/server";
 import { Pills } from "../components/Pills";
 import { UserLink } from "../components/bits";
 import { REACTIONS } from "../lib/axes";
-import { fmtCount } from "../lib/format";
+import { fmtCount, shortDate } from "../lib/format";
 import ui from "../components/ui.module.css";
 import s from "./AdminAnalytics.module.css";
 
@@ -66,6 +66,7 @@ export function Analytics() {
           <p className={ui.meta}>
             Counts are by UTC day and refresh hourly. Changes compare with the {days} days before.
           </p>
+          <Coverage />
         </div>
       )}
     </section>
@@ -439,5 +440,38 @@ function TopLists({ top }: { top: Overview["top"] }) {
         <p className={ui.meta}>Top lists count only the most recent 2,000 reviews in this period.</p>
       )}
     </>
+  );
+}
+
+const reviewsLabel = (n: number) => (n === 0 ? "no reviews" : `${fmtCount(n)} ${n === 1 ? "review" : "reviews"}`);
+
+/** Not tied to the period: where the site needs reviews right now. */
+function Coverage() {
+  const data = useQuery(api.analytics.coverage);
+  if (!data) return null;
+  return (
+    <div className={s.pair}>
+      <TopList title="Homepage models" empty="No homepage models.">
+        {data.featured.map((m) => (
+          <li key={m.versionId}>
+            <Link to={`/m/${m.versionId}`}>{m.displayName}</Link>
+            <span className={m.reviews === 0 ? s.topZero : s.topCount}>{reviewsLabel(m.reviews)}</span>
+          </li>
+        ))}
+      </TopList>
+      <TopList
+        title={`Model pages with one review or none${data.thinTotal > data.thin.length ? ` (newest ${data.thin.length} of ${data.thinTotal})` : ""}`}
+        empty="Every model page has at least two reviews."
+      >
+        {data.thin.map((m) => (
+          <li key={m.versionId}>
+            <Link to={`/m/${m.versionId}`}>{m.displayName}</Link>
+            <span className={s.topCount}>
+              {reviewsLabel(m.reviews)} · released {shortDate(m.releasedAt)}
+            </span>
+          </li>
+        ))}
+      </TopList>
+    </div>
   );
 }

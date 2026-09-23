@@ -257,7 +257,8 @@ button.tileOn:hover {
     grid-template-columns: 1fr;
   }
 }
-.trio .chartTitle {
+.trio .chartTitle,
+.pair .chartTitle {
   margin-bottom: var(--s-5);
 }
 .top {
@@ -296,4 +297,9 @@ button.tileOn:hover {
   font-variant-numeric: tabular-nums;
   color: var(--muted-2);
   white-space: nowrap;
+}
+.topZero {
+  margin-left: auto;
+  white-space: nowrap;
+  color: var(--rust-text);
 }
