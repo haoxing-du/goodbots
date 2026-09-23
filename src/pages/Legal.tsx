@@ -3,7 +3,7 @@ import ui from "../components/ui.module.css";
 import { useTitle } from "../lib/useTitle";
 import s from "./Legal.module.css";
 
-const CONTACT = "haoxingdu@gmail.com";
+const CONTACT = "hello@goodbots.review";
 const UPDATED = "September 23, 2026";
 
 function Mail({ children }: { children: React.ReactNode }) {
@@ -18,7 +18,7 @@ export function About() {
         <h1 className={ui.serifTitle}>About</h1>
         <p>GoodBots is made by <a href="https://x.com/haoxingdu">Haoxing Du</a>.</p>
         <p>
-          Questions or feedback? <Mail>Get in touch</Mail>.
+          Questions or feedback? <Mail>Email me</Mail> or <a href="https://x.com/haoxingdu">get in touch on X</a>.
         </p>
       </article>
     </div>
