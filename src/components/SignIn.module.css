@@ -134,6 +134,13 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   color: var(--ink-2);
+  position: relative;
+}
+/* Invisible hit area so the target reaches 24px+ without moving the text. */
+.back::after {
+  content: "";
+  position: absolute;
+  inset: -6px -4px;
 }
 .demo {
   background: var(--raised);

@@ -46,7 +46,7 @@
   padding: 3px 8px;
   text-decoration: none;
   color: var(--ink-2);
-  transition: border-color 120ms;
+  transition: border-color 120ms, color 120ms;
 }
 @media (hover: hover) {
   .modelChip:hover {
@@ -84,6 +84,7 @@
 .railList {
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
+  overflow: hidden; /* keep row hover inside the rounded corners */
 }
 .railRow {
   display: flex;

@@ -172,6 +172,13 @@
   color: var(--muted-3);
   text-decoration: underline;
   text-underline-offset: 3px;
+  position: relative;
+}
+/* Invisible hit area so the target reaches 24px+ without moving the text. */
+.removeAxis::after {
+  content: "";
+  position: absolute;
+  inset: -6px -4px;
 }
 @media (hover: hover) {
   .removeAxis:hover {

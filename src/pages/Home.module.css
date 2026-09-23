@@ -129,7 +129,7 @@
 .shuffle {
   border: 0;
   background: none;
-  padding: 2px 4px;
+  padding: 4px 6px; /* 24px square target */
   font-size: var(--text-lg);
   line-height: 1;
   color: var(--muted-3);

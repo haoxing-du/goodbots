@@ -152,6 +152,13 @@
   text-underline-offset: 3px;
   font-size: var(--text-base);
   color: var(--ink-2);
+  position: relative;
+}
+/* Invisible hit area so the target reaches 24px+ without moving the text. */
+.linkBtn::after {
+  content: "";
+  position: absolute;
+  inset: -6px -4px;
 }
 @media (hover: hover) {
   .linkBtn:hover:not(:disabled) {

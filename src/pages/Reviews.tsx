@@ -128,22 +128,17 @@ export function Reviews() {
 
 function ModelsRail() {
   const models = useQuery(api.models.list);
+  const rated = models?.filter((m) => m.reviewCount > 0) ?? [];
   return (
     <section>
       <h2 className={ui.sectionLabel}>Models · overall</h2>
-      {models && !models.some((m) => m.reviewCount > 0) && (
+      {models && rated.length === 0 && (
         <p className={s.railNote}>No ratings yet.</p>
       )}
-      <div className={`${s.railList} ${ui.rows}`}>
-        {models
-          ?.filter((m) => m.reviewCount > 0)
-          .slice(0, 8)
-          .map((m) => (
-            <Link
-              key={m._id}
-              to={versionPath(m.versionId)}
-              className={s.railRow}
-            >
+      {rated.length > 0 && (
+        <div className={`${s.railList} ${ui.rows}`}>
+          {rated.slice(0, 8).map((m) => (
+            <Link key={m._id} to={versionPath(m.versionId)} className={s.railRow}>
               <span>
                 <span className={s.railName}>{m.displayName}</span>
                 <span className={s.railVer}>{m.versionId}</span>
@@ -151,7 +146,8 @@ function ModelsRail() {
               <span className={s.railAvg}>{fmtAvg(m.overall)}</span>
             </Link>
           ))}
-      </div>
+        </div>
+      )}
     </section>
   );
 }
