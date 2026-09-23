@@ -10,6 +10,14 @@ export const reactionKind = v.union(
   v.literal("lol"),
 );
 
+export const reactionCounts = v.object({
+  agree: v.number(),
+  disagree: v.number(),
+  useful: v.number(),
+  hot: v.number(),
+  lol: v.number(),
+});
+
 const axisStat = v.object({
   sum: v.number(),
   count: v.number(),
@@ -200,6 +208,28 @@ export default defineSchema({
   siteStats: defineTable({
     reviewerCount: v.number(), // users with at least one review
   }),
+
+  // Site analytics, one row per UTC day ("2026-09-22"). Rebuilt hourly for recent
+  // days by convex/analytics.ts; a day's counts freeze once it's past the recount window.
+  dailyStats: defineTable({
+    day: v.string(),
+    signups: v.number(),
+    activated: v.number(), // of that day's signups, how many posted a review within 7 days
+    reviews: v.number(), // new reviews (first post on a model)
+    updates: v.number(), // follow-up entries on existing reviews
+    reactions: reactionCounts,
+    takes: v.number(), // head-to-heads
+    axes: v.number(), // custom axes created
+    requests: v.number(), // model requests
+    models: v.number(), // new model pages
+    activeUsers: v.number(), // distinct users who reviewed, updated, reacted or did a head-to-head
+  }).index("by_day", ["day"]),
+
+  // Who was active on each UTC day, so a period's distinct active users can be counted.
+  dailyActiveUsers: defineTable({
+    day: v.string(),
+    userId: v.id("users"),
+  }).index("by_day", ["day"]),
 
   versionStats: defineTable({
     versionId: v.id("versions"),
