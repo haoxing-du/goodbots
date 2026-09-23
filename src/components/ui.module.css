@@ -197,7 +197,7 @@
 }
 
 .empty {
-  padding: 28px;
+  padding: 28px 24px; /* same horizontal inset as card rows */
   color: var(--muted-2);
   font-size: var(--text-md);
   line-height: 1.5;

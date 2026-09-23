@@ -240,10 +240,9 @@
   display: flex;
   flex-direction: column;
 }
-.splitCaption span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.splitCaption {
+  flex-wrap: wrap;
+  column-gap: 12px;
 }
 .splitCaption span + span {
   color: var(--muted-3);
@@ -264,6 +263,13 @@
   font-size: var(--text-xs);
   color: var(--muted-2);
   text-align: right;
+}
+/* A <select> is as wide as its longest option; let it shrink instead of
+   being clipped by the card's overflow. */
+.composer select {
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
 }
 .composer {
   display: flex;
@@ -325,7 +331,8 @@
     grid-column: 1 / -1;
   }
   .takeCount {
-    display: none;
+    grid-column: 1 / -1;
+    text-align: left;
   }
 }
 @media (max-width: 900px) {
@@ -342,6 +349,9 @@
     padding: 14px 16px;
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+  .composer {
+    padding: 14px 16px; /* same inset as the rows above it */
   }
 }
 @media (max-width: 560px) {
