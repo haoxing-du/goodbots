@@ -502,7 +502,11 @@ function AddAxis({
       <button type="submit" className={ui.btnGhost}>
         Add
       </button>
-      {note && <span className={s.addNote}>{note}</span>}
+      {note && (
+        <span className={s.addNote} role="alert">
+          {note}
+        </span>
+      )}
     </form>
   );
 }

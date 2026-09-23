@@ -189,7 +189,7 @@
 .addNote {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--olive-text);
+  color: var(--rust-text);
 }
 .field {
   display: flex;

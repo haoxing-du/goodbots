@@ -241,7 +241,7 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
   const [left, setLeft] = useState<Id<"versions">>(versionId);
   const [right, setRight] = useState<Id<"versions"> | "">("");
   const [reason, setReason] = useState("");
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => {
     setLeft(versionId);
@@ -258,9 +258,12 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
       try {
         await post({ winnerVersionId: left, loserVersionId: opponent, reason: reason || undefined });
         setReason("");
-        setStatus("Take posted.");
+        setStatus({ ok: true, text: "Take posted." });
       } catch (e) {
-        setStatus(e instanceof ConvexError ? String(e.data) : "Couldn't post that take. Try again.");
+        setStatus({
+          ok: false,
+          text: e instanceof ConvexError ? String(e.data) : "Couldn't post that take. Try again.",
+        });
       }
     }, "Sign in to post a head-to-head take.");
 
@@ -312,8 +315,8 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
         Post take
       </button>
       {status && (
-        <span className={s.status} role="status">
-          {status}
+        <span className={`${s.status} ${status.ok ? "" : s.statusError}`} role={status.ok ? "status" : "alert"}>
+          {status.text}
         </span>
       )}
     </form>
