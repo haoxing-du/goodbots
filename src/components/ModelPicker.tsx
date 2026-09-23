@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import s from "./ModelPicker.module.css";
@@ -52,7 +53,13 @@ export function ModelPicker({
   };
 
   return (
-    <div className={s.picker}>
+    <div
+      className={s.picker}
+      // Close only when focus leaves the whole picker, so links in the panel are reachable by Tab.
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
       <input
         ref={inputRef}
         className={s.input}
@@ -67,7 +74,6 @@ export function ModelPicker({
         value={q}
         placeholder={placeholder}
         onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 120)}
         onChange={(e) => {
           setQ(e.target.value);
           setOpen(true);
@@ -114,7 +120,8 @@ export function ModelPicker({
           </ul>
           {debounced.trim() && searched?.length === 0 && (
             <div className={s.empty} role="status">
-              No models match. You can request it.
+              No models match &ldquo;{debounced.trim()}&rdquo;.{" "}
+              <Link to="/request">Request a model</Link>
             </div>
           )}
           <div className={s.credit}>
