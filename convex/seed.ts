@@ -56,7 +56,7 @@ const CUSTOM_AXES: [string, string, Handle][] = [
   ["Long documents", "Keeps track of very long inputs", "lena_evals"],
 ];
 
-type Entry = { text: string; overall: number; ago: number; prompt?: string; response?: string };
+type Entry = { text: string; overall: number; ago: number };
 // `c`: custom axis scores by slug.
 const REVIEWS: { by: Handle; v: Ver; s: S; c?: Record<string, number>; entries: Entry[] }[] = [
   {
@@ -66,8 +66,6 @@ const REVIEWS: { by: Handle; v: Ver; s: S; c?: Record<string, number>; entries: 
       {
         overall: 5, ago: 2 * DAY,
         text: "The first model that pushes back on my bad ideas instead of polishing them. Asked it to \"make this abstract punchier\" and it told me the results section doesn't support the claim. It was right.",
-        prompt: "Make this abstract punchier.",
-        response: "Happy to — but the claim in line 2 isn't supported by Table 3. Want me to soften it or…",
       },
     ],
   },
@@ -279,8 +277,6 @@ export const run = internalMutation({
         await ctx.db.insert("reviewEntries", {
           reviewId,
           text: e.text,
-          prompt: e.prompt,
-          response: e.response,
           overallAtTime: e.overall,
           createdAt: now - e.ago,
         });

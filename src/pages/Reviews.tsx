@@ -9,6 +9,7 @@ import {
   DeleteReview,
   LoadMore,
   MatchChip,
+  ReviewImage,
   Snippet,
   Stars,
   UserLink,
@@ -135,6 +136,7 @@ function Post({ r }: { r: ReviewCardData }) {
         </Link>
       )}
       <Snippet prompt={r.prompt} response={r.response} />
+      <ReviewImage image={r.image} />
       <AxisChips scores={r.scores} />
       <footer className={s.postFoot}>
         <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} compact />

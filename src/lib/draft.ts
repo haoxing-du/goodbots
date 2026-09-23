@@ -4,9 +4,8 @@ export type Draft = {
   scores: Record<string, number>; // axisId → 1–5
   newAxes: { name: string; hint?: string; score: number }[]; // axes this reviewer is adding
   text: string;
-  showSnippet: boolean;
-  prompt: string;
-  response: string;
+  image: { id: string; url: string } | null; // an uploaded, not yet posted screenshot
+  imageAlt: string;
 };
 
 export const EMPTY_DRAFT: Draft = {
@@ -14,9 +13,8 @@ export const EMPTY_DRAFT: Draft = {
   scores: {},
   newAxes: [],
   text: "",
-  showSnippet: false,
-  prompt: "",
-  response: "",
+  image: null,
+  imageAlt: "",
 };
 
 const KEY = "gb.drafts"; // { [versionId]: { savedAt, draft } }
@@ -49,7 +47,14 @@ function writeStore(store: Store) {
 
 export function loadDraft(versionId: string): Draft {
   const entry = readStore()[versionId];
-  return entry ? { ...EMPTY_DRAFT, ...entry.draft } : EMPTY_DRAFT;
+  if (!entry) return EMPTY_DRAFT;
+  // Drop fields from older drafts (the prompt/response snippet).
+  const { showSnippet: _s, prompt: _p, response: _r, ...rest } = entry.draft as Partial<Draft> & {
+    showSnippet?: unknown;
+    prompt?: unknown;
+    response?: unknown;
+  };
+  return { ...EMPTY_DRAFT, ...rest };
 }
 
 export function saveDraft(versionId: string, draft: Draft | null) {

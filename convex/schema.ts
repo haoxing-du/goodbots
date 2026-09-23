@@ -109,11 +109,24 @@ export default defineSchema({
   reviewEntries: defineTable({
     reviewId: v.id("reviews"),
     text: v.string(),
-    prompt: v.optional(v.string()),
+    image: v.optional(v.id("_storage")), // one screenshot per entry
+    imageAlt: v.optional(v.string()),
+    prompt: v.optional(v.string()), // legacy: the form no longer offers prompt/response
     response: v.optional(v.string()),
     overallAtTime: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_review", ["reviewId", "createdAt"]),
+
+  // Screenshots uploaded but not yet attached to a review entry. The row is
+  // deleted when the image is posted; a cron deletes stale ones and their files.
+  uploads: defineTable({
+    storageId: v.id("_storage"),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_storage", ["storageId"])
+    .index("by_user", ["userId", "createdAt"])
+    .index("by_createdAt", ["createdAt"]),
 
   // One row per review per rated axis (the review's current scores).
   reviewScores: defineTable({

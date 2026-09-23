@@ -124,8 +124,8 @@ export function WriteReview() {
               .map((x) => ({ name: x.name, hint: x.hint, score: x.score })),
           ],
           text: draft.text,
-          prompt: draft.showSnippet ? draft.prompt : undefined,
-          response: draft.showSnippet ? draft.response : undefined,
+          image: draft.image ? (draft.image.id as Id<"_storage">) : undefined,
+          imageAlt: draft.image ? draft.imageAlt : undefined,
         });
         setPosted(selected.versionId);
         saveDraft(selected.versionId, null);
@@ -301,38 +301,13 @@ export function WriteReview() {
             />
           </label>
 
-          <div>
-            <button
-              type="button"
-              className={ui.linkBtn}
-              disabled={done}
-              onClick={() => set({ showSnippet: !draft.showSnippet })}
-            >
-              {draft.showSnippet ? "Remove prompt / response" : "+ Add prompt / response"}
-            </button>
-            {draft.showSnippet && (
-              <div className={s.snippet}>
-                <textarea
-                  className={s.monoArea}
-                  rows={4}
-                  value={draft.prompt}
-                  disabled={done}
-                  onChange={(e) => set({ prompt: e.target.value })}
-                  placeholder="prompt ›"
-                  aria-label="Prompt"
-                />
-                <textarea
-                  className={s.monoArea}
-                  rows={4}
-                  value={draft.response}
-                  disabled={done}
-                  onChange={(e) => set({ response: e.target.value })}
-                  placeholder="model ›"
-                  aria-label="Model response"
-                />
-              </div>
-            )}
-          </div>
+          <Screenshot
+            image={draft.image}
+            alt={draft.imageAlt}
+            disabled={done}
+            onChange={(image) => set({ image, imageAlt: image ? draft.imageAlt : "" })}
+            onAltChange={(imageAlt) => set({ imageAlt })}
+          />
 
           {!done && (
             <div className={s.footer}>
@@ -449,6 +424,167 @@ function AxisRow({
         ))}
       </div>
       <div className={s.rightCell}>{right}</div>
+    </div>
+  );
+}
+
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // matches convex/uploads.ts
+
+/** One optional screenshot: choose, paste or drop an image; it uploads right away. */
+function Screenshot({
+  image,
+  alt,
+  disabled,
+  onChange,
+  onAltChange,
+}: {
+  image: Draft["image"];
+  alt: string;
+  disabled: boolean;
+  onChange: (image: Draft["image"]) => void;
+  onAltChange: (alt: string) => void;
+}) {
+  const generateUploadUrl = useMutation(api.uploads.generateUploadUrl);
+  const register = useMutation(api.uploads.register);
+  const discard = useMutation(api.uploads.discard);
+  const { requireAuth } = useSignIn();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const drop = (id: string) => void discard({ storageId: id as Id<"_storage"> }).catch(() => {});
+
+  const upload = (file: File) =>
+    requireAuth(async () => {
+      if (!IMAGE_TYPES.includes(file.type)) return setError("Use a PNG, JPEG or WebP image.");
+      if (file.size > MAX_IMAGE_BYTES) return setError("That image is over 5 MB.");
+      setBusy(true);
+      setError(null);
+      try {
+        const postUrl = await generateUploadUrl();
+        const res = await fetch(postUrl, {
+          method: "POST",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
+        if (!res.ok) throw new Error("upload failed");
+        const { storageId } = (await res.json()) as { storageId: Id<"_storage"> };
+        const result = await register({ storageId });
+        if (!result.url) return setError(result.error ?? "Couldn’t upload that. Try again.");
+        if (image) drop(image.id);
+        onChange({ id: storageId, url: result.url });
+      } catch (e) {
+        setError(e instanceof ConvexError ? String(e.data) : "Couldn’t upload that. Try again.");
+      } finally {
+        setBusy(false);
+      }
+    }, "Sign in to add a screenshot.");
+
+  // Pasting an image anywhere on the page adds it (screenshots usually go to the clipboard).
+  const uploadRef = useRef(upload);
+  uploadRef.current = upload;
+  useEffect(() => {
+    if (disabled) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const file = Array.from(e.clipboardData?.files ?? []).find((f) => f.type.startsWith("image/"));
+      if (!file) return;
+      e.preventDefault();
+      uploadRef.current(file);
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  }, [disabled]);
+
+  const dropProps = disabled
+    ? {}
+    : {
+        onDragOver: (e: React.DragEvent) => {
+          if (!e.dataTransfer.types.includes("Files")) return;
+          e.preventDefault();
+          setDragging(true);
+        },
+        onDragLeave: () => setDragging(false),
+        onDrop: (e: React.DragEvent) => {
+          const file = e.dataTransfer.files[0];
+          setDragging(false);
+          if (!file) return;
+          e.preventDefault();
+          upload(file);
+        },
+      };
+
+  return (
+    <div className={`${s.shot} ${dragging ? s.shotDragging : ""}`} {...dropProps}>
+      <input
+        ref={fileRef}
+        type="file"
+        accept={IMAGE_TYPES.join(",")}
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (file) upload(file);
+        }}
+      />
+      {image ? (
+        <div className={s.shotChosen}>
+          <img className={s.shotThumb} src={image.url} alt={alt || "Your screenshot"} />
+          <div className={s.shotSide}>
+            <input
+              className={ui.input}
+              value={alt}
+              maxLength={300}
+              disabled={disabled}
+              placeholder="Describe it for screen readers (optional)"
+              aria-label="Screenshot description"
+              onChange={(e) => onAltChange(e.target.value)}
+            />
+            {!disabled && (
+              <span className={s.shotActions}>
+                <button
+                  type="button"
+                  className={ui.linkBtn}
+                  disabled={busy}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  {busy ? "Uploading…" : "Replace"}
+                </button>
+                <button
+                  type="button"
+                  className={ui.linkBtn}
+                  disabled={busy}
+                  onClick={() => {
+                    drop(image.id);
+                    onChange(null);
+                  }}
+                >
+                  Remove
+                </button>
+              </span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className={s.shotEmpty}>
+          <button
+            type="button"
+            className={ui.linkBtn}
+            disabled={disabled || busy}
+            onClick={() => fileRef.current?.click()}
+          >
+            {busy ? "Uploading…" : "+ Add a screenshot"}
+          </button>
+          {!disabled && <span className={ui.meta}>or paste or drop one · PNG, JPEG or WebP, up to 5 MB</span>}
+        </div>
+      )}
+      {!disabled && <p className={s.shotHint}>Crop out anything private: names, emails, other chats.</p>}
+      {error && (
+        <p className={ui.error} role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

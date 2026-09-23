@@ -111,6 +111,34 @@ export function Snippet({ prompt, response }: { prompt?: string; response?: stri
   );
 }
 
+/** A review's screenshot; opens full size in a new tab. Admins can take it down. */
+export function ReviewImage({
+  image,
+}: {
+  image: { entryId: Id<"reviewEntries">; url: string | null; alt?: string } | null;
+}) {
+  const me = useQuery(api.users.me);
+  const removeImage = useMutation(api.admin.removeImage);
+  if (!image?.url) return null;
+  return (
+    <figure className={s.shot}>
+      <a href={image.url} target="_blank" rel="noopener noreferrer" className={s.shotLink}>
+        <img className={s.shotImg} src={image.url} alt={image.alt || "Screenshot"} loading="lazy" />
+      </a>
+      {me?.isAdmin && (
+        <figcaption>
+          <ConfirmDelete
+            title="Remove this screenshot?"
+            body="The review stays. This can’t be undone."
+            confirmLabel="Remove screenshot"
+            run={() => removeImage({ entryId: image.entryId })}
+          />
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
 /** Small "Delete" link on a review, shown to its author (and admins). */
 export function DeleteReview({ reviewId, authorId }: { reviewId: Id<"reviews">; authorId?: string }) {
   const me = useQuery(api.users.me);

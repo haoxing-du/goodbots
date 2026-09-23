@@ -14,6 +14,7 @@ import {
   requireAdmin,
 } from "./lib";
 import { Doc } from "./_generated/dataModel";
+import { releaseImage } from "./uploads";
 
 /** Adds a model page by hand (for models not in the OpenRouter catalog). */
 export const addVersion = mutation({
@@ -114,6 +115,18 @@ export const mergeVersion = mutation({
 
     await ctx.db.patch(from._id, { status: "hidden", mergedInto: into.versionId });
     return { moved, dropped };
+  },
+});
+
+/** Take a screenshot off a review entry (the review itself stays). */
+export const removeImage = mutation({
+  args: { entryId: v.id("reviewEntries") },
+  handler: async (ctx, { entryId }) => {
+    await requireAdmin(ctx);
+    const entry = await ctx.db.get(entryId);
+    if (!entry?.image) return;
+    await ctx.db.patch(entryId, { image: undefined, imageAlt: undefined });
+    await releaseImage(ctx, entry.reviewId, entry.image, entryId);
   },
 });
 

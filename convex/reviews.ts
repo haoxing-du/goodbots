@@ -25,6 +25,7 @@ import {
   statsFor,
   versionLabel,
 } from "./lib";
+import { claimImage, releaseImage } from "./uploads";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 /** Re-posting within this long of your last post edits it instead of adding a dated update. */
@@ -74,6 +75,9 @@ export async function hydrateReview(
     text: latest?.text ?? "",
     prompt: latest?.prompt,
     response: latest?.response,
+    image: latest?.image
+      ? { entryId: latest._id, url: await ctx.storage.getUrl(latest.image), alt: latest.imageAlt }
+      : null,
     updatedAt: review.updatedAt,
     createdAt: review.createdAt,
     reactionCounts: counts,
@@ -99,14 +103,16 @@ export const upsert = mutation({
     overall: v.optional(v.number()),
     scores: v.array(scoreInput),
     text: v.string(),
-    prompt: v.optional(v.string()),
-    response: v.optional(v.string()),
+    image: v.optional(v.id("_storage")), // a screenshot from uploads.register
+    imageAlt: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await requireMember(ctx);
     checkScore(args.overall, "Overall");
     if (args.scores.length > 40) throw new ConvexError("That’s a lot of axes. Keep it under 40.");
     if (!args.text.trim()) throw new ConvexError("Write a few words about it.");
+    const imageAlt = args.image ? args.imageAlt?.trim().replace(/\s+/g, " ") || undefined : undefined;
+    if (imageAlt && imageAlt.length > 300) throw new ConvexError("Keep the image description under 300 characters.");
     const version = await findOrActivateVersion(ctx, args.versionId);
     if (!version) throw new ConvexError("That model isn’t available to review.");
     const versionId = version._id;
@@ -156,10 +162,11 @@ export const upsert = mutation({
       { _id: reviewId, userId: user._id, versionId: versionId },
       scores,
     );
+    if (args.image) await claimImage(ctx, user._id, existing?._id ?? null, args.image);
     const entry = {
       text,
-      prompt: args.prompt?.trim() || undefined,
-      response: args.response?.trim() || undefined,
+      image: args.image,
+      imageAlt,
       overallAtTime: args.overall,
     };
     const last = existing
@@ -171,7 +178,10 @@ export const upsert = mutation({
       : null;
     if (last && now - last.createdAt < EDIT_WINDOW) {
       // A quick fix (typo, tweak): replace the last entry instead of adding history.
-      await ctx.db.patch(last._id, entry);
+      await ctx.db.patch(last._id, { ...entry, prompt: undefined, response: undefined });
+      if (last.image && last.image !== args.image) {
+        await releaseImage(ctx, reviewId, last.image, last._id);
+      }
     } else {
       await ctx.db.insert("reviewEntries", { reviewId, ...entry, createdAt: now });
     }

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type { ReviewCard as ReviewCardData } from "../../convex/reviews";
-import { AxisChips, Avatar, DeleteReview, MatchChip, Snippet, Stars, UserLink } from "./bits";
+import { AxisChips, Avatar, DeleteReview, MatchChip, ReviewImage, Snippet, Stars, UserLink } from "./bits";
 import { Reactions } from "./Reactions";
 import { timeAgo } from "../lib/format";
 import ui from "./ui.module.css";
@@ -33,6 +33,7 @@ export function ReviewCard({ r }: { r: ReviewCardData }) {
         </div>
         <p className={ui.body}>{r.text}</p>
         <Snippet prompt={r.prompt} response={r.response} />
+        <ReviewImage image={r.image} />
         <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} />
       </div>
     </article>

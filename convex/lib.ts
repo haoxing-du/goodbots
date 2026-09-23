@@ -285,12 +285,15 @@ export async function removeFromVersionStats(ctx: MutationCtx, review: Doc<"revi
 export async function deleteReviewCascade(ctx: MutationCtx, review: Doc<"reviews">) {
   await replaceReviewScores(ctx, review, new Map());
   await removeFromVersionStats(ctx, review);
+  const images = new Set<Id<"_storage">>();
   for (const e of await ctx.db
     .query("reviewEntries")
     .withIndex("by_review", (q) => q.eq("reviewId", review._id))
     .collect()) {
     await ctx.db.delete(e._id);
+    if (e.image) images.add(e.image);
   }
+  for (const id of images) await ctx.storage.delete(id);
   for (const r of await ctx.db
     .query("reactions")
     .withIndex("by_review", (q) => q.eq("reviewId", review._id))

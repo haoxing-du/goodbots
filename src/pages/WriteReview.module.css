@@ -228,21 +228,54 @@
 .textarea::placeholder {
   color: var(--muted-3);
 }
-.snippet {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s-5);
-  margin-top: var(--s-5);
+.shot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: calc(-1 * var(--s-3));
+  padding: var(--s-3);
+  border: 1px dashed transparent;
+  border-radius: var(--r-lg);
 }
-.monoArea {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 1.6;
-  background: var(--card);
-  border: 1px solid var(--control-border);
+.shotDragging {
+  border-color: var(--muted-1);
+  background: var(--page);
+}
+.shotEmpty {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
+}
+.shotChosen {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-7);
+  flex-wrap: wrap;
+}
+.shotThumb {
+  display: block;
+  max-width: min(100%, 280px);
+  max-height: 200px;
+  border: 1px solid var(--border);
   border-radius: var(--r-md);
-  padding: var(--s-4) var(--s-5);
-  resize: vertical;
+  object-fit: contain;
+  background: var(--page);
+}
+.shotSide {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+.shotActions {
+  display: flex;
+  gap: var(--s-7);
+}
+.shotHint {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--muted-3);
 }
 .footer {
   display: flex;
@@ -324,15 +357,12 @@
   .rightCell {
     text-align: start;
   }
-  .snippet {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* iOS Safari zooms the page when a focused field's text is under 16px. */
 @media (max-width: 900px) {
   .versionSelect,
-  .monoArea {
+  .shotSide input {
     font-size: var(--text-lg);
   }
 }

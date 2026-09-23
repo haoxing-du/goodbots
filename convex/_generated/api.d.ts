@@ -27,6 +27,7 @@ import type * as search from "../search.js";
 import type * as seed from "../seed.js";
 import type * as setup from "../setup.js";
 import type * as takes from "../takes.js";
+import type * as uploads from "../uploads.js";
 import type * as users from "../users.js";
 
 import type {
@@ -55,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   setup: typeof setup;
   takes: typeof takes;
+  uploads: typeof uploads;
   users: typeof users;
 }>;
 
