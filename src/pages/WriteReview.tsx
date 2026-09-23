@@ -238,7 +238,7 @@ export function WriteReview() {
               value={draft.text}
               disabled={done}
               onChange={(e) => set({ text: e.target.value })}
-              placeholder="What did you use it for? Where did it surprise you? Hot takes welcome — argue for them."
+              placeholder="What did you use it for? Where did it surprise you? Hot takes welcome."
             />
           </label>
 
