@@ -15,6 +15,6 @@ const matcher = new RegExpMatcher({
 
 export function assertClean(text: string | undefined, what: string) {
   if (text && matcher.hasMatch(text)) {
-    throw new ConvexError(`That ${what} isn't allowed. Try something else.`);
+    throw new ConvexError(`That ${what} isn’t allowed. Try something else.`);
   }
 }

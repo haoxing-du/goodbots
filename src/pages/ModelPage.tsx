@@ -266,7 +266,7 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
       } catch (e) {
         setStatus({
           ok: false,
-          text: e instanceof ConvexError ? String(e.data) : "Couldn't post that take. Try again.",
+          text: e instanceof ConvexError ? String(e.data) : "Couldn’t post that take. Try again.",
         });
       } finally {
         setBusy(false);

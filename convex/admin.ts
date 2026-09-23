@@ -148,7 +148,7 @@ export const setAxisStatus = mutation({
     await requireAdmin(ctx);
     const axis = await ctx.db.get(axisId);
     if (!axis) throw new ConvexError("Unknown axis.");
-    if (axis.core) throw new ConvexError("Core axes can't be hidden.");
+    if (axis.core) throw new ConvexError("Core axes can’t be hidden.");
     await ctx.db.patch(axisId, { status });
   },
 });
@@ -164,7 +164,7 @@ export const mergeAxis = mutation({
     if (fromId === intoId) throw new ConvexError("Pick two different axes.");
     const [from, into] = await Promise.all([ctx.db.get(fromId), ctx.db.get(intoId)]);
     if (!from || !into) throw new ConvexError("Unknown axis.");
-    if (from.core) throw new ConvexError("Core axes can't be merged away.");
+    if (from.core) throw new ConvexError("Core axes can’t be merged away.");
 
     const rows = await ctx.db
       .query("reviewScores")

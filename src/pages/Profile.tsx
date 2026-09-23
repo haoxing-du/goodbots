@@ -139,7 +139,7 @@ export function Profile() {
                   <td colSpan={data.coreAxes.length + 3} className={ui.empty}>
                     {data.isMe ? (
                       <>
-                        You haven't reviewed a model yet. <Link to="/write">Write a review</Link>
+                        You haven’t reviewed a model yet. <Link to="/write">Write a review</Link>
                       </>
                     ) : (
                       `No reviews from @${user.handle} yet.`
@@ -231,7 +231,7 @@ export function Profile() {
             {data.takes.length === 0 && (
               <div className={`${ui.card} ${ui.empty}`}>
                 {data.isMe
-                  ? "No takes yet. Post one from any model page's head-to-head section."
+                  ? "No takes yet. Post one from any model page’s head-to-head section."
                   : `No takes from @${user.handle} yet.`}
               </div>
             )}
@@ -247,7 +247,7 @@ export function Profile() {
                     {data.isMe && (
                       <ConfirmDelete
                         title="Delete this take?"
-                        body="This can't be undone."
+                        body="This can’t be undone."
                         confirmLabel="Delete take"
                         run={() => removeTake({ takeId: t._id })}
                       />
@@ -301,7 +301,7 @@ function EditProfile({
           setError(
             err instanceof ConvexError
               ? String(err.data)
-              : "Couldn't save your profile. Try again.",
+              : "Couldn’t save your profile. Try again.",
           );
         } finally {
           setBusy(false);
@@ -367,7 +367,7 @@ function EditProfile({
             setError(
               err instanceof ConvexError
                 ? String(err.data)
-                : "Couldn't delete your account. Nothing was deleted; try again.",
+                : "Couldn’t delete your account. Nothing was deleted; try again.",
             );
             return;
           }

@@ -118,7 +118,7 @@ export function DeleteReview({ reviewId, authorId }: { reviewId: Id<"reviews">; 
   return (
     <ConfirmDelete
       title="Delete this review?"
-      body="Its update history goes too. This can't be undone."
+      body="Its update history goes too. This can’t be undone."
       confirmLabel="Delete review"
       run={() => remove({ reviewId })}
     />
@@ -155,7 +155,7 @@ export function ConfirmDelete({
             setError(
               e instanceof ConvexError
                 ? String(e.data)
-                : "Couldn't delete that. Check your connection and try again.",
+                : "Couldn’t delete that. Check your connection and try again.",
             );
             setBusy(false);
           }

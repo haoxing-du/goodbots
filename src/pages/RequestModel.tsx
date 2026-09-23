@@ -51,7 +51,7 @@ export function RequestModel() {
         <h1 className={ui.serifTitle}>Request a model</h1>
         <p className={f.lede}>
           Most models are already here: we list everything on OpenRouter,
-          updated every few hours. Search first, and if it's there you can
+          updated every few hours. Search first, and if it’s there you can
           review it right away.
         </p>
       </div>
@@ -68,7 +68,7 @@ export function RequestModel() {
               className={ui.linkBtn}
               onClick={() => setShowForm(true)}
             >
-              It's not listed. Request it.
+              It’s not listed. Request it.
             </button>
           </div>
         )}
@@ -90,7 +90,7 @@ export function RequestModel() {
                 setError(
                   err instanceof ConvexError
                     ? String(err.data)
-                    : "Couldn't send the request. Check your connection and try again.",
+                    : "Couldn’t send the request. Check your connection and try again.",
                 );
               } finally {
                 setBusy(false);

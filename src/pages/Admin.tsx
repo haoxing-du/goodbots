@@ -56,7 +56,7 @@ function Requests() {
     try {
       await resolve({ requestId, approve, displayName: names[requestId] });
     } catch (e) {
-      setError(errText(e, "Couldn't update the request. Try again."));
+      setError(errText(e, "Couldn’t update the request. Try again."));
     } finally {
       setBusyId(null);
     }
@@ -112,7 +112,7 @@ function Requests() {
                 onClick={async () => {
                   const ok = await confirm({
                     title: `Reject the request for ${r.name}?`,
-                    body: "This can't be undone.",
+                    body: "This can’t be undone.",
                     confirm: "Reject request",
                     danger: true,
                   });
@@ -172,7 +172,7 @@ function AddVersion() {
           } catch (err) {
             setMsg({
               ok: false,
-              text: errText(err, "Couldn't add that model. Try again."),
+              text: errText(err, "Couldn’t add that model. Try again."),
             });
           } finally {
             setBusy(false);
@@ -215,7 +215,7 @@ function Axes() {
     try {
       setMsg({ ok: true, text: await fn() });
     } catch (e) {
-      setMsg({ ok: false, text: errText(e, "Couldn't update that axis. Try again.") });
+      setMsg({ ok: false, text: errText(e, "Couldn’t update that axis. Try again.") });
     }
   };
 
@@ -288,7 +288,7 @@ function Axes() {
                       !into ||
                       !(await confirm({
                         title: `Merge ${a.name} into ${into.name}?`,
-                        body: "Scores move to the target axis. This can't be undone.",
+                        body: "Scores move to the target axis. This can’t be undone.",
                         confirm: "Merge axes",
                         danger: true,
                       }))
@@ -348,7 +348,7 @@ function MergeModels() {
         <p className={f.hint}>
           For duplicates (e.g. a hand-added model that later appeared in the
           catalog). Reviews, scores and takes move to the second model; if
-          someone reviewed both, their newer review is kept. The first model's
+          someone reviewed both, their newer review is kept. The first model’s
           page redirects.
         </p>
         <div className={s.mergeRow}>
@@ -363,7 +363,7 @@ function MergeModels() {
               if (
                 !(await confirm({
                   title: `Merge ${name(from)} into ${name(into)}?`,
-                  body: "Reviews move to the target model. This can't be undone.",
+                  body: "Reviews move to the target model. This can’t be undone.",
                   confirm: "Merge models",
                   danger: true,
                 }))
@@ -381,7 +381,7 @@ function MergeModels() {
               } catch (e) {
                 setMsg({
                   ok: false,
-                  text: errText(e, "Couldn't merge those models. Nothing was changed; try again."),
+                  text: errText(e, "Couldn’t merge those models. Nothing was changed; try again."),
                 });
               }
             }}
@@ -490,7 +490,7 @@ function HomepageModels() {
               } catch (e) {
                 setMsg({
                   ok: false,
-                  text: errText(e, "Couldn't save the list. Try again."),
+                  text: errText(e, "Couldn’t save the list. Try again."),
                 });
               }
             }}

@@ -130,7 +130,7 @@ export function WriteReview() {
         setPosted(selected.versionId);
         saveDraft(selected.versionId, null);
       } catch (e) {
-        setError(e instanceof ConvexError ? String(e.data) : "Couldn't post your review. Try again.");
+        setError(e instanceof ConvexError ? String(e.data) : "Couldn’t post your review. Try again.");
       } finally {
         setBusy(false);
       }
@@ -172,7 +172,7 @@ export function WriteReview() {
           {prior && !done && (
             <div className={s.notice}>
               {Date.now() - prior.lastPostAt < EDIT_WINDOW_MS
-                ? "You posted this a few minutes ago. Posting again replaces it (edits within 10 minutes don't add an update)."
+                ? "You posted this a few minutes ago. Posting again replaces it (edits within 10 minutes don’t add an update)."
                 : `You reviewed this model on ${proseDate(prior.createdAt)}. Posting now adds a dated update to that review; the new scores replace the old ones.`}
             </div>
           )}
@@ -375,11 +375,11 @@ function ScaleGuide() {
           <b>3</b> — fine, forgettable
         </li>
         <li>
-          <b>5</b> — best I've used
+          <b>5</b> — best I’ve used
         </li>
       </ul>
       <p className={s.asideNote}>
-        Skip anything you haven't tested; only the text is required. Missing an axis? Add your own
+        Skip anything you haven’t tested; only the text is required. Missing an axis? Add your own
         at the bottom of the list.
       </p>
     </>
@@ -495,7 +495,7 @@ function AddAxis({
       return;
     }
     if (pending.some((p) => axisSlug(p) === slug)) {
-      setNote("You've already added that.");
+      setNote("You’ve already added that.");
       return;
     }
     onAdd(clean, hint.trim().replace(/\s+/g, " ") || undefined);

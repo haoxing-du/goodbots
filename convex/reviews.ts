@@ -105,10 +105,10 @@ export const upsert = mutation({
   handler: async (ctx, args) => {
     const user = await requireMember(ctx);
     checkScore(args.overall, "Overall");
-    if (args.scores.length > 40) throw new ConvexError("That's a lot of axes. Keep it under 40.");
+    if (args.scores.length > 40) throw new ConvexError("That’s a lot of axes. Keep it under 40.");
     if (!args.text.trim()) throw new ConvexError("Write a few words about it.");
     const version = await findOrActivateVersion(ctx, args.versionId);
-    if (!version) throw new ConvexError("That model isn't available to review.");
+    if (!version) throw new ConvexError("That model isn’t available to review.");
     const versionId = version._id;
     const text = args.text.trim();
     const scores = await resolveScores(ctx, user._id, args.scores);

@@ -83,7 +83,7 @@ function SignInDialog({
         // OAuth leaves the page; credential sign-in (demo) completes here, so navigate ourselves.
         if (signingIn && target) navigate(target);
       })
-      .catch(() => setError("Couldn't sign in that way. Try again, or use an email link instead."));
+      .catch(() => setError("Couldn’t sign in that way. Try again, or use an email link instead."));
   };
 
   const sendLink = async (e: React.FormEvent) => {
@@ -96,7 +96,7 @@ function SignInDialog({
       await signIn("email", { email: to, redirectTo: redirectTo() });
       setSentTo(to);
     } catch {
-      setError("Couldn't send the link. Check the address and try again.");
+      setError("Couldn’t send the link. Check the address and try again.");
     } finally {
       setSending(false);
     }
@@ -212,7 +212,7 @@ function HandleDialog() {
           try {
             await update({ name, handle });
           } catch (err) {
-            setError(err instanceof ConvexError ? String(err.data) : "Couldn't save. Try again.");
+            setError(err instanceof ConvexError ? String(err.data) : "Couldn’t save. Try again.");
           } finally {
             setBusy(false);
           }
@@ -222,7 +222,7 @@ function HandleDialog() {
           Pick a handle
         </h2>
         <p className={s.reason}>
-          This is how you'll show up next to your reviews. Your email stays private.
+          This is how you’ll show up next to your reviews. Your email stays private.
         </p>
         <label className={s.field}>
           <span className={s.label}>Name</span>

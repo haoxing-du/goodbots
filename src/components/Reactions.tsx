@@ -54,7 +54,7 @@ export function Reactions({
         );
       })}
       <span className={s.failed} role="status">
-        {failed && "Couldn't save your reaction. Try again."}
+        {failed && "Couldn’t save your reaction. Try again."}
       </span>
     </div>
   );
