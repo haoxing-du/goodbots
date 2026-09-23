@@ -40,8 +40,10 @@
 .permalink {
   text-decoration: none;
 }
-.permalink:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .permalink:hover {
+    text-decoration: underline;
+  }
 }
 @media (max-width: 900px) {
   .review {

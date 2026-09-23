@@ -9,15 +9,17 @@
   border-radius: var(--r-sm);
   padding: 5px 10px;
   font-size: var(--text-sm);
-  transition: background 120ms, border-color 120ms;
+  transition: background 120ms, border-color 120ms, scale 120ms;
 }
 .off {
   background: var(--raised);
   border-color: var(--border);
   color: var(--ink-2);
 }
-.off:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .off:hover {
+    border-color: var(--ink);
+  }
 }
 .on {
   background: var(--ink);
@@ -36,4 +38,15 @@
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   color: var(--rust-text);
+}
+
+.on:active,
+.off:active {
+  scale: 0.97;
+}
+@media (prefers-reduced-motion: reduce) {
+  .on:active,
+  .off:active {
+    scale: none;
+  }
 }

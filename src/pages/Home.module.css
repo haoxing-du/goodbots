@@ -67,8 +67,10 @@
   resize: none;
   transition: border-color 150ms;
 }
-.text:hover {
-  border-color: var(--muted-1);
+@media (hover: hover) {
+  .text:hover {
+    border-color: var(--muted-1);
+  }
 }
 .text:focus-visible {
   border-color: var(--ink);
@@ -94,8 +96,10 @@
   letter-spacing: 0.06em;
   color: var(--muted-3);
 }
-.cancelSearch:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .cancelSearch:hover {
+    color: var(--ink);
+  }
 }
 .action {
   display: flex;
@@ -132,8 +136,10 @@
   border-radius: var(--r-sm);
   transition: color 120ms;
 }
-.shuffle:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .shuffle:hover {
+    color: var(--ink);
+  }
 }
 .axisHint {
   font-size: var(--text-sm);
@@ -159,8 +165,10 @@
 .starOff {
   color: var(--muted-3);
 }
-.starOff:hover {
-  color: var(--muted-1);
+@media (hover: hover) {
+  .starOff:hover {
+    color: var(--muted-1);
+  }
 }
 .continue {
   border: 0;
@@ -172,8 +180,10 @@
   color: var(--on-ink);
   transition: background 120ms;
 }
-.continue:hover:not(:disabled) {
-  background: var(--ink-hover);
+@media (hover: hover) {
+  .continue:hover:not(:disabled) {
+    background: var(--ink-hover);
+  }
 }
 .continue:disabled {
   background: var(--disabled);
@@ -209,9 +219,11 @@
   color: var(--ink);
   transition: border-color 120ms;
 }
-a.card:hover {
-  border-color: var(--ink);
-  color: var(--ink);
+@media (hover: hover) {
+  a.card:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
 }
 .cat1 { --c: var(--cat-1); --c-bg: var(--cat-1-bg); --c-border: var(--cat-1-border); }
 .cat2 { --c: var(--cat-2); --c-bg: var(--cat-2-bg); --c-border: var(--cat-2-border); }

@@ -27,6 +27,8 @@
   background: var(--card);
   color: var(--muted-1);
 }
-.off:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .off:hover {
+    color: var(--ink);
+  }
 }

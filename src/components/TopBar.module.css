@@ -20,8 +20,10 @@
   text-decoration: none;
   color: var(--ink);
 }
-.wordmark:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .wordmark:hover {
+    color: var(--ink);
+  }
 }
 .nav {
   display: flex;
@@ -42,8 +44,10 @@
 .active {
   color: var(--ink);
 }
-.link:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .link:hover {
+    color: var(--ink);
+  }
 }
 .cancel {
   background: none;
@@ -51,8 +55,10 @@
   color: var(--muted-1);
   padding: 6px 0;
 }
-.cancel:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .cancel:hover {
+    color: var(--ink);
+  }
 }
 .spacer {
   flex: 1;
@@ -69,8 +75,10 @@
   font-size: var(--text-base);
   transition: border-color 120ms;
 }
-.search:hover {
-  border-color: var(--muted-1);
+@media (hover: hover) {
+  .search:hover {
+    border-color: var(--muted-1);
+  }
 }
 .search::placeholder {
   color: var(--muted-3);
@@ -84,11 +92,13 @@
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
-  transition: background 120ms;
+  transition: background 120ms, scale 120ms;
 }
-.write:hover {
-  background: var(--ink-hover);
-  color: var(--on-ink);
+@media (hover: hover) {
+  .write:hover {
+    background: var(--ink-hover);
+    color: var(--on-ink);
+  }
 }
 .signIn {
   background: none;
@@ -101,8 +111,10 @@
   padding: 6px 0;
   white-space: nowrap;
 }
-.signIn:hover {
-  color: var(--ink);
+@media (hover: hover) {
+  .signIn:hover {
+    color: var(--ink);
+  }
 }
 .userSlot {
   width: 32px;
@@ -117,9 +129,13 @@
   border-radius: 50%;
   transition: box-shadow 120ms;
 }
-.menuButton:hover,
 .menu[open] .menuButton {
   box-shadow: 0 0 0 2px var(--outline);
+}
+@media (hover: hover) {
+  .menuButton:hover {
+    box-shadow: 0 0 0 2px var(--outline);
+  }
 }
 .menuButton::-webkit-details-marker {
   display: none;
@@ -149,10 +165,12 @@
   text-decoration: none;
   color: var(--ink-2);
 }
-.menuList a:hover,
-.menuList button:hover {
-  background: var(--page);
-  color: var(--ink);
+@media (hover: hover) {
+  .menuList a:hover,
+  .menuList button:hover {
+    background: var(--page);
+    color: var(--ink);
+  }
 }
 
 @media (max-width: 900px) {
@@ -191,5 +209,14 @@
 @media (max-width: 900px) {
   .search {
     font-size: var(--text-lg);
+  }
+}
+
+.write:active {
+  scale: 0.97;
+}
+@media (prefers-reduced-motion: reduce) {
+  .write:active {
+    scale: none;
   }
 }

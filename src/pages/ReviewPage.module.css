@@ -9,8 +9,10 @@
 .title a {
   text-decoration: none;
 }
-.title a:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .title a:hover {
+    text-decoration: underline;
+  }
 }
 .more {
   font-size: var(--text-md);

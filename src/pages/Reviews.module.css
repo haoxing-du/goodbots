@@ -48,9 +48,11 @@
   color: var(--ink-2);
   transition: border-color 120ms;
 }
-.modelChip:hover {
-  border-color: var(--ink);
-  color: var(--ink);
+@media (hover: hover) {
+  .modelChip:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
 }
 .when {
   margin-left: auto;
@@ -92,9 +94,11 @@
   text-decoration: none;
   transition: background 120ms;
 }
-.railRow:hover {
-  background: var(--raised);
-  color: var(--ink);
+@media (hover: hover) {
+  .railRow:hover {
+    background: var(--raised);
+    color: var(--ink);
+  }
 }
 .railName {
   font-size: var(--text-md);
@@ -130,9 +134,11 @@
   text-decoration: none;
   transition: border-color 120ms;
 }
-.person:hover {
-  border-color: var(--ink);
-  color: var(--ink);
+@media (hover: hover) {
+  .person:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
 }
 .personName {
   font-size: var(--text-base);
@@ -171,6 +177,8 @@
 .permalink {
   text-decoration: none;
 }
-.permalink:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .permalink:hover {
+    text-decoration: underline;
+  }
 }

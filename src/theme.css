@@ -128,9 +128,11 @@ a {
   color: var(--ink);
   text-underline-offset: 3px;
 }
-a:hover {
-  color: var(--ink);
-  text-decoration-thickness: 2px;
+@media (hover: hover) {
+  a:hover {
+    color: var(--ink);
+    text-decoration-thickness: 2px;
+  }
 }
 
 textarea,

@@ -63,9 +63,11 @@
   color: var(--ink);
   transition: border-color 120ms;
 }
-.card:hover {
-  border-color: var(--ink);
-  color: var(--ink);
+@media (hover: hover) {
+  .card:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
 }
 .cardTop {
   display: flex;

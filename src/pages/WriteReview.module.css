@@ -106,8 +106,10 @@
 .starOff {
   color: var(--muted-3);
 }
-.starOff:hover:not(:disabled) {
-  color: var(--muted-1);
+@media (hover: hover) {
+  .starOff:hover:not(:disabled) {
+    color: var(--muted-1);
+  }
 }
 .starOn:disabled,
 .starOff:disabled,
@@ -134,8 +136,10 @@
   border-color: var(--border);
   color: var(--ink-2);
 }
-.numOff:hover:not(:disabled) {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .numOff:hover:not(:disabled) {
+    border-color: var(--ink);
+  }
 }
 .numOn {
   background: var(--ink);
@@ -169,8 +173,10 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.removeAxis:hover {
-  color: var(--rust-text);
+@media (hover: hover) {
+  .removeAxis:hover {
+    color: var(--rust-text);
+  }
 }
 .addRow {
   display: flex;
@@ -207,8 +213,10 @@
   resize: vertical;
   transition: border-color 120ms;
 }
-.textarea:hover:not(:disabled) {
-  border-color: var(--muted-1);
+@media (hover: hover) {
+  .textarea:hover:not(:disabled) {
+    border-color: var(--muted-1);
+  }
 }
 .textarea::placeholder {
   color: var(--muted-3);

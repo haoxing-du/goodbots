@@ -288,8 +288,10 @@
   font-weight: 400;
   color: var(--muted-3);
 }
-.takeLeft:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .takeLeft:hover {
+    border-color: var(--ink);
+  }
 }
 .gt {
   font-family: var(--font-mono);

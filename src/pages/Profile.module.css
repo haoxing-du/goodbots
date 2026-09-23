@@ -92,8 +92,10 @@
 .modelName a {
   text-decoration: none;
 }
-.modelName a:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .modelName a:hover {
+    text-decoration: underline;
+  }
 }
 .customScores {
   display: block;
@@ -180,8 +182,10 @@
 .takeLine a {
   text-decoration: none;
 }
-.takeLine a:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .takeLine a:hover {
+    text-decoration: underline;
+  }
 }
 .gt {
   font-family: var(--font-mono);

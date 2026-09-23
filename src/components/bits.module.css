@@ -52,8 +52,10 @@
 .userLink {
   text-decoration: none;
 }
-.userLink:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .userLink:hover {
+    text-decoration: underline;
+  }
 }
 
 .axisInline {
@@ -119,8 +121,10 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
-.deleteLink:hover:not(:disabled) {
-  color: var(--rust-text);
+@media (hover: hover) {
+  .deleteLink:hover:not(:disabled) {
+    color: var(--rust-text);
+  }
 }
 
 .loadMore {
@@ -140,7 +144,9 @@
   color: var(--muted-1);
   transition: border-color 120ms;
 }
-.loadMoreBtn:hover:not(:disabled) {
-  border-color: var(--ink);
-  color: var(--ink);
+@media (hover: hover) {
+  .loadMoreBtn:hover:not(:disabled) {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
 }

@@ -88,9 +88,11 @@
   white-space: nowrap;
   transition: background 120ms;
 }
-.btn:hover {
-  background: var(--ink-hover);
-  color: var(--on-ink);
+@media (hover: hover) {
+  .btn:hover {
+    background: var(--ink-hover);
+    color: var(--on-ink);
+  }
 }
 .btn:disabled {
   background: var(--disabled);
@@ -107,8 +109,10 @@
   font-size: var(--text-base);
   transition: border-color 120ms;
 }
-.btnGhost:hover:not(:disabled) {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .btnGhost:hover:not(:disabled) {
+    border-color: var(--ink);
+  }
 }
 .btnGhost:disabled {
   color: var(--muted-3);
@@ -120,8 +124,10 @@
   color: var(--rust-text);
   border-color: var(--rust-border);
 }
-.btnDanger:hover:not(:disabled) {
-  border-color: var(--rust-text);
+@media (hover: hover) {
+  .btnDanger:hover:not(:disabled) {
+    border-color: var(--rust-text);
+  }
 }
 
 .input {
@@ -132,8 +138,10 @@
   font-size: var(--text-base);
   transition: border-color 120ms;
 }
-.input:hover {
-  border-color: var(--ink);
+@media (hover: hover) {
+  .input:hover {
+    border-color: var(--ink);
+  }
 }
 
 .linkBtn {
@@ -145,9 +153,11 @@
   font-size: var(--text-base);
   color: var(--ink-2);
 }
-.linkBtn:hover:not(:disabled) {
-  color: var(--ink);
-  text-decoration-thickness: 2px;
+@media (hover: hover) {
+  .linkBtn:hover:not(:disabled) {
+    color: var(--ink);
+    text-decoration-thickness: 2px;
+  }
 }
 .linkBtn:disabled {
   color: var(--muted-3);
@@ -188,5 +198,23 @@
 @media (max-width: 900px) {
   .input {
     font-size: var(--text-lg);
+  }
+}
+
+/* Pressed feedback for buttons; touch has no hover, so this is the only
+   confirmation a tap landed. */
+.btn,
+.btnGhost {
+  transition-property: background, border-color, scale;
+  transition-duration: 120ms;
+}
+.btn:active:not(:disabled),
+.btnGhost:active:not(:disabled) {
+  scale: 0.97;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn:active:not(:disabled),
+  .btnGhost:active:not(:disabled) {
+    scale: none;
   }
 }

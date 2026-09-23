@@ -12,8 +12,10 @@
   font-size: var(--text-md);
   transition: border-color 120ms;
 }
-.input:hover {
-  border-color: var(--muted-1);
+@media (hover: hover) {
+  .input:hover {
+    border-color: var(--muted-1);
+  }
 }
 .input:focus-visible {
   border-color: var(--ink);
