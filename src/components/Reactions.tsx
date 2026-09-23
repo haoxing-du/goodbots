@@ -19,6 +19,7 @@ export function Reactions({
   const { requireAuth } = useSignIn();
   // Optimistic copy of the server state; resyncs whenever the server state changes.
   const [local, setLocal] = useState({ counts, mine });
+  const [failed, setFailed] = useState(false);
   const serverKey = JSON.stringify([counts, mine]);
   useEffect(() => setLocal({ counts, mine }), [serverKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -29,7 +30,11 @@ export function Reactions({
         counts: { ...prev.counts, [kind]: prev.counts[kind] + (on ? -1 : 1) },
         mine: on ? prev.mine.filter((k) => k !== kind) : [...prev.mine, kind],
       }));
-      toggle({ reviewId, kind }).catch(() => setLocal({ counts, mine }));
+      setFailed(false);
+      toggle({ reviewId, kind }).catch(() => {
+        setLocal({ counts, mine });
+        setFailed(true);
+      });
     }, "Sign in to react to reviews.");
 
   return (
@@ -48,6 +53,9 @@ export function Reactions({
           </button>
         );
       })}
+      <span className={s.failed} role="status">
+        {failed && "Couldn't save your reaction. Try again."}
+      </span>
     </div>
   );
 }

@@ -326,7 +326,7 @@ export function WriteReview() {
               </button>
             </div>
           )}
-          {error && <p className={ui.error}>{error}</p>}
+          {error && <p className={ui.error} role="alert">{error}</p>}
         </div>
 
         <aside className={s.aside}>

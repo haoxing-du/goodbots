@@ -316,7 +316,7 @@ function EditProfile({
           />
         </span>
       </label>
-      {error && <p className={ui.error}>{error}</p>}
+      {error && <p className={ui.error} role="alert">{error}</p>}
       <div className={s.editActions}>
         <button type="submit" className={ui.btn} disabled={busy}>
           {busy ? "Saving…" : "Save"}

@@ -113,7 +113,7 @@ function Requests() {
           </div>
         ))}
       </div>
-      {error && <p className={ui.error}>{error}</p>}
+      {error && <p className={ui.error} role="alert">{error}</p>}
     </section>
   );
 }
@@ -174,7 +174,7 @@ function AddVersion() {
         <div className={f.row}>
           {input("displayName", "Display name", "Claude Opus 5.5")}
         </div>
-        {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
+        {msg && <p className={msg.ok ? f.ok : ui.error} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
         <div>
           <button type="submit" className={ui.btn}>
             Add version
@@ -289,7 +289,7 @@ function Axes() {
           </div>
         ))}
       </div>
-      {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
+      {msg && <p className={msg.ok ? f.ok : ui.error} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
     </section>
   );
 }
@@ -364,7 +364,7 @@ function MergeModels() {
             Merge
           </button>
         </div>
-        {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
+        {msg && <p className={msg.ok ? f.ok : ui.error} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
       </div>
     </section>
   );
@@ -474,7 +474,7 @@ function HomepageModels() {
             </button>
           )}
         </div>
-        {msg && <p className={msg.ok ? f.ok : ui.error}>{msg.text}</p>}
+        {msg && <p className={msg.ok ? f.ok : ui.error} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
       </div>
     </section>
   );

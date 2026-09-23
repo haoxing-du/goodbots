@@ -103,7 +103,7 @@ export function RequestModel() {
           </div>
           {field("versionId", "Version id", "claude-sonnet-4-5")}
           {field("link", "Link", "Announcement or docs URL", false)}
-          {error && <p className={ui.error}>{error}</p>}
+          {error && <p className={ui.error} role="alert">{error}</p>}
           <div>
             <button type="submit" className={ui.btn}>
               Send request

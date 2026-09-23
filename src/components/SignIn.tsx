@@ -164,7 +164,7 @@ function SignInDialog({
             </div>
           </>
         )}
-        {error && <p className={s.error}>{error}</p>}
+        {error && <p className={s.error} role="alert">{error}</p>}
         <button type="button" className={s.close} onClick={() => ref.current?.close()}>
           Not now
         </button>
@@ -254,7 +254,7 @@ function HandleDialog() {
             />
           </span>
         </label>
-        {error && <p className={s.error}>{error}</p>}
+        {error && <p className={s.error} role="alert">{error}</p>}
         <button type="submit" className={s.provider} disabled={busy}>
           {busy ? "Saving…" : "Continue"}
         </button>
