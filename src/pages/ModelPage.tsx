@@ -45,6 +45,9 @@ export function ModelPage() {
             {fmtCount(data.takeCount)} head-to-head {data.takeCount === 1 ? "take" : "takes"}
           </p>
         </div>
+        <Link to={writePath(version.versionId)} className={ui.btn}>
+          Review {version.displayName}
+        </Link>
       </header>
 
       <AxisGrid
