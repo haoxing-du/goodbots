@@ -79,6 +79,7 @@ export function WriteReview() {
 
   // Axes added in this draft that don't exist yet (after posting they do, and merge in).
   const knownSlugs = new Set(data.axes.map((a) => a.slug));
+  const activeAxisIds = new Set<string>(data.axes.map((a) => a._id));
   const pendingAxes = draft.newAxes.filter((n) => !knownSlugs.has(axisSlug(n.name)));
   // Your score on an axis: while editing, from the draft; after posting, from the server.
   const valueFor = (axis: { _id: string; slug: string }) =>
@@ -109,10 +110,11 @@ export function WriteReview() {
           versionId: selected.versionId,
           overall: draft.overall || undefined,
           scores: [
-            ...Object.entries(draft.scores).map(([axisId, score]) => ({
-              axisId: axisId as Id<"axes">,
-              score,
-            })),
+            // A saved draft can hold scores for axes an admin has since hidden or merged;
+            // those aren't shown, so drop them rather than fail with "Unknown axis."
+            ...Object.entries(draft.scores)
+              .filter(([axisId]) => activeAxisIds.has(axisId))
+              .map(([axisId, score]) => ({ axisId: axisId as Id<"axes">, score })),
             ...draft.newAxes
               .filter((x) => x.score > 0)
               .map((x) => ({ name: x.name, hint: x.hint, score: x.score })),
