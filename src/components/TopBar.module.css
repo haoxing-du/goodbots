@@ -1,13 +1,13 @@
 .bar {
   background: var(--raised);
   border-bottom: 1px solid var(--border);
-  padding: 16px 48px;
+  padding: var(--s-7) var(--s-14);
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: var(--s-10);
 }
 .barPlain {
-  padding: 16px 48px;
+  padding: var(--s-7) var(--s-14);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -53,7 +53,7 @@
   background: none;
   border: 0;
   color: var(--muted-1);
-  padding: 6px 0;
+  padding: var(--s-2) 0;
 }
 @media (hover: hover) {
   .cancel:hover {
@@ -71,7 +71,7 @@
   background: var(--card);
   border: 1px solid var(--control-border);
   border-radius: var(--r-md);
-  padding: 8px 12px;
+  padding: var(--s-3) var(--s-5);
   font-size: var(--text-base);
   transition: border-color 120ms;
 }
@@ -87,7 +87,7 @@
   background: var(--ink);
   color: var(--on-ink);
   border-radius: var(--r-sm);
-  padding: 9px 16px;
+  padding: 9px var(--s-7);
   font-size: var(--text-base);
   font-weight: 500;
   text-decoration: none;
@@ -108,7 +108,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted-1);
-  padding: 6px 0;
+  padding: var(--s-2) 0;
   white-space: nowrap;
 }
 @media (hover: hover) {
@@ -151,7 +151,7 @@
   min-width: 180px;
   display: flex;
   flex-direction: column;
-  padding: 4px; /* 4px items + 4px padding = 8px panel radius */
+  padding: var(--s-1); /* 4px items + 4px padding = 8px panel radius */
   z-index: 10;
 }
 .menuList a,
@@ -159,7 +159,7 @@
   text-align: start;
   background: none;
   border: 0;
-  padding: 8px 10px;
+  padding: var(--s-3) var(--s-4);
   font-size: var(--text-base);
   border-radius: var(--r-sm);
   text-decoration: none;
@@ -175,12 +175,12 @@
 
 @media (max-width: 900px) {
   .barPlain {
-    padding: 14px 16px;
+    padding: var(--s-6) var(--s-7);
     gap: 18px;
   }
   .bar {
-    padding: 14px 16px;
-    gap: 14px;
+    padding: var(--s-6) var(--s-7);
+    gap: var(--s-6);
     flex-wrap: wrap;
   }
   /* Row 1: wordmark · Write a review · account. Nav and search follow. */

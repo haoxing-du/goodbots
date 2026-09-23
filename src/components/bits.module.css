@@ -66,7 +66,7 @@ img.avatar {
 .axisInline {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  gap: var(--s-2) var(--s-7);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   text-transform: uppercase;
@@ -75,7 +75,7 @@ img.avatar {
 .axisStack {
   display: grid;
   grid-template-columns: repeat(2, max-content);
-  gap: 4px 14px;
+  gap: var(--s-1) var(--s-6);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   text-transform: uppercase;
@@ -95,14 +95,14 @@ img.avatar {
   background: var(--page);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  padding: 12px 14px;
+  padding: var(--s-5) var(--s-6);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   line-height: 1.6;
   color: var(--ink-2);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--s-1);
   white-space: pre-wrap;
 }
 .snipPrompt {
@@ -148,7 +148,7 @@ img.avatar {
 .loadMore {
   display: flex;
   justify-content: center;
-  padding-top: 6px;
+  padding-top: var(--s-2);
 }
 .loadMoreBtn {
   background: var(--card);

@@ -179,7 +179,7 @@ p {
   z-index: 100;
   background: var(--ink);
   color: var(--on-ink);
-  padding: 8px 12px;
+  padding: var(--s-3) var(--s-5);
   border-radius: var(--r-sm);
   transform: translateY(-200%);
 }

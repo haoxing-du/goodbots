@@ -1,10 +1,10 @@
 /* Shared patterns from the design handoff. */
 
 .page {
-  padding: 44px 48px 56px;
+  padding: 44px var(--s-14) var(--s-15);
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: var(--s-13);
   max-width: 1280px;
   margin: 0 auto;
 }
@@ -40,15 +40,15 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted-1);
-  margin-bottom: 14px;
+  margin-bottom: var(--s-6);
 }
 
 .sectionHead {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
+  gap: var(--s-7);
+  margin-bottom: var(--s-6);
 }
 .sectionHead .sectionLabel {
   margin-bottom: 0;
@@ -104,7 +104,7 @@
   color: var(--on-ink);
   border: 0;
   border-radius: var(--r-sm);
-  padding: 9px 16px;
+  padding: 9px var(--s-7);
   font-size: var(--text-base);
   font-weight: 500;
   text-decoration: none;
@@ -129,7 +129,7 @@
   color: var(--ink-2);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
-  padding: 8px 14px;
+  padding: var(--s-3) var(--s-6);
   font-size: var(--text-base);
   transition: border-color 120ms;
 }
@@ -158,7 +158,7 @@
   background: var(--card);
   border: 1px solid var(--control-border);
   border-radius: var(--r-sm);
-  padding: 9px 12px;
+  padding: 9px var(--s-5);
   font-size: var(--text-base);
   transition: border-color 120ms;
 }
@@ -197,7 +197,7 @@
 }
 
 .empty {
-  padding: 28px 24px; /* same horizontal inset as card rows */
+  padding: var(--s-10) var(--s-9); /* same horizontal inset as card rows */
   color: var(--muted-2);
   font-size: var(--text-md);
   line-height: 1.5;
@@ -214,8 +214,8 @@
 
 @media (max-width: 900px) {
   .page {
-    padding: 28px 16px 40px;
-    gap: 32px;
+    padding: var(--s-10) var(--s-7) var(--s-13);
+    gap: var(--s-11);
   }
   .serifTitle {
     font-size: var(--text-h1);

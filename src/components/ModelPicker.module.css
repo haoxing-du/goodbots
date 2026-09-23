@@ -8,7 +8,7 @@
   background: var(--card);
   border: 1px solid var(--control-border);
   border-radius: var(--r-md);
-  padding: 10px 14px;
+  padding: var(--s-4) var(--s-6);
   font-size: var(--text-md);
   transition: border-color 120ms;
 }
@@ -38,7 +38,7 @@
 .list {
   list-style: none;
   margin: 0;
-  padding: 4px;
+  padding: var(--s-1);
   max-height: 340px;
   overflow-y: auto;
 }
@@ -47,8 +47,8 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
-  padding: 9px 10px;
+  gap: var(--s-5);
+  padding: 9px var(--s-4);
   border-radius: var(--r-sm);
   cursor: pointer;
   font-family: var(--font-sans);
@@ -69,14 +69,14 @@
   white-space: nowrap;
 }
 .empty {
-  padding: 4px 16px 12px;
+  padding: var(--s-1) var(--s-7) var(--s-5);
   font-size: var(--text-base);
   color: var(--muted-2);
   font-family: var(--font-sans);
 }
 .credit {
   border-top: 1px solid var(--divider);
-  padding: 8px 14px;
+  padding: var(--s-3) var(--s-6);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   color: var(--muted-3);

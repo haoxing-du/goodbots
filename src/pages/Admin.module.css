@@ -1,32 +1,32 @@
 .request {
   display: grid;
   grid-template-columns: 1fr 260px auto;
-  gap: 16px;
+  gap: var(--s-7);
   align-items: center;
-  padding: 16px 20px;
+  padding: var(--s-7) var(--s-8);
 }
 .reqTitle {
   font-size: var(--text-md);
-  margin-bottom: 4px;
+  margin-bottom: var(--s-1);
 }
 .axis {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: var(--s-7);
   flex-wrap: wrap;
-  padding: 14px 20px;
+  padding: var(--s-6) var(--s-8);
 }
 .axisHidden {
   font-size: var(--text-md);
-  margin-bottom: 4px;
+  margin-bottom: var(--s-1);
   color: var(--muted-3);
   text-decoration: line-through;
 }
 .actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-3);
   flex-wrap: wrap;
 }
 @media (max-width: 900px) {
@@ -38,7 +38,7 @@
 .mergeRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--s-4);
   flex-wrap: wrap;
 }
 .mergeRow select {
@@ -57,8 +57,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding: 8px 0;
+  gap: var(--s-5);
+  padding: var(--s-3) 0;
   border-top: 1px solid var(--divider);
   font-size: var(--text-md);
 }

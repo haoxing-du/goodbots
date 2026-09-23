@@ -1,13 +1,13 @@
 .row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--s-2);
 }
 .on,
 .off {
   border: 1px solid;
   border-radius: var(--r-sm);
-  padding: 5px 10px;
+  padding: 5px var(--s-4);
   font-size: var(--text-sm);
   transition: background 120ms, border-color 120ms, scale 120ms;
 }

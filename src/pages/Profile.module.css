@@ -2,14 +2,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  gap: var(--s-9);
   flex-wrap: wrap;
 }
 .identity {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 20px;
+  gap: var(--s-8);
 }
 .bigAvatar {
   font-family: var(--font-serif);
@@ -17,7 +17,7 @@
   color: var(--ink);
 }
 .subline {
-  margin-top: 8px;
+  margin-top: var(--s-3);
   font-size: var(--text-lg);
   color: var(--muted-2);
 }
@@ -27,11 +27,11 @@
 .counts {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-5);
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r-pill);
-  padding: 9px 16px;
+  padding: 9px var(--s-7);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   text-transform: uppercase;
@@ -65,7 +65,7 @@
   letter-spacing: 0.06em;
   color: var(--muted-3);
   text-align: start;
-  padding: 12px 20px;
+  padding: var(--s-5) var(--s-8);
   border-bottom: 1px solid var(--divider);
 }
 .table th:first-child {
@@ -78,7 +78,7 @@
   width: 90px;
 }
 .table td {
-  padding: 14px 20px;
+  padding: var(--s-6) var(--s-8);
   border-top: 1px solid var(--divider);
   vertical-align: middle;
 }
@@ -99,7 +99,7 @@
 }
 .customScores {
   display: block;
-  margin-top: 4px;
+  margin-top: var(--s-1);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   color: var(--olive-text);
@@ -114,19 +114,19 @@
 .columns {
   display: grid;
   grid-template-columns: 1fr 420px;
-  gap: 32px;
+  gap: var(--s-11);
   align-items: start;
 }
 .latest {
-  padding: 24px 28px;
+  padding: var(--s-9) var(--s-10);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--s-8);
 }
 .latestHead {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-5);
 }
 .latestModel {
   font-family: var(--font-serif);
@@ -137,11 +137,11 @@
 }
 .entryLatest,
 .entryOld {
-  padding-inline-start: 16px;
+  padding-inline-start: var(--s-7);
   border-inline-start: 2px solid;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--s-3);
 }
 .entryLatest {
   border-color: var(--ink);
@@ -162,19 +162,19 @@
 .takeCards {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--s-4);
 }
 .take {
-  padding: 16px 20px;
+  padding: var(--s-7) var(--s-8);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--s-2);
 }
 .takeHead {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
+  gap: var(--s-5);
 }
 .takeLine {
   font-size: var(--text-md);
@@ -206,10 +206,10 @@
 }
 @media (max-width: 900px) {
   .latest {
-    padding: 20px;
+    padding: var(--s-8);
   }
   .identity {
-    gap: 14px;
+    gap: var(--s-6);
   }
 }
 
@@ -234,8 +234,8 @@
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 6px 16px;
-    padding: 14px 16px;
+    gap: var(--s-2) var(--s-7);
+    padding: var(--s-6) var(--s-7);
     border-top: 1px solid var(--divider);
   }
   .table tr:first-child {
@@ -251,7 +251,7 @@
   }
   .table td[data-label]::before {
     content: attr(data-label);
-    margin-inline-end: 6px;
+    margin-inline-end: var(--s-2);
     font-family: var(--font-mono);
     font-size: var(--text-2xs);
     text-transform: uppercase;
@@ -264,25 +264,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: var(--s-7);
   flex-wrap: wrap;
   background: var(--olive-bg);
   border: 1px solid var(--olive-border);
   border-radius: var(--r-md);
-  padding: 12px 16px;
+  padding: var(--s-5) var(--s-7);
   font-size: var(--text-base);
   color: var(--olive-text-2);
   line-height: 1.5;
 }
 .editLink {
-  margin-top: 10px;
+  margin-top: var(--s-4);
   font-size: var(--text-sm);
   color: var(--muted-2);
 }
 .editForm {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--s-5);
   flex: 1 1 16rem;
   min-width: 0;
   max-width: 360px;
@@ -290,17 +290,17 @@
 .editField {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--s-2);
 }
 .nameInput {
   font-family: var(--font-serif);
   font-size: var(--text-h3);
-  padding: 8px 12px;
+  padding: var(--s-3) var(--s-5);
 }
 .handleWrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-2);
 }
 .at {
   font-family: var(--font-mono);
@@ -312,7 +312,7 @@
 }
 .editActions {
   display: flex;
-  gap: 8px;
+  gap: var(--s-3);
 }
 
 .headDelete {
@@ -321,14 +321,14 @@
 .takeMeta {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: var(--s-5);
 }
 .deleteAccount {
   align-self: flex-start;
   background: none;
   border: 0;
   padding: 0;
-  margin-top: 4px;
+  margin-top: var(--s-1);
   font-size: var(--text-sm);
   color: var(--rust-text);
   text-decoration: underline;

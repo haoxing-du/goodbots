@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 32px;
+  gap: var(--s-11);
   flex-wrap: wrap;
 }
 .name {
@@ -11,7 +11,7 @@
   font-size: var(--text-hero-sm);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  margin: 10px 0 14px;
+  margin: var(--s-4) 0 var(--s-6);
 }
 .summary {
   font-size: var(--text-2xl);
@@ -30,7 +30,7 @@
 .toggle {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-3);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   text-transform: uppercase;
@@ -63,14 +63,14 @@
 .axes {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: var(--s-6);
 }
 .axisCard {
-  padding: 20px;
+  padding: var(--s-8);
   min-height: 196px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--s-6);
 }
 .avg {
   font-size: var(--text-display);
@@ -81,7 +81,7 @@
 .pips {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+  gap: var(--s-1);
 }
 .pipOn,
 .pipOff {
@@ -97,7 +97,7 @@
 .hist {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+  gap: var(--s-1);
   height: 68px;
   align-items: end;
 }
@@ -138,7 +138,7 @@
 
 /* Also rated on (custom axes) */
 .also {
-  margin-top: 28px;
+  margin-top: var(--s-10);
 }
 .alsoLabel {
   font-family: var(--font-mono);
@@ -147,18 +147,18 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted-1);
-  margin: 0 0 14px;
+  margin: 0 0 var(--s-6);
 }
 .alsoGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: var(--s-6);
 }
 .alsoCard {
-  padding: 16px 18px;
+  padding: var(--s-7) 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--s-4);
 }
 .alsoName {
   font-size: var(--text-md);
@@ -178,12 +178,12 @@
 .alsoPips {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+  gap: var(--s-1);
 }
 .alsoHist {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+  gap: var(--s-1);
   height: 24px;
   align-items: end;
 }
@@ -199,7 +199,7 @@
 .reviewCards {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--s-6);
 }
 
 /* Head to head */
@@ -209,9 +209,9 @@
 .h2hRow {
   display: grid;
   grid-template-columns: 200px 200px 1fr 110px;
-  gap: 24px;
+  gap: var(--s-9);
   align-items: center;
-  padding: 16px 24px;
+  padding: var(--s-7) var(--s-9);
 }
 .vs {
   font-size: var(--text-md);
@@ -232,7 +232,7 @@
   background: var(--ink);
 }
 .splitCaption {
-  margin-top: 6px;
+  margin-top: var(--s-2);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   color: var(--muted-2);
@@ -242,7 +242,7 @@
 }
 .splitCaption {
   flex-wrap: wrap;
-  column-gap: 12px;
+  column-gap: var(--s-5);
 }
 .splitCaption span + span {
   color: var(--muted-3);
@@ -275,8 +275,8 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 16px 24px;
+  gap: var(--s-4);
+  padding: var(--s-7) var(--s-9);
   background: var(--raised);
   min-height: 68px;
 }
@@ -284,13 +284,13 @@
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
-  padding: 9px 12px;
+  padding: 9px var(--s-5);
   font-size: var(--text-base);
   font-weight: 500;
   transition: border-color 120ms;
 }
 .swapIcon {
-  margin-inline-start: 4px;
+  margin-inline-start: var(--s-1);
   font-weight: 400;
   color: var(--muted-3);
 }
@@ -346,12 +346,12 @@
     grid-template-columns: repeat(2, 1fr);
   }
   .h2hRow {
-    padding: 14px 16px;
+    padding: var(--s-6) var(--s-7);
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: var(--s-4);
   }
   .composer {
-    padding: 14px 16px; /* same inset as the rows above it */
+    padding: var(--s-6) var(--s-7); /* same inset as the rows above it */
   }
 }
 @media (max-width: 560px) {
@@ -364,11 +364,11 @@
 }
 
 .firstReview {
-  padding: 28px;
+  padding: var(--s-10);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: var(--s-8);
   flex-wrap: wrap;
   font-size: var(--text-lg);
   line-height: 1.5;

@@ -2,13 +2,13 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 16px;
+  gap: var(--s-7);
   flex-wrap: wrap;
 }
 .headActions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-5);
   flex-wrap: wrap;
 }
 .headActions a {
@@ -17,8 +17,8 @@
 .familyHead {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: var(--s-5);
+  margin-bottom: var(--s-6);
 }
 .familyName {
   font-family: var(--font-serif);
@@ -30,7 +30,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: var(--s-6);
 }
 /* Inside a family block the grid only has as many columns as the family has versions. */
 .families .grid {
@@ -39,7 +39,7 @@
 .families {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 32px 14px;
+  gap: var(--s-11) var(--s-6);
 }
 .span1 {
   grid-column: span 1;
@@ -54,10 +54,10 @@
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  padding: 22px 24px;
+  padding: 22px var(--s-9);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--s-7);
   text-decoration: none;
   color: var(--ink);
   transition: border-color 120ms;
@@ -72,19 +72,19 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
+  gap: var(--s-5);
 }
 .name {
   font-family: var(--font-serif);
   font-size: var(--text-h2-lg);
   line-height: 1.1;
   letter-spacing: -0.015em;
-  margin-bottom: 4px;
+  margin-bottom: var(--s-1);
 }
 .overall {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-5);
 }
 .overallNum {
   font-size: var(--text-h1);
@@ -95,9 +95,9 @@
 .axes {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--s-3);
   border-top: 1px solid var(--divider);
-  padding-top: 14px;
+  padding-top: var(--s-6);
 }
 .axis {
   display: flex;
@@ -141,10 +141,10 @@
 }
 
 .emptyCard {
-  padding: 28px;
+  padding: var(--s-10);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--s-7);
   font-size: var(--text-lg);
   color: var(--muted-1);
   line-height: 1.5;

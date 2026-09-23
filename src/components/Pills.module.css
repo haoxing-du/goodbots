@@ -11,7 +11,7 @@
 .on,
 .off {
   border: 0;
-  padding: 9px 14px;
+  padding: 9px var(--s-6);
   font-family: inherit;
   font-size: inherit;
   text-transform: uppercase;

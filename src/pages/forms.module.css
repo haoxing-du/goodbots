@@ -1,13 +1,13 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--s-7);
   max-width: 560px;
 }
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--s-2);
 }
 .label {
   font-family: var(--font-mono);
@@ -24,25 +24,25 @@
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: var(--s-5);
 }
 .lede {
   font-size: var(--text-xl);
   line-height: 1.5;
   color: var(--muted-2);
   max-width: 60ch;
-  margin-top: 12px;
+  margin-top: var(--s-5);
 }
 .ok {
   background: var(--olive-bg);
   border: 1px solid var(--olive-border);
   border-radius: var(--r-md);
-  padding: 14px 16px;
+  padding: var(--s-6) var(--s-7);
   font-size: var(--text-base);
   color: var(--olive-text-2);
 }
 .cardPad {
-  padding: 24px;
+  padding: var(--s-9);
 }
 @media (max-width: 600px) {
   .row {

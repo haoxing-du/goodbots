@@ -1,24 +1,24 @@
 .reviewMeta {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: var(--s-5);
 }
 .review {
   display: grid;
   grid-template-columns: 230px 1fr;
-  gap: 36px;
-  padding: 26px 28px;
+  gap: var(--s-12);
+  padding: 26px var(--s-10);
 }
 .reviewer {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--s-5);
 }
 .who {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--s-4);
 }
 .whoName {
   font-size: var(--text-base);
@@ -29,7 +29,7 @@
 .reviewBody {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--s-6);
   min-width: 0;
 }
 .reviewTop {
@@ -49,7 +49,7 @@
   .review {
     grid-template-columns: 1fr;
     gap: 18px;
-    padding: 20px;
+    padding: var(--s-8);
   }
 }
 
