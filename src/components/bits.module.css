@@ -115,7 +115,11 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.deleteLink:hover {
+.deleteLink:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.deleteLink:hover:not(:disabled) {
   color: var(--rust-text);
 }
 

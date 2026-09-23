@@ -46,7 +46,7 @@
 .provider:disabled {
   background: var(--disabled);
   color: var(--muted-3);
-  cursor: default;
+  cursor: not-allowed;
 }
 .emailForm {
   display: flex;

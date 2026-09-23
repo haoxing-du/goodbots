@@ -178,7 +178,7 @@
 .continue:disabled {
   background: var(--disabled);
   color: var(--muted-3);
-  cursor: default;
+  cursor: not-allowed;
 }
 .count {
   font-family: var(--font-mono);

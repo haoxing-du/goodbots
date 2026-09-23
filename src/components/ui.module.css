@@ -107,15 +107,20 @@
   font-size: var(--text-base);
   transition: border-color 120ms;
 }
-.btnGhost:hover {
+.btnGhost:hover:not(:disabled) {
   border-color: var(--ink);
+}
+.btnGhost:disabled {
+  color: var(--muted-3);
+  border-color: var(--divider);
+  cursor: not-allowed;
 }
 /* Modifier for irreversible actions: rust at rest, not just on hover. */
 .btnDanger {
   color: var(--rust-text);
   border-color: var(--rust-border);
 }
-.btnDanger:hover {
+.btnDanger:hover:not(:disabled) {
   border-color: var(--rust-text);
 }
 
@@ -140,9 +145,14 @@
   font-size: var(--text-base);
   color: var(--ink-2);
 }
-.linkBtn:hover {
+.linkBtn:hover:not(:disabled) {
   color: var(--ink);
   text-decoration-thickness: 2px;
+}
+.linkBtn:disabled {
+  color: var(--muted-3);
+  text-decoration: none;
+  cursor: not-allowed;
 }
 
 .empty {
