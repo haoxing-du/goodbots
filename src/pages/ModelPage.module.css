@@ -97,7 +97,7 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 4px;
-  height: 52px;
+  height: 68px;
   align-items: end;
 }
 .bin {
@@ -111,6 +111,14 @@
 .bar {
   background: var(--olive-fill);
   border-radius: 2px 2px 0 0;
+}
+.binCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-3);
+  text-align: center;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 .binLabel {
   font-family: var(--font-mono);
@@ -153,6 +161,12 @@
 }
 .alsoName {
   font-size: 15px;
+}
+.alsoHint {
+  margin-top: -6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted-2);
 }
 .alsoAvg {
   font-size: 28px;
@@ -267,6 +281,11 @@
   font-size: 14px;
   font-weight: 500;
   transition: border-color 120ms;
+}
+.swapIcon {
+  margin-left: 4px;
+  font-weight: 400;
+  color: var(--muted-3);
 }
 .takeLeft:hover {
   border-color: var(--ink);

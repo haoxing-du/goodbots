@@ -106,9 +106,10 @@ function AxisGrid({ axes, custom }: { axes: AxisStat[]; custom: AxisStat[] }) {
               <div className={ui.monoLabel}>{a.name}</div>
               <div className={s.avg}>{fmtAvg(a.avg)}</div>
               {dist ? (
-                <div className={s.hist} aria-label={`${a.name} distribution`}>
+                <div className={s.hist} role="img" aria-label={histLabel(a.name, a.hist)}>
                   {a.hist.map((c, i) => (
-                    <div key={i} className={s.bin} title={`${i + 1}: ${c}`}>
+                    <div key={i} className={s.bin} aria-hidden>
+                      <span className={s.binCount}>{c}</span>
                       <div className={s.bar} style={{ height: Math.max(3, (c / max) * 38) }} />
                       <span className={s.binLabel}>{i + 1}</span>
                     </div>
@@ -134,11 +135,12 @@ function AxisGrid({ axes, custom }: { axes: AxisStat[]; custom: AxisStat[] }) {
               const rounded = a.avg == null ? 0 : Math.round(a.avg);
               const max = Math.max(1, ...a.hist);
               return (
-                <div key={a._id} className={`${ui.card} ${s.alsoCard}`} title={a.hint}>
+                <div key={a._id} className={`${ui.card} ${s.alsoCard}`}>
                   <span className={s.alsoName}>{a.name}</span>
+                  {a.hint && <span className={s.alsoHint}>{a.hint}</span>}
                   <span className={s.alsoAvg}>{fmtAvg(a.avg)}</span>
                   {dist ? (
-                    <span className={s.alsoHist} aria-label={`${a.name} distribution`}>
+                    <span className={s.alsoHist} role="img" aria-label={histLabel(a.name, a.hist)}>
                       {a.hist.map((c, i) => (
                         <span
                           key={i}
@@ -279,6 +281,7 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
       <button
         type="button"
         className={s.takeLeft}
+        aria-label={`${nameOf(left)}, swap sides`}
         title="Swap sides"
         onClick={() => {
           if (!opponent) return;
@@ -286,7 +289,7 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
           setLeft(opponent);
         }}
       >
-        {nameOf(left)}
+        {nameOf(left)} <span className={s.swapIcon} aria-hidden>⇄</span>
       </button>
       <span className={s.gt}>&gt;</span>
       <select
@@ -386,4 +389,8 @@ function UnreviewedModel({
       </div>
     </div>
   );
+}
+
+function histLabel(name: string, hist: number[]) {
+  return `${name} ratings: ${hist.map((c, i) => `${i + 1} star ${c}`).join(", ")}`;
 }

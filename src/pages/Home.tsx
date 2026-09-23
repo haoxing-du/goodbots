@@ -131,7 +131,7 @@ export function Home() {
           {axis && (
             <div className={s.axisPick}>
               <div className={s.axisName}>
-                <span title={axis.hint}>{axis.name}</span>
+                <span>{axis.name}</span>
                 <button
                   type="button"
                   className={s.shuffle}
@@ -142,7 +142,9 @@ export function Home() {
                   ↻
                 </button>
               </div>
-              <div className={s.axisHint}>optional</div>
+              <div className={s.axisHint}>
+                {axis.hint ? `${axis.hint} · optional` : "optional"}
+              </div>
             </div>
           )}
           <div
