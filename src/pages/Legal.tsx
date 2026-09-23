@@ -6,8 +6,8 @@ import s from "./Legal.module.css";
 const CONTACT = "haoxingdu@gmail.com";
 const UPDATED = "September 23, 2026";
 
-function Mail() {
-  return <a href={`mailto:${CONTACT}`}>{CONTACT}</a>;
+function Mail({ children }: { children: React.ReactNode }) {
+  return <a href={`mailto:${CONTACT}`}>{children}</a>;
 }
 
 export function About() {
@@ -18,7 +18,7 @@ export function About() {
         <h1 className={ui.serifTitle}>About</h1>
         <p>GoodBots is made by Haoxing Du.</p>
         <p>
-          Questions or feedback: <Mail />
+          Questions or feedback? <Mail>Get in touch</Mail>.
         </p>
       </article>
     </div>
@@ -62,12 +62,12 @@ export function Privacy() {
         <h2>Deleting your data</h2>
         <p>
           On your profile, choose “Edit profile”, then “Delete account” to permanently remove your
-          account and everything you posted. You can also email <Mail />.
+          account and everything you posted. You can also <Mail>email us</Mail>.
         </p>
 
         <h2>Contact</h2>
         <p>
-          <Mail />
+          Questions about your data? <Mail>Email us</Mail>.
         </p>
       </article>
     </div>
@@ -101,7 +101,7 @@ export function Terms() {
           </li>
         </ul>
         <p>
-          Also see the <Link to="/privacy">privacy policy</Link>. Questions: <Mail />
+          Also see the <Link to="/privacy">privacy policy</Link>. Questions? <Mail>Email us</Mail>.
         </p>
       </article>
     </div>
