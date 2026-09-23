@@ -10,6 +10,10 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     MagicLink(),
     Twitter({
+      // Ask X only for what sign-in needs. X requires users.read + tweet.read to read
+      // the signed-in profile; the default also asks for offline.access ("stay
+      // connected"), which we don't use since we never call X after sign-in.
+      authorization: "https://x.com/i/oauth2/authorize?scope=users.read%20tweet.read",
       // X doesn't return email; keep the username as the public X handle.
       profile(response) {
         // X answers /2/users/me with { data: {...} }, or with an error body (e.g. when the
