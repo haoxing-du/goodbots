@@ -136,7 +136,13 @@ export function Profile() {
               {data.ratings.length === 0 && (
                 <tr>
                   <td colSpan={data.coreAxes.length + 3} className={ui.empty}>
-                    No reviews yet.
+                    {data.isMe ? (
+                      <>
+                        You haven't reviewed a model yet. <Link to="/write">Write a review</Link>
+                      </>
+                    ) : (
+                      `No reviews from @${user.handle} yet.`
+                    )}
                   </td>
                 </tr>
               )}
@@ -212,7 +218,9 @@ export function Profile() {
               })}
             </div>
           ) : (
-            <div className={`${ui.card} ${ui.empty}`}>Nothing yet.</div>
+            <div className={`${ui.card} ${ui.empty}`}>
+              {data.isMe ? "Your latest review will show here." : `No reviews from @${user.handle} yet.`}
+            </div>
           )}
         </section>
 
@@ -220,7 +228,11 @@ export function Profile() {
           <h2 className={ui.sectionLabel}>Takes</h2>
           <div className={s.takeCards}>
             {data.takes.length === 0 && (
-              <div className={`${ui.card} ${ui.empty}`}>No takes yet.</div>
+              <div className={`${ui.card} ${ui.empty}`}>
+                {data.isMe
+                  ? "No takes yet. Post one from any model page's head-to-head section."
+                  : `No takes from @${user.handle} yet.`}
+              </div>
             )}
             {data.takes.map((t) => (
               <div key={t._id} className={`${ui.card} ${s.take}`}>

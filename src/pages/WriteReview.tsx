@@ -69,7 +69,9 @@ export function WriteReview() {
       <>
         <MinimalBar />
         <main id="main" tabIndex={-1} className={ui.page}>
-          <p>No models to review yet.</p>
+          <p>
+            No models to review yet. <Link to="/request">Request a model</Link>
+          </p>
         </main>
       </>
     );

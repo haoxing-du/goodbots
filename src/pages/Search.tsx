@@ -10,8 +10,17 @@ import { useTitle } from "../lib/useTitle";
 export function Search() {
   const [params] = useSearchParams();
   const q = params.get("q") ?? "";
-  const results = useQuery(api.search.all, { q });
-  useTitle(`Search: ${q}`);
+  const results = useQuery(api.search.all, q.trim() ? { q } : "skip");
+  useTitle(q.trim() ? `Search: ${q}` : "Search");
+
+  if (!q.trim()) {
+    return (
+      <div className={ui.page}>
+        <h1 className={ui.serifTitle}>Search</h1>
+        <p className={ui.empty}>Search models or reviewers from the bar above.</p>
+      </div>
+    );
+  }
 
   return (
     <div className={ui.page}>
@@ -21,7 +30,9 @@ export function Search() {
       <section>
         <h2 className={ui.sectionLabel}>Models</h2>
         {!results && <div className={`${ui.card} ${ui.skelRow}`} aria-busy="true" />}
-        {results?.models.length === 0 && <div className={`${ui.card} ${ui.empty}`}>No models match.</div>}
+        {results?.models.length === 0 && <div className={`${ui.card} ${ui.empty}`}>
+            No models match &ldquo;{q}&rdquo;. <Link to="/request">Request a model</Link>
+          </div>}
         <div className={s.grid}>
           {results?.models.map((m) => (
             <Link key={m.versionId} to={versionPath(m.versionId)} className={s.card}>

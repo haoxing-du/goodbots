@@ -57,7 +57,7 @@ export function ModelPage() {
         rows={data.headToHead}
       />
 
-      <ReviewList versionId={version._id} />
+      <ReviewList versionId={version._id} slug={version.versionId} />
     </div>
   );
 }
@@ -330,7 +330,7 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
   );
 }
 
-function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
+function ReviewList({ versionId, slug }: { versionId: Id<"versions">; slug: string }) {
   const [stars, setStars] = useState(0);
   const {
     results: reviews,
@@ -357,7 +357,13 @@ function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
         {status === "LoadingFirstPage" && <div className={`${ui.card} ${ui.skelCard}`} aria-busy="true" />}
         {status !== "LoadingFirstPage" && reviews.length === 0 && (
           <div className={`${ui.card} ${ui.empty}`}>
-            {stars ? `No ${stars}★ reviews yet.` : "No reviews yet. Write the first one."}
+            {stars ? (
+              `No ${stars}★ reviews yet.`
+            ) : (
+              <>
+                No reviews yet. <Link to={writePath(slug)}>Write the first review</Link>
+              </>
+            )}
           </div>
         )}
         {reviews.map((r) => (
