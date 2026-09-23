@@ -37,9 +37,11 @@ export function SignInProvider({ children }: { children: React.ReactNode }) {
     [signedIn, open],
   );
 
+  // Close once actually signed in (a user record, not just a session: a stale
+  // session is already "authenticated" before the sign-in finishes).
   useEffect(() => {
-    if (isAuthenticated) setReason(null);
-  }, [isAuthenticated]);
+    if (signedIn) setReason(null);
+  }, [signedIn]);
 
   return (
     <SignInContext.Provider value={{ open, requireAuth }}>
