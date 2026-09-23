@@ -12,7 +12,7 @@ GoodBots is a review site for specific LLM versions. Rate a model on whatever yo
 - **No anchoring:** the review form hides community scores until you post, then shows how your scores compare.
 - **Taste match:** once you and another reviewer share 3+ reviewed versions, their reviews show a match %: `100 × (1 − mean |score difference| / 4)`.
 - **Reactions:** Agree, Disagree, Useful, Hot take, Lol.
-- **Curated catalog:** users request models and admins approve them. Admins can also hide or merge custom axes.
+- **Every model:** the catalog mirrors OpenRouter's model list (300+ models, refreshed every 6 hours), so almost anything can be reviewed right away; a model gets its page on its first review. Anything missing can be requested. Admins can merge duplicate models and hide or merge custom axes.
 - **Sign-in:** email magic link or X. Browsing needs no account.
 
 ## Stack

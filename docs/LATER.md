@@ -24,6 +24,15 @@ Most of these compute on read what could be stored and updated in the same mutat
 - There's no **report/flag** button. Admins can hide axes and delete reviews/takes, but have no way to hear about problems.
 - **Link-preview crawler detection** in `middleware.ts` is a user-agent regex; add crawlers as they show up.
 
+## Model catalog
+
+- **Check OpenRouter's terms** for using their model list (we credit them in the picker). The sync uses the public, keyless `/api/v1/models` endpoint.
+- **Open-weight coverage:** OpenRouter lists the popular open models, not the long tail of Hugging Face fine-tunes. A Hugging Face source could be added to the same `catalog` table (there's already an `hfId` field).
+- **"Latest" aliases** (`~anthropic/claude-opus-latest` etc.) are filtered out today; they could power "I used ChatGPT → which version is that?" suggestions.
+- **No alert if the sync breaks** (OpenRouter changes its format or is down). The action logs and throws; add monitoring.
+- **Deprecated models** keep their pages (by design) but aren't marked as retired anywhere yet (`deprecatedAt` is stored).
+- Unreviewed catalog pages (`/m/<id>` for a model with no reviews) are served to crawlers with no preview metadata.
+
 ## Product leftovers
 
 - **Hidden axes still count toward taste match** (their scores are kept).

@@ -13,6 +13,7 @@ convex/            backend
   models.ts        model list, model page (stats, head-to-head)
   users.ts         profile, reviewers like you
   takes.ts, reactions.ts, requests.ts, admin.ts, search.ts
+  catalog.ts       OpenRouter model-list sync (catalog table); crons.ts runs it every 6 hours
   seed.ts          seed:run / seed:reset
 src/
   theme.css        all design tokens
@@ -23,7 +24,7 @@ middleware.ts   Vercel edge middleware: Open Graph tags for link-preview crawler
 api/og.ts       Vercel edge function: the 1200×630 link-preview image (layout in api/_og-tree.ts)
 ```
 
-Routes: `/`, `/reviews`, `/models`, `/m/:versionId` (one page per version; old `/m/:family[/:version]` links redirect), `/r/:reviewId` (one review, for sharing), `/write?v=:versionId`, `/u/:handle`, `/request`, `/admin`, `/search?q=`.
+Routes: `/`, `/reviews`, `/models`, `/m/:provider/:model` (one page per model, ids like `anthropic/claude-opus-4.1`), `/r/:reviewId` (one review, for sharing), `/write?v=:versionId`, `/u/:handle`, `/request`, `/admin`, `/search?q=`.
 
 ## Local setup
 
@@ -41,7 +42,8 @@ node scripts/generateKeys.mjs                       # sets JWT_PRIVATE_KEY + JWK
 npx convex env set SITE_URL http://localhost:5173
 npx convex env set DEMO_LOGIN true                  # optional: sign in without OAuth keys
 npx convex env set ADMIN_EMAILS demo@goodbots.local # optional: demo user can use /admin
-npx convex run seed:run                             # 7 versions, 11 reviewers, 24 reviews, takes, reactions
+npx convex run seed:run                             # 7 models, 41 reviewers, 144 reviews, takes, reactions
+npx convex run catalog:sync                         # optional: fill the model catalog now (the cron also runs it)
 npx vite
 ```
 

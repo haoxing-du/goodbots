@@ -27,7 +27,7 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 - **Head-to-head takes**: separate post type, `A > B` on overall, optional one-line reason. Unlimited per user. Model page shows per-opponent win %, counting only each person's most recent take on that pair (one vote per person), and the number of people.
 - **Deletion**: people can delete their own reviews (with history) and takes, and their whole account (reviews, takes, reactions, model requests and sign-in records; axes they created stay). All stats are updated in the same mutation. Admins can delete any review or take.
 - **Reactions**: Agree, Disagree, Useful, Hot take, Lol. Toggle; a user may hold several on one review.
-- **Model catalog**: admin-curated. Users can submit a request (family, version id, provider, link); admin approves in a simple admin view.
+- **Model catalog**: synced every 6 hours from OpenRouter's public model list (routers, "latest" aliases and :free/:batch copies filtered out; entries never deleted). Any catalog model can be reviewed; its page is created on its first review. Model ids are OpenRouter-style (`provider/model`) and pages live at `/m/<provider>/<model>`. Models not in the catalog: users request them (name, id, provider, link) and admins approve, or admins add them by hand. Admins can merge duplicate models (newer review wins when someone reviewed both; the old URL redirects).
 - **No moderation, verification, screenshots, tweet embeds, divisive badges, or reviewer filter in v1.**
 
 ## Homepage
@@ -45,14 +45,16 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 2. **Model page (4a)**: one page per model version (`/m/<version-id>`); versions of the same family are separate pages, not tabs. Name, provider, version id, overall + review count + take count. Four core axis cards with averages, plus "Also rated on" for custom axes; "Show distributions" toggle swaps in a 1–5 histogram (off by default). Head-to-head list + inline take composer. Reviews sorted Top, filterable by star rating.
 3. **Write a review (4c)**: version picker, prior-review notice when updating, overall stars, five axes, text, optional snippet, post → reveal community comparison.
 4. **Reviewer profile (4d)**: name, X handle if signed in with X, join date, taste match with viewer, counts. Ratings table (one row per version), latest review with update history, takes list.
-5. **Request a model**: small form (not mocked).
-6. **Admin**: approve/reject model requests, add versions (not mocked).
-7. Search: models and reviewers by name (simple prefix match).
+5. **Request a model**: search the catalog first; the request form is only for models that aren't listed.
+6. **Admin**: approve/reject model requests, add models by hand, merge models, hide/merge axes.
+7. **Search**: models (site + full catalog; close matches first, reviewed before unreviewed, unreviewed newest first) and reviewers by name/handle prefix. The same search powers the model pickers on the write page and homepage.
+8. **Models page**: reviewed models only, grouped by provider (default) or ranked by overall rating.
 
 ## Data (Convex tables)
 - `users`: name, handle, avatarUrl, xHandle?, createdAt
-- `models`: family, provider, slug
-- `versions`: modelId, versionId (e.g. `claude-opus-4-1`), displayName, releasedAt?, status
+- `providers`: name, slug (first segment of model ids)
+- `catalog`: orId, name, provider, providerSlug, releasedAt?, hfId?, contextLength?, deprecatedAt?, searchText (search index), lastSeenAt — the OpenRouter mirror
+- `versions` (a model with a page): providerId, versionId (e.g. `anthropic/claude-opus-4.1`), displayName, releasedAt?, status, source (catalog/manual), mergedInto?
 - `axes`: name, slug (unique), hint?, core, order?, status (active/hidden), ratingCount, createdBy?, createdAt
 - `reviews`: userId, versionId, overall?, reactionCount, createdAt, updatedAt — unique (userId, versionId)
 - `reviewScores`: reviewId, userId, versionId, axisId, score — a review's current axis scores
