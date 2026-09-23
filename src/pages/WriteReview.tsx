@@ -12,6 +12,9 @@ import ui from "../components/ui.module.css";
 import s from "./WriteReview.module.css";
 import { versionPath } from "../lib/paths";
 
+/** Matches EDIT_WINDOW in convex/reviews.ts. */
+const EDIT_WINDOW_MS = 10 * 60 * 1000;
+
 export function WriteReview() {
   const [params, setParams] = useSearchParams();
   const data = useQuery(api.reviews.forWrite);
@@ -57,7 +60,7 @@ export function WriteReview() {
   }
 
   const done = posted === selected._id;
-  const priorAt = data.prior[selected._id];
+  const prior = data.prior[selected._id];
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
   // Axes added in this draft that don't exist yet (after posting they do, and merge in).
@@ -137,10 +140,11 @@ export function WriteReview() {
             ))}
           </select>
 
-          {priorAt && !done && (
+          {prior && !done && (
             <div className={s.notice}>
-              You reviewed this version on {proseDate(priorAt)}. Posting now adds a dated update to that
-              review; the new scores replace the old ones.
+              {Date.now() - prior.lastPostAt < EDIT_WINDOW_MS
+                ? "You posted this a few minutes ago. Posting again replaces it (edits within 10 minutes don't add an update)."
+                : `You reviewed this version on ${proseDate(prior.createdAt)}. Posting now adds a dated update to that review; the new scores replace the old ones.`}
             </div>
           )}
 

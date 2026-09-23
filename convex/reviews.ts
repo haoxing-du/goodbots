@@ -26,6 +26,8 @@ import {
 } from "./lib";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
+/** Re-posting within this long of your last post edits it instead of adding a dated update. */
+export const EDIT_WINDOW = 10 * 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
 
 type Matcher = Awaited<ReturnType<typeof matcherFor>>;
@@ -154,14 +156,25 @@ export const upsert = mutation({
       { _id: reviewId, userId: user._id, versionId: args.versionId },
       scores,
     );
-    await ctx.db.insert("reviewEntries", {
-      reviewId,
+    const entry = {
       text,
       prompt: args.prompt?.trim() || undefined,
       response: args.response?.trim() || undefined,
       overallAtTime: args.overall,
-      createdAt: now,
-    });
+    };
+    const last = existing
+      ? await ctx.db
+          .query("reviewEntries")
+          .withIndex("by_review", (q) => q.eq("reviewId", reviewId))
+          .order("desc")
+          .first()
+      : null;
+    if (last && now - last.createdAt < EDIT_WINDOW) {
+      // A quick fix (typo, tweak): replace the last entry instead of adding history.
+      await ctx.db.patch(last._id, entry);
+    } else {
+      await ctx.db.insert("reviewEntries", { reviewId, ...entry, createdAt: now });
+    }
     return reviewId;
   },
 });
@@ -289,13 +302,21 @@ export const forWrite = query({
       .filter((a) => a.status === "active" && (a.core || a.ratingCount > 0))
       .sort(compareAxes)
       .map(publicAxis);
-    const prior: Record<string, number> = {};
+    // Your existing reviews by version: when you first reviewed it and when you last posted.
+    const prior: Record<string, { createdAt: number; lastPostAt: number }> = {};
     if (viewerId) {
       const mine = await ctx.db
         .query("reviews")
         .withIndex("by_user", (q) => q.eq("userId", viewerId))
         .collect();
-      for (const r of mine) prior[r.versionId] = r.createdAt;
+      for (const r of mine) {
+        const last = await ctx.db
+          .query("reviewEntries")
+          .withIndex("by_review", (q) => q.eq("reviewId", r._id))
+          .order("desc")
+          .first();
+        prior[r.versionId] = { createdAt: r.createdAt, lastPostAt: last?.createdAt ?? r.updatedAt };
+      }
     }
     return { options, axes, prior };
   },
