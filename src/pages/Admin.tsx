@@ -46,13 +46,17 @@ function Requests() {
   const resolve = useMutation(api.requests.resolve);
   const [names, setNames] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const act = async (requestId: Id<"modelRequests">, approve: boolean) => {
     setError(null);
+    setBusyId(requestId);
     try {
       await resolve({ requestId, approve, displayName: names[requestId] });
     } catch (e) {
       setError(errText(e, "Couldn't update the request. Try again."));
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -94,6 +98,7 @@ function Requests() {
               <button
                 type="button"
                 className={ui.btn}
+                disabled={busyId === r._id}
                 onClick={() => void act(r._id, true)}
               >
                 Approve
@@ -101,6 +106,7 @@ function Requests() {
               <button
                 type="button"
                 className={`${ui.btnGhost} ${ui.btnDanger}`}
+                disabled={busyId === r._id}
                 onClick={() => {
                   if (window.confirm(`Reject the request for ${r.name}? This can't be undone.`)) {
                     void act(r._id, false);
@@ -124,6 +130,7 @@ function AddVersion() {
   const add = useMutation(api.admin.addVersion);
   const [form, setForm] = useState(EMPTY);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const input = (
     key: keyof typeof EMPTY,
@@ -149,7 +156,9 @@ function AddVersion() {
         className={`${ui.card} ${f.cardPad} ${f.form}`}
         onSubmit={async (e) => {
           e.preventDefault();
+          if (busy) return;
           setMsg(null);
+          setBusy(true);
           try {
             await add(form);
             setMsg({ ok: true, text: `Added ${form.displayName}.` });
@@ -159,6 +168,8 @@ function AddVersion() {
               ok: false,
               text: errText(err, "Couldn't add that version. Try again."),
             });
+          } finally {
+            setBusy(false);
           }
         }}
       >
@@ -176,8 +187,8 @@ function AddVersion() {
         </div>
         {msg && <p className={msg.ok ? f.ok : ui.error} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
         <div>
-          <button type="submit" className={ui.btn}>
-            Add version
+          <button type="submit" className={ui.btn} disabled={busy}>
+            {busy ? "Adding…" : "Add version"}
           </button>
         </div>
       </form>

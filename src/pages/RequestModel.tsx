@@ -21,6 +21,7 @@ export function RequestModel() {
   const [showForm, setShowForm] = useState(false);
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const field = (
     key: keyof typeof EMPTY,
@@ -77,7 +78,9 @@ export function RequestModel() {
           onSubmit={(e) => {
             e.preventDefault();
             requireAuth(async () => {
+              if (busy) return;
               setError(null);
+              setBusy(true);
               try {
                 await create(form);
                 setForm(EMPTY);
@@ -88,6 +91,8 @@ export function RequestModel() {
                     ? String(err.data)
                     : "Couldn't send the request. Check your connection and try again.",
                 );
+              } finally {
+                setBusy(false);
               }
             }, "Sign in to request a model.");
           }}
@@ -105,8 +110,8 @@ export function RequestModel() {
           {field("link", "Link", "Announcement or docs URL", false)}
           {error && <p className={ui.error} role="alert">{error}</p>}
           <div>
-            <button type="submit" className={ui.btn}>
-              Send request
+            <button type="submit" className={ui.btn} disabled={busy}>
+              {busy ? "Sending…" : "Send request"}
             </button>
           </div>
         </form>

@@ -244,6 +244,7 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
   const [right, setRight] = useState<Id<"versions"> | "">("");
   const [reason, setReason] = useState("");
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setLeft(versionId);
@@ -256,7 +257,8 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
 
   const submit = () =>
     requireAuth(async () => {
-      if (!opponent) return;
+      if (!opponent || busy) return;
+      setBusy(true);
       try {
         await post({ winnerVersionId: left, loserVersionId: opponent, reason: reason || undefined });
         setReason("");
@@ -266,6 +268,8 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
           ok: false,
           text: e instanceof ConvexError ? String(e.data) : "Couldn't post that take. Try again.",
         });
+      } finally {
+        setBusy(false);
       }
     }, "Sign in to post a head-to-head take.");
 
@@ -314,8 +318,8 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
         placeholder="Because…"
         aria-label="Reason (optional)"
       />
-      <button type="submit" className={ui.btn}>
-        Post take
+      <button type="submit" className={ui.btn} disabled={busy}>
+        {busy ? "Posting…" : "Post take"}
       </button>
       {status && (
         <span className={`${s.status} ${status.ok ? "" : s.statusError}`} role={status.ok ? "status" : "alert"}>

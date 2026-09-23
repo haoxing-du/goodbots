@@ -260,6 +260,7 @@ function EditProfile({
   const { signOut } = useAuthActions();
   const navigate = useNavigate();
   const [name, setName] = useState(initialName);
+  const [deleting, setDeleting] = useState(false);
   const [handle, setHandle] = useState(initialHandle);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -328,6 +329,7 @@ function EditProfile({
       <button
         type="button"
         className={s.deleteAccount}
+        disabled={deleting}
         onClick={async () => {
           const typed = window.prompt(
             `This permanently deletes your account, reviews, takes and reactions.\n\nType your handle (${initialHandle}) to confirm.`,
@@ -337,9 +339,11 @@ function EditProfile({
             window.alert("That didn't match your handle. Nothing was deleted.");
             return;
           }
+          setDeleting(true);
           try {
             await deleteAccount();
           } catch (err) {
+            setDeleting(false);
             setError(
               err instanceof ConvexError
                 ? String(err.data)
@@ -352,7 +356,7 @@ function EditProfile({
           navigate("/", { replace: true });
         }}
       >
-        Delete account…
+        {deleting ? "Deleting account…" : "Delete account…"}
       </button>
     </form>
   );
