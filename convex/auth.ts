@@ -11,7 +11,13 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     MagicLink(),
     Twitter({
       // X doesn't return email; keep the username as the public X handle.
-      profile({ data }) {
+      profile(response) {
+        // X answers /2/users/me with { data: {...} }, or with an error body (e.g. when the
+        // developer app's access tier or credits don't cover it). Surface the error.
+        const data = (response as { data?: typeof response.data }).data;
+        if (!data?.id) {
+          throw new Error(`X profile lookup failed: ${JSON.stringify(response).slice(0, 500)}`);
+        }
         return {
           id: data.id,
           name: data.name,
