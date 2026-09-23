@@ -183,11 +183,8 @@
   margin: 0 auto;
 }
 .card {
-  --c: var(--cat-1);
-  --c-bg: var(--cat-1-bg);
-  --c-border: var(--cat-1-border);
-  background: var(--c-bg);
-  border: 1px solid var(--c-border);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg);
   padding: 22px var(--s-9);
   display: flex;
@@ -203,19 +200,13 @@
     color: var(--ink);
   }
 }
-.cat1 { --c: var(--cat-1); --c-bg: var(--cat-1-bg); --c-border: var(--cat-1-border); }
-.cat2 { --c: var(--cat-2); --c-bg: var(--cat-2-bg); --c-border: var(--cat-2-border); }
-.cat3 { --c: var(--cat-3); --c-bg: var(--cat-3-bg); --c-border: var(--cat-3-border); }
-.cat4 { --c: var(--cat-4); --c-bg: var(--cat-4-bg); --c-border: var(--cat-4-border); }
-.cat5 { --c: var(--cat-5); --c-bg: var(--cat-5-bg); --c-border: var(--cat-5-border); }
-.cat6 { --c: var(--cat-6); --c-bg: var(--cat-6-bg); --c-border: var(--cat-6-border); }
 
 .cardLabel {
   font-family: var(--font-serif);
   font-size: var(--text-h1-sm);
   line-height: 1.1;
   letter-spacing: -0.015em;
-  color: var(--c);
+  color: var(--axis, var(--ink)); /* axis cards take their axis hue */
 }
 .cardRow {
   display: flex;

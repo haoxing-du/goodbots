@@ -32,27 +32,6 @@
   --rust-bg: #fcf1ea;
   --rust-border: #efc9b3;
 
-  /* homepage stat cards: cool OKLCH band, hues 180 → 305 in card order.
-     Chroma is the largest every hue can hold inside sRGB, so none get clipped. */
-  --cat-1: oklch(0.47 0.08 180);
-  --cat-1-bg: oklch(0.97 0.014 180);
-  --cat-1-border: oklch(0.88 0.04 180);
-  --cat-2: oklch(0.47 0.08 205);
-  --cat-2-bg: oklch(0.97 0.014 205);
-  --cat-2-border: oklch(0.88 0.04 205);
-  --cat-3: oklch(0.47 0.08 230);
-  --cat-3-bg: oklch(0.97 0.014 230);
-  --cat-3-border: oklch(0.88 0.04 230);
-  --cat-4: oklch(0.47 0.08 255);
-  --cat-4-bg: oklch(0.97 0.014 255);
-  --cat-4-border: oklch(0.88 0.04 255);
-  --cat-5: oklch(0.47 0.08 280);
-  --cat-5-bg: oklch(0.97 0.014 280);
-  --cat-5-border: oklch(0.88 0.04 280);
-  --cat-6: oklch(0.47 0.08 305);
-  --cat-6-bg: oklch(0.97 0.014 305);
-  --cat-6-border: oklch(0.88 0.04 305);
-
   /* core axes: one distinct hue each, so chips read at a glance. Names are
      always shown too, so color is never the only cue. */
   --axis-smarts: oklch(0.45 0.09 250);

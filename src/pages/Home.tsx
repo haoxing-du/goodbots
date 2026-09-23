@@ -11,6 +11,7 @@ import s from "./Home.module.css";
 import { versionPath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
 import { radioGroupKeys, radioTabIndex } from "../lib/radioGroup";
+import { axisVars } from "../lib/axes";
 
 const SCORES = [1, 2, 3, 4, 5] as const;
 
@@ -200,7 +201,7 @@ export function Home() {
       {/* Only cards with a winner; on a brand-new site the section is hidden. */}
       {data?.cards.some((c) => c.version) && (
         <section className={s.cards} aria-label="Summary stats">
-          {data.cards.map((c, i) => {
+          {data.cards.map((c) => {
             if (!c.version) return null;
             const body = (
               <>
@@ -214,17 +215,18 @@ export function Home() {
                 <span className={s.cardCaption}>{c.caption}</span>
               </>
             );
-            const cls = `${s.card} ${s[`cat${i + 1}`]}`;
+            const cls = s.card;
             return c.version ? (
               <Link
                 key={c.key}
                 to={versionPath(c.version.versionId)}
                 className={cls}
+                style={axisVars(c.key)}
               >
                 {body}
               </Link>
             ) : (
-              <div key={c.key} className={`${cls} ${s.cardEmpty}`}>
+              <div key={c.key} className={`${cls} ${s.cardEmpty}`} style={axisVars(c.key)}>
                 {body}
               </div>
             );
