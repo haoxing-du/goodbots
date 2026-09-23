@@ -54,10 +54,10 @@ async function ensureHandle(ctx: MutationCtx, userId: Id<"users">) {
   if (shownName && user.nameLower !== shownName.toLowerCase()) {
     patch.nameLower = shownName.toLowerCase();
   }
-  if (!user.handle) {
-    const base =
-      slugify(user.xHandle ?? user.name ?? user.email?.split("@")[0] ?? "") ||
-      "reader";
+  // Only X sign-ins get a handle automatically (their public X username).
+  // Email sign-ups choose one on first sign-in, so we never derive it from the address.
+  if (!user.handle && user.xHandle) {
+    const base = slugify(user.xHandle) || "reader";
     let handle = base;
     for (let i = 2; ; i++) {
       const taken = await ctx.db

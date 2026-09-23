@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
+import { api } from "../../convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "react-router-dom";
 import s from "./SignIn.module.css";
@@ -40,6 +42,7 @@ export function SignInProvider({ children }: { children: React.ReactNode }) {
       {reason !== null && (
         <SignInDialog reason={reason} redirectTo={redirectTo} onClose={() => setReason(null)} />
       )}
+      <HandleGate />
     </SignInContext.Provider>
   );
 }
@@ -166,6 +169,99 @@ function SignInDialog({
           Not now
         </button>
       </div>
+    </dialog>
+  );
+}
+
+/**
+ * Email sign-ups have no handle until they pick one. Until then this dialog
+ * stays open (the server also refuses reviews, reactions and takes).
+ */
+function HandleGate() {
+  const me = useQuery(api.users.me);
+  if (!me?.needsHandle) return null;
+  return <HandleDialog />;
+}
+
+function HandleDialog() {
+  const update = useMutation(api.users.updateProfile);
+  const { signOut } = useAuthActions();
+  const ref = useRef<HTMLDialogElement>(null);
+  const [name, setName] = useState("");
+  const [handle, setHandle] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    ref.current?.showModal();
+  }, []);
+
+  return (
+    <dialog
+      ref={ref}
+      className={s.dialog}
+      aria-labelledby="handle-title"
+      onCancel={(e) => e.preventDefault() /* not dismissable */}
+    >
+      <form
+        className={s.inner}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError(null);
+          setBusy(true);
+          try {
+            await update({ name, handle });
+          } catch (err) {
+            setError(err instanceof ConvexError ? String(err.data) : "Couldn't save. Try again.");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <h2 id="handle-title" className={s.title}>
+          Pick a handle
+        </h2>
+        <p className={s.reason}>
+          This is how you'll show up next to your reviews. Your email stays private.
+        </p>
+        <label className={s.field}>
+          <span className={s.label}>Name</span>
+          <input
+            className={s.email}
+            value={name}
+            maxLength={50}
+            required
+            autoFocus
+            placeholder="Your name"
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+        <label className={s.field}>
+          <span className={s.label}>Handle</span>
+          <span className={s.handleWrap}>
+            <span className={s.at} aria-hidden>
+              @
+            </span>
+            <input
+              className={s.email}
+              value={handle}
+              maxLength={20}
+              required
+              pattern="[A-Za-z0-9_]{3,20}"
+              title="3–20 letters, numbers or underscores"
+              placeholder="your_handle"
+              onChange={(e) => setHandle(e.target.value)}
+            />
+          </span>
+        </label>
+        {error && <p className={s.error}>{error}</p>}
+        <button type="submit" className={s.provider} disabled={busy}>
+          {busy ? "Saving…" : "Continue"}
+        </button>
+        <button type="button" className={s.close} onClick={() => void signOut()}>
+          Sign out
+        </button>
+      </form>
     </dialog>
   );
 }

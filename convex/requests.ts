@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { publicUser, requireAdmin, requireUser } from "./lib";
+import { publicUser, requireAdmin, requireMember } from "./lib";
 import { createVersion } from "./admin";
 
 export const create = mutation({
@@ -11,7 +11,7 @@ export const create = mutation({
     link: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
+    const user = await requireMember(ctx);
     const clean = {
       family: args.family.trim(),
       versionId: args.versionId.trim(),

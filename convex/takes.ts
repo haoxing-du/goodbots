@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation } from "./_generated/server";
-import { bumpTakeCount, requireUser } from "./lib";
+import { bumpTakeCount, requireMember } from "./lib";
 
 export const create = mutation({
   args: {
@@ -9,7 +9,7 @@ export const create = mutation({
     reason: v.optional(v.string()),
   },
   handler: async (ctx, { winnerVersionId, loserVersionId, reason }) => {
-    const user = await requireUser(ctx);
+    const user = await requireMember(ctx);
     if (winnerVersionId === loserVersionId) {
       throw new ConvexError("Pick two different models.");
     }

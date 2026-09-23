@@ -154,3 +154,30 @@
 .close:hover {
   color: var(--ink);
 }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-1);
+}
+.handleWrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.handleWrap .email {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.at {
+  font-family: var(--font-mono);
+  color: var(--muted-3);
+}

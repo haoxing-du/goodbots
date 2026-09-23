@@ -12,6 +12,8 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 - Logged-out users can browse everything (feed, model pages, profiles).
 - Sign-in required to review, react, post takes, request models. Prompt sign-in on the action.
 - Signed-in users can set their display name and @handle on their profile.
+- Handles: X sign-ins use their X username. Email sign-ups pick a name and handle on first sign-in (never derived from the email address), and can't review, react, take or request until they do.
+- Axis names/descriptions, names and handles go through a basic profanity filter (`obscenity`). Review text is not filtered.
 
 ## Rating model
 - **Overall**: 1–5 stars, optional.

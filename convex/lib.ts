@@ -34,6 +34,13 @@ export async function requireUser(ctx: QueryCtx) {
   return user;
 }
 
+/** A signed-in user who has picked a handle; required for anything public. */
+export async function requireMember(ctx: QueryCtx) {
+  const user = await requireUser(ctx);
+  if (!user.handle) throw new ConvexError("Pick a handle first.");
+  return user;
+}
+
 export function isAdmin(user: Doc<"users"> | null) {
   if (!user?.email) return false;
   const admins = (process.env.ADMIN_EMAILS ?? "")

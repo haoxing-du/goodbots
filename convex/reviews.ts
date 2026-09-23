@@ -15,7 +15,7 @@ import {
   REACTION_KINDS,
   ReactionKind,
   replaceReviewScores,
-  requireUser,
+  requireMember,
   resolveScores,
   scoresForReview,
   statsFor,
@@ -97,7 +97,7 @@ export const upsert = mutation({
     response: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await requireUser(ctx);
+    const user = await requireMember(ctx);
     const version = await ctx.db.get(args.versionId);
     if (!version || version.status !== "active") {
       throw new ConvexError("That version isn't available to review.");

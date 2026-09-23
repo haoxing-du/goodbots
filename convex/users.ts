@@ -22,7 +22,7 @@ export const me = query({
   handler: async (ctx) => {
     const user = await getViewer(ctx);
     if (!user) return null;
-    return { ...publicUser(user), isAdmin: isAdmin(user) };
+    return { ...publicUser(user), isAdmin: isAdmin(user), needsHandle: !user.handle };
   },
 });
 
