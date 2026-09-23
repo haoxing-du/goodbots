@@ -28,42 +28,6 @@
   min-width: 0;
   max-width: 100%;
 }
-.selectWrap {
-  position: relative;
-  display: inline-block;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-}
-/* A long name can't wrap inside a <select>; cap it at the screen width and
-   ellipsize. The open list still shows the full name. */
-.sizer {
-  display: block;
-  visibility: hidden;
-  white-space: pre;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 var(--s-1);
-  border-bottom: 2px solid transparent;
-}
-.select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  appearance: none;
-  border: 0;
-  border-bottom: 2px solid var(--ink);
-  border-radius: 0;
-  background: transparent;
-  font-family: var(--font-serif);
-  font-size: var(--text-hero);
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-  padding: 0 var(--s-1);
-  cursor: pointer;
-  max-width: 100%;
-  text-overflow: ellipsis;
-}
 
 .text {
   width: min(640px, 100%);
@@ -287,8 +251,7 @@
   .hero {
     padding: 72px var(--s-7) var(--s-15);
   }
-  .headline,
-  .select {
+  .headline {
     font-size: var(--text-display);
   }
   .cards {
@@ -301,8 +264,7 @@
     text-align: center;
     flex-basis: 100%;
   }
-  .headline,
-  .select {
+  .headline {
     font-size: var(--text-h1-sm);
   }
   .headline {

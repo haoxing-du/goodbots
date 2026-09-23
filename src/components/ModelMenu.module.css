@@ -1,0 +1,132 @@
+.menu {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Set in the headline's own type; the underline marks it as the choice. */
+.button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.18em;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 var(--s-1);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+  border-radius: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--ink);
+  transition: border-color 120ms, color 120ms;
+}
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chevron {
+  flex: none;
+  width: 0.42em;
+  height: 0.42em;
+  align-self: center;
+  color: var(--muted-2);
+  transition: rotate 150ms ease-out;
+}
+.button[aria-expanded="true"] .chevron {
+  rotate: 180deg;
+}
+@media (hover: hover) {
+  .button:hover .chevron {
+    color: var(--ink);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+.list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--s-3));
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(420px, 60vh);
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--s-1); /* 4px items + 4px padding = 8px panel radius */
+  list-style: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-float);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  letter-spacing: 0;
+  line-height: 1.3;
+  text-align: start;
+}
+.list:focus {
+  outline: none;
+}
+.option,
+.optionActive {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-5);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.optionActive {
+  background: var(--page);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.optionText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.optionName {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.optionMeta {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--muted-3);
+}
+.check {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ink);
+}
+.separator {
+  height: 1px;
+  margin: var(--s-1) var(--s-3);
+  background: var(--divider);
+}
+.search {
+  justify-content: flex-start;
+  color: var(--muted-1);
+}
+.searchIcon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+@media (forced-colors: active) {
+  .optionActive {
+    outline: 2px solid Highlight;
+  }
+}

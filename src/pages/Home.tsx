@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSignIn } from "../components/SignIn";
+import { ModelMenu } from "../components/ModelMenu";
 import { ModelPicker, PickedModel } from "../components/ModelPicker";
 import { mergeIntoDraft } from "../lib/draft";
 import { fmtCount } from "../lib/format";
@@ -13,7 +14,6 @@ import { radioGroupKeys, radioTabIndex } from "../lib/radioGroup";
 
 const SCORES = [1, 2, 3, 4, 5] as const;
 
-const OTHER = "__other__";
 
 export function Home() {
   useTitle(null);
@@ -25,11 +25,11 @@ export function Home() {
   // One suggested axis at a time (random); ratings persist across shuffles.
   const [axisIndex, setAxisIndex] = useState<number | null>(null);
   const [ratings, setRatings] = useState<Record<string, number>>({});
-  const selectRef = useRef<HTMLSelectElement>(null);
-  // The search replaces nothing but unmounts on pick/cancel; send focus back to the select.
+  const menuRef = useRef<HTMLButtonElement>(null);
+  // The catalog search unmounts on pick/cancel; send focus back to the model menu.
   const closeSearch = () => {
     setSearching(false);
-    requestAnimationFrame(() => selectRef.current?.focus());
+    requestAnimationFrame(() => menuRef.current?.focus());
   };
 
   const axes = data?.axes ?? [];
@@ -54,7 +54,7 @@ export function Home() {
     setAxisIndex((axisIndex + step) % axes.length);
   };
 
-  // The select lists reviewed models; "Something else…" opens a search over the
+  // The menu lists featured models; "Search all models…" opens a search over the
   // whole catalog, and the pick joins the list.
   const [extra, setExtra] = useState<PickedModel | null>(null);
   const [searching, setSearching] = useState(false);
@@ -65,8 +65,6 @@ export function Home() {
     ...(data?.versions ?? []),
   ];
   const versionId = picked ?? options[0]?.versionId ?? "";
-  const selectedName =
-    options.find((v) => v.versionId === versionId)?.displayName ?? "";
 
   const started = Object.keys(ratings).length > 0 || text.trim().length > 0;
 
@@ -85,34 +83,18 @@ export function Home() {
   return (
     <>
       <section className={s.hero}>
-        {/* The select sits beside the <h1>, not inside it, so the heading's
+        {/* The model menu sits beside the <h1>, not inside it, so the heading’s
             accessible name isn’t polluted by every option. */}
         <div className={s.headline}>
           <h1 className={s.lead}>What did you think of</h1>
           <span className={s.pick}>
-            {/* The hidden sizer makes the select exactly as wide as the chosen name. */}
-            <span className={s.selectWrap}>
-              <span className={s.sizer} aria-hidden>
-                {selectedName || "\u00a0"}
-              </span>
-              <select
-                ref={selectRef}
-                className={s.select}
-                value={versionId}
-                onChange={(e) => {
-                  if (e.target.value === OTHER) setSearching(true);
-                  else setPicked(e.target.value);
-                }}
-                aria-label="Model"
-              >
-                {options.map((v) => (
-                  <option key={v.versionId} value={v.versionId}>
-                    {v.displayName}
-                  </option>
-                ))}
-                <option value={OTHER}>Something else…</option>
-              </select>
-            </span>
+            <ModelMenu
+              models={options}
+              value={versionId}
+              onChange={setPicked}
+              onSearch={() => setSearching(true)}
+              buttonRef={menuRef}
+            />
             <span aria-hidden>?</span>
           </span>
         </div>
