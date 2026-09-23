@@ -11,6 +11,7 @@ import f from "./forms.module.css";
 import s from "./Admin.module.css";
 import { useTitle } from "../lib/useTitle";
 import { useConfirm } from "../components/Confirm";
+import { Analytics } from "./AdminAnalytics";
 
 function errText(e: unknown, fallback: string) {
   return e instanceof ConvexError ? String(e.data) : fallback;
@@ -33,6 +34,7 @@ export function Admin() {
   return (
     <div className={ui.page}>
       <h1 className={ui.serifTitle}>Admin</h1>
+      <Analytics />
       <HomepageModels />
       <Requests />
       <AddVersion />
