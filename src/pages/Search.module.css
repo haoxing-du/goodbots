@@ -24,7 +24,7 @@
 }
 .modelName {
   font-family: var(--font-serif);
-  font-size: 24px;
+  font-size: var(--text-h2);
   line-height: 1.15;
   letter-spacing: -0.01em;
 }
@@ -35,7 +35,7 @@
 }
 .personName {
   display: block;
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 500;
   margin-bottom: 2px;
 }

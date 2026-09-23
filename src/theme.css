@@ -58,6 +58,27 @@
   --font-sans: "Geist", system-ui, -apple-system, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  /* type scale, in rem so it follows the reader's browser font size */
+  --text-2xs: 0.6875rem; /* 11px */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.8125rem; /* 13px */
+  --text-base: 0.875rem; /* 14px */
+  --text-md: 0.9375rem; /* 15px */
+  --text-lg: 1rem; /* 16px */
+  --text-xl: 1.0625rem; /* 17px */
+  --text-2xl: 1.125rem; /* 18px */
+  --text-body: 1.1875rem; /* 19px */
+  --text-3xl: 1.25rem; /* 20px */
+  --text-h3: 1.375rem; /* 22px */
+  --text-h2: 1.625rem; /* 26px */
+  --text-h2-lg: 1.75rem; /* 28px */
+  --text-h1-sm: 2rem; /* 32px */
+  --text-h1: 2.25rem; /* 36px */
+  --text-display: 2.5rem; /* 40px */
+  --text-title: 2.75rem; /* 44px */
+  --text-hero-sm: 3.25rem; /* 52px */
+  --text-hero: 3.5rem; /* 56px */
+
   /* radii */
   --r-sm: 4px;
   --r-md: 6px;

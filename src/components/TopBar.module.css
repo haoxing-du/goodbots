@@ -15,7 +15,7 @@
 }
 .wordmark {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: var(--text-h3);
   font-weight: 400;
   text-decoration: none;
   color: var(--ink);
@@ -31,7 +31,7 @@
 .active,
 .cancel {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   text-decoration: none;
@@ -66,7 +66,7 @@
   border: 1px solid var(--control-border);
   border-radius: var(--r-md);
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: var(--text-base);
   transition: border-color 120ms;
 }
 .search:hover {
@@ -80,7 +80,7 @@
   color: #fff;
   border-radius: var(--r-sm);
   padding: 9px 16px;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
@@ -94,7 +94,7 @@
   background: none;
   border: 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted-1);
@@ -144,7 +144,7 @@
   background: none;
   border: 0;
   padding: 8px 10px;
-  font-size: 14px;
+  font-size: var(--text-base);
   border-radius: var(--r-sm);
   text-decoration: none;
   color: var(--ink-2);
@@ -190,6 +190,6 @@
 /* iOS Safari zooms the page when a focused field's text is under 16px. */
 @media (max-width: 900px) {
   .search {
-    font-size: 16px;
+    font-size: var(--text-lg);
   }
 }

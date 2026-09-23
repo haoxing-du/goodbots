@@ -1,7 +1,7 @@
 .title {
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 44px;
+  font-size: var(--text-title);
   line-height: 1.05;
   letter-spacing: -0.01em;
   margin-top: 8px;
@@ -13,5 +13,5 @@
   text-decoration: underline;
 }
 .more {
-  font-size: 15px;
+  font-size: var(--text-md);
 }

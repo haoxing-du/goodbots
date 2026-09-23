@@ -11,7 +11,7 @@
 
 .sectionLabel {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 400; /* Geist Mono is loaded at 400 only; <h2> would synthesize bold */
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -46,7 +46,7 @@
 
 .monoLabel {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted-3);
@@ -54,21 +54,21 @@
 
 .meta {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--muted-3);
 }
 
 .serifTitle {
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 44px;
+  font-size: var(--text-title);
   line-height: 1.05;
   letter-spacing: -0.01em;
 }
 
 .body {
   font-family: var(--font-serif);
-  font-size: 19px;
+  font-size: var(--text-body);
   line-height: 1.5;
   color: var(--ink);
   white-space: pre-wrap;
@@ -81,7 +81,7 @@
   border: 0;
   border-radius: var(--r-sm);
   padding: 9px 16px;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   text-decoration: none;
   display: inline-block;
@@ -104,7 +104,7 @@
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: var(--text-base);
   transition: border-color 120ms;
 }
 .btnGhost:hover {
@@ -124,7 +124,7 @@
   border: 1px solid var(--control-border);
   border-radius: var(--r-sm);
   padding: 9px 12px;
-  font-size: 14px;
+  font-size: var(--text-base);
   transition: border-color 120ms;
 }
 .input:hover {
@@ -137,7 +137,7 @@
   padding: 0;
   text-decoration: underline;
   text-underline-offset: 3px;
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--ink-2);
 }
 .linkBtn:hover {
@@ -147,13 +147,13 @@
 .empty {
   padding: 28px;
   color: var(--muted-2);
-  font-size: 15px;
+  font-size: var(--text-md);
   line-height: 1.5;
 }
 
 .error {
   color: var(--rust-text);
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .olive {
@@ -166,7 +166,7 @@
     gap: 32px;
   }
   .serifTitle {
-    font-size: 36px;
+    font-size: var(--text-h1);
   }
   .sectionHead {
     flex-wrap: wrap;
@@ -176,6 +176,6 @@
 /* iOS Safari zooms the page when a focused field's text is under 16px. */
 @media (max-width: 900px) {
   .input {
-    font-size: 16px;
+    font-size: var(--text-lg);
   }
 }

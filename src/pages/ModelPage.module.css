@@ -8,13 +8,13 @@
 .name {
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 52px;
+  font-size: var(--text-hero-sm);
   line-height: 1.1;
   letter-spacing: -0.02em;
   margin: 10px 0 14px;
 }
 .summary {
-  font-size: 18px;
+  font-size: var(--text-2xl);
   color: var(--muted-2);
   line-height: 1.5;
 }
@@ -32,7 +32,7 @@
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted-1);
@@ -73,7 +73,7 @@
   gap: 14px;
 }
 .avg {
-  font-size: 40px;
+  font-size: var(--text-display);
   font-weight: 300;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -115,7 +115,7 @@
 }
 .binCount {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--muted-3);
   text-align: center;
   line-height: 1;
@@ -123,7 +123,7 @@
 }
 .binLabel {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--muted-3);
   text-align: center;
   line-height: 1;
@@ -131,7 +131,7 @@
 .hint {
   margin-top: auto;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--olive-text);
   line-height: 1.4;
 }
@@ -142,7 +142,7 @@
 }
 .alsoLabel {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -161,16 +161,16 @@
   gap: 10px;
 }
 .alsoName {
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 .alsoHint {
   margin-top: -6px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.4;
   color: var(--muted-2);
 }
 .alsoAvg {
-  font-size: 28px;
+  font-size: var(--text-h2-lg);
   line-height: 1;
   font-weight: 300;
   font-variant-numeric: tabular-nums;
@@ -193,7 +193,7 @@
 }
 .alsoCount {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--muted-3);
 }
 .reviewCards {
@@ -214,7 +214,7 @@
   padding: 16px 24px;
 }
 .vs {
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 .vs a {
   text-decoration: none;
@@ -234,7 +234,7 @@
 .splitCaption {
   margin-top: 6px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--muted-2);
   line-height: 1.4;
   display: flex;
@@ -250,18 +250,18 @@
 }
 .quote {
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: var(--text-xl);
   line-height: 1.4;
   color: var(--ink-2);
 }
 .quoteBy {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--muted-3);
 }
 .takeCount {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted-2);
   text-align: right;
 }
@@ -279,7 +279,7 @@
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   padding: 9px 12px;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   transition: border-color 120ms;
 }
@@ -293,7 +293,7 @@
 }
 .gt {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--muted-1);
 }
 .because {
@@ -302,7 +302,7 @@
 }
 .status {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--olive-text);
 }
 .statusError {
@@ -331,7 +331,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .name {
-    font-size: 40px;
+    font-size: var(--text-display);
   }
   .axes {
     grid-template-columns: repeat(2, 1fr);
@@ -358,7 +358,7 @@
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
-  font-size: 16px;
+  font-size: var(--text-lg);
   line-height: 1.5;
 }
 .firstReview a {

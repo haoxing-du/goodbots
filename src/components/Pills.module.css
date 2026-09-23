@@ -6,7 +6,7 @@
   border-radius: var(--r-pill);
   overflow: hidden;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 .on,
 .off {

@@ -6,7 +6,7 @@
   padding: 16px 20px;
 }
 .reqTitle {
-  font-size: 15px;
+  font-size: var(--text-md);
   margin-bottom: 4px;
 }
 .axis {
@@ -18,7 +18,7 @@
   padding: 14px 20px;
 }
 .axisHidden {
-  font-size: 15px;
+  font-size: var(--text-md);
   margin-bottom: 4px;
   color: var(--muted-3);
   text-decoration: line-through;
@@ -60,7 +60,7 @@
   gap: 12px;
   padding: 8px 0;
   border-top: 1px solid var(--divider);
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 .featuredRow:first-child {
   border-top: 0;
