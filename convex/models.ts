@@ -62,7 +62,6 @@ export const list = query({
   },
 });
 
-/** The model page: header, axis stats and head-to-head for one version. */
 /**
  * One model version's page (every version is its own page). If `id` is a family
  * slug instead (old links like /m/claude-opus), returns a redirect to that
@@ -113,7 +112,9 @@ export const page = query({
         };
       });
 
-    // Head to head: group every take involving this version by opponent.
+    // Head to head: group takes involving this version by opponent. Takes are
+    // unlimited, but win % counts only each person's latest take per matchup,
+    // so one person posting the same take repeatedly can't swing it.
     const [wins, losses] = await Promise.all([
       ctx.db
         .query("takes")
@@ -128,15 +129,23 @@ export const page = query({
       Id<"versions">,
       { wins: number; total: number; quote: Doc<"takes"> | null }
     >();
-    const add = (t: Doc<"takes">, opp: Id<"versions">, won: boolean) => {
+    const latest = new Map<string, { take: Doc<"takes">; opp: Id<"versions">; won: boolean }>();
+    const consider = (t: Doc<"takes">, opp: Id<"versions">, won: boolean) => {
+      const key = `${t.userId}|${opp}`;
+      const prev = latest.get(key);
+      if (!prev || t.createdAt > prev.take.createdAt) latest.set(key, { take: t, opp, won });
+      // The quote is the newest take with a reason, from anyone.
       const row = byOpp.get(opp) ?? { wins: 0, total: 0, quote: null };
-      row.total++;
-      if (won) row.wins++;
       if (t.reason && (!row.quote || t.createdAt > row.quote.createdAt)) row.quote = t;
       byOpp.set(opp, row);
     };
-    for (const t of wins) add(t, t.loserVersionId, true);
-    for (const t of losses) add(t, t.winnerVersionId, false);
+    for (const t of wins) consider(t, t.loserVersionId, true);
+    for (const t of losses) consider(t, t.winnerVersionId, false);
+    for (const { opp, won } of latest.values()) {
+      const row = byOpp.get(opp)!;
+      row.total++; // one vote per person
+      if (won) row.wins++;
+    }
 
     const headToHead = await Promise.all(
       [...byOpp.entries()]

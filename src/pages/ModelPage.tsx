@@ -218,7 +218,7 @@ function HeadToHead({
               )}
             </div>
             <div className={s.takeCount}>
-              {fmtCount(h.total)} {h.total === 1 ? "take" : "takes"}
+              {fmtCount(h.total)} {h.total === 1 ? "person" : "people"}
             </div>
           </div>
         ))}
