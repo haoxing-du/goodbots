@@ -165,3 +165,10 @@
     padding: 28px 16px 40px;
   }
 }
+
+.permalink {
+  text-decoration: none;
+}
+.permalink:hover {
+  text-decoration: underline;
+}

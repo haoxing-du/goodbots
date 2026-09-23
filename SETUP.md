@@ -19,9 +19,11 @@ src/
   components/      TopBar, SignIn dialog, Pills, Reactions, Stars/MatchChip/Avatar…
   pages/           Home, Models, ModelPage, WriteReview, Profile, RequestModel, Admin, Search
 scripts/generateKeys.mjs   creates the JWT keys Convex Auth needs
+middleware.ts   Vercel edge middleware: Open Graph tags for link-preview crawlers
+api/og.ts       Vercel edge function: the 1200×630 link-preview image (layout in api/_og-tree.ts)
 ```
 
-Routes: `/`, `/reviews`, `/models`, `/m/:versionId` (one page per version; old `/m/:family[/:version]` links redirect), `/write?v=:versionId`, `/u/:handle`, `/request`, `/admin`, `/search?q=`.
+Routes: `/`, `/reviews`, `/models`, `/m/:versionId` (one page per version; old `/m/:family[/:version]` links redirect), `/r/:reviewId` (one review, for sharing), `/write?v=:versionId`, `/u/:handle`, `/request`, `/admin`, `/search?q=`.
 
 ## Local setup
 
@@ -89,8 +91,11 @@ Dev and prod deployments have different `.convex.site` URLs, so register both ca
 3. **Vercel.** Import the repo, framework preset **Vite**, then:
    - Build command: `npx convex deploy --cmd 'npm run build'`
    - Output directory: `dist`
-   - Environment variable: `CONVEX_DEPLOY_KEY` = the production deploy key
+   - Environment variables:
+     - `CONVEX_DEPLOY_KEY` = the production deploy key
+     - `CONVEX_SITE_URL` = the production deployment's HTTP actions URL (`https://<deployment>.convex.site`). The link-preview middleware uses it; without it, shared links fall back to the site-wide preview.
 
    `convex deploy` pushes the backend, then runs the frontend build with `VITE_CONVEX_URL` pointing at production.
-4. **SPA routing.** `vercel.json` in the repo rewrites all paths to `index.html` so deep links like `/m/claude-opus` work.
+4. **SPA routing.** `vercel.json` rewrites every path except `/api/*` to `index.html` so deep links like `/m/claude-opus-4-1` work.
+   **Link previews:** when X, Slack, iMessage and similar crawlers fetch `/`, `/m/…`, `/u/…` or `/r/…`, `middleware.ts` asks Convex (`GET <CONVEX_SITE_URL>/meta?path=…`) for the page's title and description and adds Open Graph/Twitter tags pointing at `/api/og?…` for the image. Regular visitors aren't affected. Check with X's or LinkedIn's post inspector after deploying.
 5. **Seed (optional).** To load the demo data into prod: `npx convex run seed:run --prod`. Or start empty and add models from `/admin`.

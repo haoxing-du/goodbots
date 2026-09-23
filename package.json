@@ -8,13 +8,14 @@
     "dev:frontend": "vite",
     "dev:backend": "convex dev",
     "build": "tsc -p . && vite build",
-    "typecheck": "tsc -p . && tsc -p convex",
+    "typecheck": "tsc -p . && tsc -p convex && tsc -p tsconfig.edge.json",
     "seed": "convex run seed:run",
     "preview": "vite preview"
   },
   "dependencies": {
     "@auth/core": "^0.41.3",
     "@convex-dev/auth": "^0.0.95",
+    "@vercel/og": "^1.0.0",
     "convex": "^1.46.0",
     "obscenity": "^0.4.6",
     "react": "^19.3.0",

@@ -10,6 +10,7 @@ import { versionPath } from "../lib/paths";
 import { NotFound } from "./NotFound";
 import ui from "../components/ui.module.css";
 import s from "./Profile.module.css";
+import { useTitle } from "../lib/useTitle";
 
 type VersionRef = {
   displayName: string;
@@ -25,6 +26,7 @@ function VersionLink({ v }: { v: VersionRef }) {
 export function Profile() {
   const { handle = "" } = useParams();
   const data = useQuery(api.users.profile, { handle });
+  useTitle(data ? `${data.user.name} (@${data.user.handle})` : undefined);
   const removeTake = useMutation(api.takes.remove);
   const [editing, setEditing] = useState(false);
 

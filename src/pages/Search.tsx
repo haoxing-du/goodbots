@@ -5,11 +5,13 @@ import { Avatar } from "../components/bits";
 import ui from "../components/ui.module.css";
 import s from "./Search.module.css";
 import { versionPath } from "../lib/paths";
+import { useTitle } from "../lib/useTitle";
 
 export function Search() {
   const [params] = useSearchParams();
   const q = params.get("q") ?? "";
   const results = useQuery(api.search.all, { q });
+  useTitle(`Search: ${q}`);
 
   return (
     <div className={ui.page}>

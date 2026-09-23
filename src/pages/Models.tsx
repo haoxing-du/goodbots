@@ -8,6 +8,7 @@ import { fmtAvg, fmtCount } from "../lib/format";
 import { versionPath } from "../lib/paths";
 import ui from "../components/ui.module.css";
 import s from "./Models.module.css";
+import { useTitle } from "../lib/useTitle";
 
 type Version = NonNullable<ReturnType<typeof useQuery<typeof api.models.list>>>[number];
 type View = "family" | "all";
@@ -15,6 +16,7 @@ type View = "family" | "all";
 const VIEW_KEY = "gb.modelsView";
 
 export function Models() {
+  useTitle("Models");
   const versions = useQuery(api.models.list);
   const [view, setView] = useState<View>(() => {
     try {

@@ -7,8 +7,10 @@ import { mergeIntoDraft } from "../lib/draft";
 import { fmtCount } from "../lib/format";
 import s from "./Home.module.css";
 import { versionPath } from "../lib/paths";
+import { useTitle } from "../lib/useTitle";
 
 export function Home() {
+  useTitle(null);
   const data = useQuery(api.home.homeStats);
   const navigate = useNavigate();
   const { requireAuth } = useSignIn();

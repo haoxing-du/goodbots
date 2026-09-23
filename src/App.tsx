@@ -10,6 +10,7 @@ import { Profile } from "./pages/Profile";
 import { RequestModel } from "./pages/RequestModel";
 import { Admin } from "./pages/Admin";
 import { Search } from "./pages/Search";
+import { ReviewPage } from "./pages/ReviewPage";
 import { NotFound } from "./pages/NotFound";
 
 function Chrome() {
@@ -40,6 +41,7 @@ export function App() {
           <Route path="/m/:id" element={<ModelPage />} />
           <Route path="/m/:family/:versionId" element={<LegacyModelRedirect />} />
           <Route path="/u/:handle" element={<Profile />} />
+          <Route path="/r/:id" element={<ReviewPage />} />
           <Route path="/request" element={<RequestModel />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/search" element={<Search />} />

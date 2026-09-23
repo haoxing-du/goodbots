@@ -8,12 +8,14 @@ import { shortDate } from "../lib/format";
 import ui from "../components/ui.module.css";
 import f from "./forms.module.css";
 import s from "./Admin.module.css";
+import { useTitle } from "../lib/useTitle";
 
 function errText(e: unknown, fallback: string) {
   return e instanceof ConvexError ? String(e.data) : fallback;
 }
 
 export function Admin() {
+  useTitle("Admin");
   const me = useQuery(api.users.me);
   if (me === undefined) return <div className={ui.page} />;
   if (!me?.isAdmin) {

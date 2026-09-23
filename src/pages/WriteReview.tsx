@@ -11,11 +11,13 @@ import { proseDate } from "../lib/format";
 import ui from "../components/ui.module.css";
 import s from "./WriteReview.module.css";
 import { versionPath } from "../lib/paths";
+import { useTitle } from "../lib/useTitle";
 
 /** Matches EDIT_WINDOW in convex/reviews.ts. */
 const EDIT_WINDOW_MS = 10 * 60 * 1000;
 
 export function WriteReview() {
+  useTitle("Write a review");
   const [params, setParams] = useSearchParams();
   const data = useQuery(api.reviews.forWrite);
   const upsert = useMutation(api.reviews.upsert);

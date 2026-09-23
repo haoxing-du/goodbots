@@ -195,6 +195,19 @@ export const remove = mutation({
 
 // ---------- queries ----------
 
+/** One review, for its share page (/r/:id). */
+export const get = query({
+  args: { id: v.string() },
+  handler: async (ctx, { id }) => {
+    const reviewId = ctx.db.normalizeId("reviews", id);
+    const review = reviewId ? await ctx.db.get(reviewId) : null;
+    if (!review) return null;
+    const viewerId = await getAuthUserId(ctx);
+    const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
+    return await hydrateReview(ctx, review, viewerId, match, axes);
+  },
+});
+
 /** A version's reviews, most reactions first, optionally only one star rating. Paginated. */
 export const byVersion = query({
   args: {

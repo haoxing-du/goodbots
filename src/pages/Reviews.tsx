@@ -9,8 +9,10 @@ import { fmtAvg, timeAgo } from "../lib/format";
 import ui from "../components/ui.module.css";
 import s from "./Reviews.module.css";
 import { versionPath } from "../lib/paths";
+import { useTitle } from "../lib/useTitle";
 
 export function Reviews() {
+  useTitle("Reviews");
   const [tab, setTab] = useState<"latest" | "top">("latest");
   const latest = usePaginatedQuery(
     api.reviews.feedLatest,
@@ -62,7 +64,9 @@ export function Reviews() {
                 <MatchChip match={r.match} />
                 <span className={s.when}>
                   <DeleteReview reviewId={r._id} authorId={r.user?._id} />
-                  <span className={ui.meta}>{timeAgo(r.updatedAt)}</span>
+                  <Link to={`/r/${r._id}`} className={`${ui.meta} ${s.permalink}`} title="Link to this review">
+                    {timeAgo(r.updatedAt)}
+                  </Link>
                 </span>
               </div>
               <div className={s.byline}>

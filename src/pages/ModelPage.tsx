@@ -5,27 +5,20 @@ import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { Pills } from "../components/Pills";
-import {
-  AxisScores,
-  Avatar,
-  DeleteReview,
-  LoadMore,
-  MatchChip,
-  Snippet,
-  Stars,
-  UserLink,
-} from "../components/bits";
-import { Reactions } from "../components/Reactions";
+import { LoadMore, UserLink } from "../components/bits";
+import { ReviewCard } from "../components/ReviewCard";
 import { useSignIn } from "../components/SignIn";
-import { fmtAvg, fmtCount, timeAgo } from "../lib/format";
+import { fmtAvg, fmtCount } from "../lib/format";
 import { NotFound } from "./NotFound";
 import ui from "../components/ui.module.css";
 import s from "./ModelPage.module.css";
 import { versionPath } from "../lib/paths";
+import { useTitle } from "../lib/useTitle";
 
 export function ModelPage() {
   const { id = "" } = useParams();
   const data = useQuery(api.models.page, { id });
+  useTitle(data && data.redirectTo === null ? data.version.displayName : undefined);
 
   if (data === undefined) return <div className={ui.page} />;
   if (data === null) return <NotFound what="model" />;
@@ -353,31 +346,7 @@ function ReviewList({ versionId }: { versionId: Id<"versions"> }) {
           </div>
         )}
         {reviews.map((r) => (
-          <article key={r._id} className={`${ui.card} ${s.review}`}>
-            <div className={s.reviewer}>
-              <div className={s.who}>
-                <Avatar name={r.user?.name ?? "?"} image={r.user?.image} />
-                <div>
-                  <UserLink user={r.user} className={s.whoName} />
-                  <div className={ui.meta}>@{r.user?.handle}</div>
-                </div>
-              </div>
-              <MatchChip match={r.match} />
-              <AxisScores scores={r.scores} stacked />
-            </div>
-            <div className={s.reviewBody}>
-              <div className={s.reviewTop}>
-                {r.overall ? <Stars value={r.overall} /> : <span />}
-                <span className={s.reviewMeta}>
-                  <DeleteReview reviewId={r._id} authorId={r.user?._id} />
-                  <span className={ui.meta}>{timeAgo(r.updatedAt)}</span>
-                </span>
-              </div>
-              <p className={ui.body}>{r.text}</p>
-              <Snippet prompt={r.prompt} response={r.response} />
-              <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} />
-            </div>
-          </article>
+          <ReviewCard key={r._id} r={r} />
         ))}
         <LoadMore status={status} loadMore={loadMore} label="More reviews" />
       </div>

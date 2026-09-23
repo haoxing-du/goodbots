@@ -5,10 +5,12 @@ import { api } from "../../convex/_generated/api";
 import { useSignIn } from "../components/SignIn";
 import ui from "../components/ui.module.css";
 import f from "./forms.module.css";
+import { useTitle } from "../lib/useTitle";
 
 const EMPTY = { family: "", versionId: "", provider: "", link: "" };
 
 export function RequestModel() {
+  useTitle("Request a model");
   const create = useMutation(api.requests.create);
   const { requireAuth } = useSignIn();
   const [form, setForm] = useState(EMPTY);
