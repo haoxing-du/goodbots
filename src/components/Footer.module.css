@@ -4,6 +4,7 @@
   padding: var(--s-9) var(--s-14) var(--s-11);
   border-top: 1px solid var(--divider);
   display: flex;
+  justify-content: center;
   gap: var(--s-8);
   font-size: var(--text-sm);
 }
