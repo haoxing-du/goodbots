@@ -187,10 +187,10 @@
   .bar .spacer {
     display: none;
   }
-  .nav {
+  .bar .nav {
     order: 5;
   }
-  .searchForm {
+  .bar .searchForm {
     order: 6;
     flex: 1 1 12rem;
   }

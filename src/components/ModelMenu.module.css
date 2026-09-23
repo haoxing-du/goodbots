@@ -30,8 +30,8 @@
 }
 .chevron {
   flex: none;
-  width: 0.42em;
-  height: 0.42em;
+  width: 0.5em;
+  height: 0.5em;
   align-self: center;
   color: var(--muted-2);
   transition: rotate 150ms ease-out;
