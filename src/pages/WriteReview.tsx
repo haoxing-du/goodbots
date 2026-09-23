@@ -187,6 +187,10 @@ export function WriteReview() {
             </div>
           )}
 
+          <div className={s.guideInline}>
+            <ScaleGuide />
+          </div>
+
           <div className={`${ui.card} ${ui.rows} ${s.ratingCard}`}>
             <div className={s.overallRow}>
               <div>
@@ -324,24 +328,33 @@ export function WriteReview() {
         </div>
 
         <aside className={s.aside}>
-          <div className={ui.sectionLabel}>Scale</div>
-          <ul className={s.scale}>
-            <li>
-              <b>1</b> — actively bad
-            </li>
-            <li>
-              <b>3</b> — fine, forgettable
-            </li>
-            <li>
-              <b>5</b> — best I've used
-            </li>
-          </ul>
-          <p className={s.asideNote}>
-            Skip anything you haven't tested; only the text is required. Missing an axis? Add
-            your own at the bottom of the list.
-          </p>
+          <ScaleGuide />
         </aside>
       </div>
+    </>
+  );
+}
+
+// Shown in the side column on wide screens and above the ratings on narrow ones.
+function ScaleGuide() {
+  return (
+    <>
+      <div className={ui.sectionLabel}>Scale</div>
+      <ul className={s.scale}>
+        <li>
+          <b>1</b> — actively bad
+        </li>
+        <li>
+          <b>3</b> — fine, forgettable
+        </li>
+        <li>
+          <b>5</b> — best I've used
+        </li>
+      </ul>
+      <p className={s.asideNote}>
+        Skip anything you haven't tested; only the text is required. Missing an axis? Add your own
+        at the bottom of the list.
+      </p>
     </>
   );
 }

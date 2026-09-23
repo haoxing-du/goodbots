@@ -245,6 +245,9 @@
 .aside {
   padding-top: 64px;
 }
+.guideInline {
+  display: none;
+}
 .scale {
   list-style: none;
   padding: 0;
@@ -278,9 +281,19 @@
     padding: 28px 16px 40px;
   }
   .aside {
-    padding-top: 0;
-    order: -1;
     display: none;
+  }
+  .guideInline {
+    display: block;
+  }
+  .guideInline .scale {
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: 16px;
+    margin-bottom: 8px;
+  }
+  .guideInline .asideNote {
+    max-width: none;
   }
   .versionSelect {
     min-width: 0;
