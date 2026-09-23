@@ -6,7 +6,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { MinimalBar } from "../components/TopBar";
 import { useSignIn } from "../components/SignIn";
-import { Draft, loadDraft, saveDraft } from "../lib/draft";
+import { Draft, EMPTY_DRAFT, loadDraft, saveDraft } from "../lib/draft";
 import { proseDate } from "../lib/format";
 import ui from "../components/ui.module.css";
 import s from "./WriteReview.module.css";
@@ -22,8 +22,10 @@ export function WriteReview() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { open, requireAuth } = useSignIn();
 
-  // Text and stars started on the homepage arrive through the saved draft.
-  const [draft, setDraft] = useState<Draft>(loadDraft);
+  // Each model version has its own saved draft (text and ratings started on the
+  // homepage arrive through it). `draftFor` is the version the draft belongs to.
+  const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
+  const [draftFor, setDraftFor] = useState<string | null>(null);
   const [posted, setPosted] = useState<Id<"versions"> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -32,15 +34,23 @@ export function WriteReview() {
     if (!isLoading && !isAuthenticated) open("Sign in to write a review. You can browse without an account.");
   }, [isLoading, isAuthenticated, open]);
 
-  useEffect(() => {
-    if (!posted) saveDraft(draft);
-  }, [draft, posted]);
-
   const selected = useMemo(() => {
     if (!data) return null;
     const want = params.get("v");
     return data.options.find((o) => o.versionId === want) ?? data.options[0] ?? null;
   }, [data, params]);
+
+  // Switching versions loads that version's draft.
+  const selectedId = selected?.versionId ?? null;
+  useEffect(() => {
+    if (!selectedId) return;
+    setDraft(loadDraft(selectedId));
+    setDraftFor(selectedId);
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (draftFor && draftFor === selectedId && !posted) saveDraft(draftFor, draft);
+  }, [draft, draftFor, selectedId, posted]);
 
   const community = useQuery(
     api.reviews.communityAfterPost,
@@ -108,7 +118,7 @@ export function WriteReview() {
           response: draft.showSnippet ? draft.response : undefined,
         });
         setPosted(selected._id);
-        saveDraft(null);
+        saveDraft(selected.versionId, null);
       } catch (e) {
         setError(e instanceof ConvexError ? String(e.data) : "Couldn't post your review. Try again.");
       } finally {

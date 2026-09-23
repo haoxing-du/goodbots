@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSignIn } from "../components/SignIn";
-import { EMPTY_DRAFT, saveDraft } from "../lib/draft";
+import { mergeIntoDraft } from "../lib/draft";
 import { fmtCount } from "../lib/format";
 import s from "./Home.module.css";
 import { versionPath } from "../lib/paths";
@@ -40,7 +40,7 @@ export function Home() {
   const onFinish = () => {
     if (!started || !versionId) return;
     // Hand the text and axis ratings to the write page; the draft also survives sign-in.
-    saveDraft({ ...EMPTY_DRAFT, text, scores: ratings });
+    mergeIntoDraft(versionId, text, ratings);
     const to = `/write?v=${encodeURIComponent(versionId)}`;
     requireAuth(
       () => navigate(to),

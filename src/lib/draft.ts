@@ -19,28 +19,52 @@ export const EMPTY_DRAFT: Draft = {
   response: "",
 };
 
-const KEY = "gb.draft";
+const KEY = "gb.drafts"; // { [versionId]: { savedAt, draft } }
 const MAX_AGE = 24 * 60 * 60 * 1000;
 
-// localStorage (not sessionStorage) so the draft survives sign-in, including a
-// magic link opened in a new tab. Drafts older than a day are dropped.
-export function loadDraft(): Draft {
+type Store = Record<string, { savedAt: number; draft: Partial<Draft> }>;
+
+// localStorage (not sessionStorage) so a draft survives sign-in, including a
+// magic link opened in a new tab. One draft per model version; drafts older
+// than a day are dropped.
+function readStore(): Store {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return EMPTY_DRAFT;
-    const { savedAt, draft } = JSON.parse(raw) as { savedAt: number; draft: Partial<Draft> };
-    if (!savedAt || Date.now() - savedAt > MAX_AGE) return EMPTY_DRAFT;
-    return { ...EMPTY_DRAFT, ...draft };
+    const store = JSON.parse(localStorage.getItem(KEY) ?? "{}") as Store;
+    const now = Date.now();
+    for (const [k, v] of Object.entries(store)) if (!v?.savedAt || now - v.savedAt > MAX_AGE) delete store[k];
+    return store;
   } catch {
-    return EMPTY_DRAFT;
+    return {};
   }
 }
 
-export function saveDraft(draft: Draft | null) {
+function writeStore(store: Store) {
   try {
-    if (draft) localStorage.setItem(KEY, JSON.stringify({ savedAt: Date.now(), draft }));
-    else localStorage.removeItem(KEY);
+    localStorage.setItem(KEY, JSON.stringify(store));
+    localStorage.removeItem("gb.draft"); // pre-per-version key
   } catch {
     /* storage unavailable */
   }
+}
+
+export function loadDraft(versionId: string): Draft {
+  const entry = readStore()[versionId];
+  return entry ? { ...EMPTY_DRAFT, ...entry.draft } : EMPTY_DRAFT;
+}
+
+export function saveDraft(versionId: string, draft: Draft | null) {
+  const store = readStore();
+  if (draft) store[versionId] = { savedAt: Date.now(), draft };
+  else delete store[versionId];
+  writeStore(store);
+}
+
+/** Adds homepage text/ratings to a version's draft without wiping what's already there. */
+export function mergeIntoDraft(versionId: string, text: string, scores: Record<string, number>) {
+  const existing = loadDraft(versionId);
+  saveDraft(versionId, {
+    ...existing,
+    text: text.trim() ? text : existing.text,
+    scores: { ...existing.scores, ...scores },
+  });
 }
