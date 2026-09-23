@@ -17,7 +17,7 @@ export const create = mutation({
       ctx.db.get(winnerVersionId),
       ctx.db.get(loserVersionId),
     ]);
-    if (!a || !b) throw new ConvexError("Unknown model version.");
+    if (!a || !b) throw new ConvexError("Unknown model.");
     const trimmed = reason?.trim().slice(0, 200);
     await ctx.db.insert("takes", {
       userId: user._id,

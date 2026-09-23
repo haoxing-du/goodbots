@@ -151,7 +151,7 @@ function AddVersion() {
 
   return (
     <section>
-      <h2 className={ui.sectionLabel}>Add a version</h2>
+      <h2 className={ui.sectionLabel}>Add a model</h2>
       <form
         className={`${ui.card} ${f.cardPad} ${f.form}`}
         onSubmit={async (e) => {
@@ -166,7 +166,7 @@ function AddVersion() {
           } catch (err) {
             setMsg({
               ok: false,
-              text: errText(err, "Couldn't add that version. Try again."),
+              text: errText(err, "Couldn't add that model. Try again."),
             });
           } finally {
             setBusy(false);
@@ -188,7 +188,7 @@ function AddVersion() {
         {msg && <p className={msg.ok ? f.ok : ui.error} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
         <div>
           <button type="submit" className={ui.btn} disabled={busy}>
-            {busy ? "Adding…" : "Add version"}
+            {busy ? "Adding…" : "Add model"}
           </button>
         </div>
       </form>

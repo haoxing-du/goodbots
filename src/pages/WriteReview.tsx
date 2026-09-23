@@ -173,7 +173,7 @@ export function WriteReview() {
             <div className={s.notice}>
               {Date.now() - prior.lastPostAt < EDIT_WINDOW_MS
                 ? "You posted this a few minutes ago. Posting again replaces it (edits within 10 minutes don't add an update)."
-                : `You reviewed this version on ${proseDate(prior.createdAt)}. Posting now adds a dated update to that review; the new scores replace the old ones.`}
+                : `You reviewed this model on ${proseDate(prior.createdAt)}. Posting now adds a dated update to that review; the new scores replace the old ones.`}
             </div>
           )}
 

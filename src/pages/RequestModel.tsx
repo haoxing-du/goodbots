@@ -107,7 +107,7 @@ export function RequestModel() {
             {field("name", "Model name", "Claude Sonnet 5")}
             {field("provider", "Provider", "Anthropic")}
           </div>
-          {field("versionId", "Version id", "claude-sonnet-4-5")}
+          {field("versionId", "Model id", "anthropic/claude-sonnet-5")}
           {field("link", "Link", "Announcement or docs URL", false)}
           {error && <p className={ui.error} role="alert">{error}</p>}
           <div>
