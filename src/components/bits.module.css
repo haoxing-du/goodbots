@@ -91,6 +91,39 @@ img.avatar {
   color: var(--ink);
 }
 
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chip {
+  --c: var(--muted-1);
+  --c-bg: var(--page);
+  --c-border: var(--border);
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--s-1);
+  padding: 2px var(--s-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill);
+  background: var(--c-bg);
+  color: var(--c);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.chip b {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.axisSmarts { --c: var(--axis-smarts); --c-bg: var(--axis-smarts-bg); --c-border: var(--axis-smarts-border); }
+.axisTaste { --c: var(--axis-taste); --c-bg: var(--axis-taste-bg); --c-border: var(--axis-taste-border); }
+.axisVibes { --c: var(--axis-vibes); --c-bg: var(--axis-vibes-bg); --c-border: var(--axis-vibes-border); }
+.axisAligned { --c: var(--axis-aligned); --c-bg: var(--axis-aligned-bg); --c-border: var(--axis-aligned-border); }
+
 .snippet {
   background: var(--page);
   border: 1px solid var(--border);

@@ -92,6 +92,27 @@ export function AxisScores({ scores, stacked }: { scores: AxisScore[]; stacked?:
   );
 }
 
+const AXIS_COLORS: Record<string, string> = {
+  smarts: s.axisSmarts,
+  taste: s.axisTaste,
+  vibes: s.axisVibes,
+  aligned: s.axisAligned,
+};
+
+/** Rated axes as small chips; core axes get their own hue, custom axes stay neutral. */
+export function AxisChips({ scores }: { scores: AxisScore[] }) {
+  if (!scores.length) return null;
+  return (
+    <ul className={s.chips} aria-label="Axis scores">
+      {scores.map((a) => (
+        <li key={a._id} className={`${s.chip} ${(a.slug && AXIS_COLORS[a.slug]) || ""}`}>
+          {a.name} <b>{a.score}</b>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function Snippet({ prompt, response }: { prompt?: string; response?: string }) {
   if (!prompt && !response) return null;
   return (

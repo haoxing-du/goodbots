@@ -4,14 +4,16 @@ import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Pills } from "../components/Pills";
 import {
-  AxisScores,
+  AxisChips,
   Avatar,
   DeleteReview,
   LoadMore,
   MatchChip,
+  Snippet,
   Stars,
   UserLink,
 } from "../components/bits";
+import type { ReviewCard as ReviewCardData } from "../../convex/reviews";
 import { Reactions } from "../components/Reactions";
 import { fmtAvg, timeAgo } from "../lib/format";
 import ui from "../components/ui.module.css";
@@ -60,58 +62,26 @@ export function Reviews() {
           />
         </header>
 
-        <div className={s.cards}>
-          {feed === undefined && <div className={`${ui.card} ${ui.skelCard}`} aria-busy="true" />}
+        <div className={s.board}>
+          {feed === undefined && (
+            <div className={`${ui.card} ${ui.skelCard} ${s.wide}`} aria-busy="true" />
+          )}
           {feed && feed.length === 0 && (
-            <div className={`${ui.card} ${ui.empty}`}>
+            <div className={`${ui.card} ${ui.empty} ${s.wide}`}>
               {tab === "top" ? (
                 "No reactions this week yet."
               ) : (
                 <>
-                  No reviews yet.{" "}
-                  <Link to="/write">Be the first to write one.</Link>
+                  No reviews yet. <Link to="/write">Be the first to write one.</Link>
                 </>
               )}
             </div>
           )}
-          {feed?.map((r) => (
-            <article key={r._id} className={`${ui.card} ${s.card}`}>
-              <div className={s.cardTop}>
-                {r.version && (
-                  <Link
-                    to={versionPath(r.version.versionId)}
-                    className={s.modelChip}
-                  >
-                    {r.version.displayName}
-                  </Link>
-                )}
-                <MatchChip match={r.match} />
-                <span className={s.when}>
-                  <DeleteReview reviewId={r._id} authorId={r.user?._id} />
-                  <Link
-                    to={`/r/${r._id}`}
-                    className={`${ui.meta} ${s.permalink}`}
-                    title="Link to this review"
-                  >
-                    {timeAgo(r.updatedAt)}
-                  </Link>
-                </span>
-              </div>
-              <div className={s.byline}>
-                <UserLink user={r.user} className={s.name} />
-                {r.overall && <Stars value={r.overall} />}
-              </div>
-              <p className={`${ui.body} ${s.text}`}>{r.text}</p>
-              <AxisScores scores={r.scores} />
-              <Reactions
-                reviewId={r._id}
-                counts={r.reactionCounts}
-                mine={r.myReactions}
-              />
-            </article>
-          ))}
+          {feed?.map((r) => <Post key={r._id} r={r} />)}
           {tab === "latest" && (
-            <LoadMore status={latest.status} loadMore={latest.loadMore} />
+            <div className={s.wide}>
+              <LoadMore status={latest.status} loadMore={latest.loadMore} />
+            </div>
           )}
         </div>
       </div>
@@ -121,6 +91,50 @@ export function Reviews() {
         <ReviewersLikeYou />
       </aside>
     </div>
+  );
+}
+
+// Past this many characters a card clamps to 8 lines and links to the full review.
+const LONG_REVIEW = 420;
+
+function Post({ r }: { r: ReviewCardData }) {
+  const long = r.text.length > LONG_REVIEW;
+  return (
+    <article className={`${ui.card} ${s.post}`}>
+      <header className={s.postHead}>
+        <Avatar name={r.user?.name ?? "?"} image={r.user?.image} size={36} />
+        <div className={s.who}>
+          <UserLink user={r.user} className={s.name} />
+          <span className={s.meta}>
+            {r.user && <>@{r.user.handle} · </>}
+            <Link to={`/r/${r._id}`}>{timeAgo(r.updatedAt)}</Link>
+          </span>
+        </div>
+        <MatchChip match={r.match} />
+      </header>
+      {(r.version || r.overall) && (
+        <div className={s.postModel}>
+          {r.version && (
+            <Link to={versionPath(r.version.versionId)} className={s.modelChip}>
+              {r.version.displayName}
+            </Link>
+          )}
+          {r.overall ? <Stars value={r.overall} size={13} /> : null}
+        </div>
+      )}
+      <p className={`${s.text} ${long ? s.clamped : ""}`}>{r.text}</p>
+      {long && (
+        <Link to={`/r/${r._id}`} className={s.more}>
+          Read the full review
+        </Link>
+      )}
+      <Snippet prompt={r.prompt} response={r.response} />
+      <AxisChips scores={r.scores} />
+      <footer className={s.postFoot}>
+        <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} compact />
+        <DeleteReview reviewId={r._id} authorId={r.user?._id} />
+      </footer>
+    </article>
   );
 }
 

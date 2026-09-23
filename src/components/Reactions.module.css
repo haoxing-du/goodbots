@@ -5,6 +5,9 @@
 }
 .on,
 .off {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
   border: 1px solid;
   border-radius: var(--r-sm);
   padding: 5px var(--s-4);
@@ -25,6 +28,19 @@
   background: var(--ink);
   border-color: var(--ink);
   color: var(--on-ink);
+}
+.emoji {
+  font-size: 1.05em;
+  line-height: 1;
+}
+/* Feed board: pill-shaped emoji + count. */
+.compact {
+  border-radius: var(--r-pill);
+  padding: var(--s-1) var(--s-4);
+}
+.compact.off {
+  background: transparent;
+  border-color: transparent;
 }
 .count {
   font-family: var(--font-mono);

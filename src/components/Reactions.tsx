@@ -10,10 +10,13 @@ export function Reactions({
   reviewId,
   counts,
   mine,
+  compact,
 }: {
   reviewId: Id<"reviews">;
   counts: Record<ReactionKind, number>;
   mine: ReactionKind[];
+  /** Emoji + count only (the feed board); the label moves to the accessible name. */
+  compact?: boolean;
 }) {
   const toggle = useMutation(api.reactions.toggle);
   const { requireAuth } = useSignIn();
@@ -39,17 +42,23 @@ export function Reactions({
 
   return (
     <div className={s.row}>
-      {REACTIONS.map(({ kind, label }) => {
+      {REACTIONS.map(({ kind, label, emoji }) => {
         const on = local.mine.includes(kind);
+        const n = local.counts[kind];
         return (
           <button
             key={kind}
             type="button"
-            className={on ? s.on : s.off}
+            className={`${on ? s.on : s.off} ${compact ? s.compact : ""}`}
             aria-pressed={on}
+            aria-label={compact ? `${label}, ${n}` : undefined}
+            title={compact ? label : undefined}
             onClick={() => onClick(kind)}
           >
-            {label} <span className={s.count}>{local.counts[kind]}</span>
+            <span className={s.emoji} aria-hidden>
+              {emoji}
+            </span>
+            {!compact && label} <span className={s.count}>{n}</span>
           </button>
         );
       })}
