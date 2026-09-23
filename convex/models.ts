@@ -50,7 +50,7 @@ export const list = query({
           overall: stats ? avg(stats.overall) : null,
           axes: coreAxes.map((a) => {
             const s = byAxis.get(a._id);
-            return { _id: a._id, name: a.name, avg: s ? avg(s) : null };
+            return { _id: a._id, name: a.name, slug: a.slug, avg: s ? avg(s) : null };
           }),
         });
       }

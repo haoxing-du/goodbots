@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 /** An axis score as returned with reviews (axes come from the server now). */
 export type AxisScore = {
   _id: string;
@@ -17,3 +19,20 @@ export const REACTIONS = [
 ] as const;
 
 export type ReactionKind = (typeof REACTIONS)[number]["kind"];
+
+// Core axes with their own hue (--axis-<slug> tokens in theme.css).
+const COLORED_AXES = new Set(["smarts", "taste", "vibes", "aligned"]);
+
+/**
+ * CSS variables that color an element for one axis: --axis (text/fill),
+ * --axis-bg and --axis-border. Undefined for custom axes, so styles fall
+ * back to their neutral defaults via var(--axis, …).
+ */
+export function axisVars(slug: string | undefined): CSSProperties | undefined {
+  if (!slug || !COLORED_AXES.has(slug)) return undefined;
+  return {
+    "--axis": `var(--axis-${slug})`,
+    "--axis-bg": `var(--axis-${slug}-bg)`,
+    "--axis-border": `var(--axis-${slug}-border)`,
+  } as CSSProperties;
+}

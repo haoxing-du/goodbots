@@ -14,6 +14,7 @@ import ui from "../components/ui.module.css";
 import s from "./ModelPage.module.css";
 import { versionPath, writePath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
+import { axisVars } from "../lib/axes";
 
 export function ModelPage() {
   const { provider = "", model = "" } = useParams();
@@ -65,6 +66,7 @@ export function ModelPage() {
 type AxisStat = {
   _id: string;
   name: string;
+  slug?: string;
   hint?: string;
   avg: number | null;
   count: number;
@@ -102,8 +104,8 @@ function AxisGrid({ axes, custom }: { axes: AxisStat[]; custom: AxisStat[] }) {
           const rounded = a.avg == null ? 0 : Math.round(a.avg);
           const max = Math.max(1, ...a.hist);
           return (
-            <div key={a._id} className={`${ui.card} ${s.axisCard}`}>
-              <div className={ui.monoLabel}>{a.name}</div>
+            <div key={a._id} className={`${ui.card} ${s.axisCard}`} style={axisVars(a.slug)}>
+              <div className={`${ui.monoLabel} ${s.axisName}`}>{a.name}</div>
               <div className={s.avg}>{fmtAvg(a.avg)}</div>
               {dist ? (
                 <div className={s.hist} role="img" aria-label={histLabel(a.name, a.hist)}>

@@ -10,6 +10,7 @@ import { versionPath } from "../lib/paths";
 import ui from "../components/ui.module.css";
 import s from "./Models.module.css";
 import { useTitle } from "../lib/useTitle";
+import { axisVars } from "../lib/axes";
 
 type Version = NonNullable<
   ReturnType<typeof useQuery<typeof api.models.list>>
@@ -173,7 +174,7 @@ function Grid({ versions }: { versions: Version[] }) {
           </div>
           <div className={s.axes}>
             {v.axes.map((a) => (
-              <div key={a._id} className={s.axis}>
+              <div key={a._id} className={s.axis} style={axisVars(a.slug)}>
                 <span className={s.axisLabel}>{a.name}</span>
                 <span className={s.axisValue}>{fmtAvg(a.avg)}</span>
               </div>

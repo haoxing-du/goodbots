@@ -5,7 +5,7 @@ import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { initials } from "../lib/format";
-import { AxisScore } from "../lib/axes";
+import { AxisScore, axisVars } from "../lib/axes";
 import { useConfirm } from "./Confirm";
 import s from "./bits.module.css";
 import ui from "./ui.module.css";
@@ -79,20 +79,13 @@ export function UserLink({
 }
 
 /** Mono "SMARTS 5  TASTE 4 …" line; only axes the reviewer rated. */
-const AXIS_COLORS: Record<string, string> = {
-  smarts: s.axisSmarts,
-  taste: s.axisTaste,
-  vibes: s.axisVibes,
-  aligned: s.axisAligned,
-};
-
 /** Rated axes as small chips; core axes get their own hue, custom axes stay neutral. */
 export function AxisChips({ scores }: { scores: AxisScore[] }) {
   if (!scores.length) return null;
   return (
     <ul className={s.chips} aria-label="Axis scores">
       {scores.map((a) => (
-        <li key={a._id} className={`${s.chip} ${(a.slug && AXIS_COLORS[a.slug]) || ""}`}>
+        <li key={a._id} className={s.chip} style={axisVars(a.slug)}>
           {a.name} <b>{a.score}</b>
         </li>
       ))}

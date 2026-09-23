@@ -88,8 +88,12 @@
   height: 10px;
   border-radius: 2px;
 }
+/* Core axis cards take their axis hue (set by axisVars); others stay olive. */
+.axisName {
+  color: var(--axis, var(--muted-1));
+}
 .pipOn {
-  background: var(--olive-fill);
+  background: var(--axis, var(--olive-fill));
 }
 .pipOff {
   background: var(--divider);
@@ -110,7 +114,7 @@
   height: 100%;
 }
 .bar {
-  background: var(--olive-fill);
+  background: var(--axis, var(--olive-fill));
   border-radius: 2px 2px 0 0;
 }
 .binCount {
@@ -132,7 +136,7 @@
   margin-top: auto;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--olive-text);
+  color: var(--axis, var(--olive-text));
   line-height: 1.4;
 }
 
