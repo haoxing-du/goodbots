@@ -1,7 +1,8 @@
-import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import { ConvexError, v } from "convex/values";
+import { internalMutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
+import { publicUser, requireAdmin } from "./lib";
 
 const DAY = 24 * 60 * 60 * 1000;
 // A signup counts as "activated" if they post a review within this long.
@@ -151,5 +152,145 @@ export const backfill = internalMutation({
       days++;
     }
     return days;
+  },
+});
+
+// ---------- admin page ----------
+
+type DayRow = Omit<Doc<"dailyStats">, "_id" | "_creationTime">;
+type Counts = Omit<DayRow, "day">;
+
+const emptyCounts = (): Counts => ({
+  signups: 0,
+  activated: 0,
+  reviews: 0,
+  updates: 0,
+  reactions: { agree: 0, disagree: 0, useful: 0, hot: 0, lol: 0 },
+  takes: 0,
+  axes: 0,
+  requests: 0,
+  models: 0,
+  activeUsers: 0,
+});
+
+function addCounts(into: Counts, row: Counts) {
+  for (const key of Object.keys(into) as (keyof Counts)[]) {
+    if (key === "reactions") {
+      for (const kind of Object.keys(into.reactions) as (keyof Counts["reactions"])[]) {
+        into.reactions[kind] += row.reactions[kind];
+      }
+    } else {
+      into[key] += row[key];
+    }
+  }
+  return into;
+}
+
+// Reviews scanned for the period's top lists.
+const TOP_SCAN = 2000;
+const TOP_N = 5;
+
+/**
+ * Site analytics for the admin page: daily series and totals for the `days`
+ * ending `today` (a UTC day key from the client, since queries can't read the
+ * clock), the same totals for the period before, all-time totals and top lists.
+ */
+export const overview = query({
+  args: { today: v.string(), days: v.number() },
+  handler: async (ctx, { today, days }) => {
+    await requireAdmin(ctx);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(today) || ![7, 30, 90].includes(days)) {
+      throw new ConvexError("Pick 7, 30 or 90 days.");
+    }
+    const end = dayStart(today) + DAY;
+    const start = end - days * DAY;
+    const prevStart = start - days * DAY;
+
+    const rows = new Map<string, DayRow>();
+    const allTime = emptyCounts();
+    for await (const { _id, _creationTime, ...row } of ctx.db.query("dailyStats")) {
+      addCounts(allTime, row);
+      if (row.day >= dayKey(prevStart) && row.day <= today) rows.set(row.day, row);
+    }
+    const series = (from: number): DayRow[] =>
+      Array.from({ length: days }, (_, i) => {
+        const day = dayKey(from + i * DAY);
+        return rows.get(day) ?? { day, ...emptyCounts() };
+      });
+    const current = series(start);
+    const previous = series(prevStart);
+
+    // Daily active users don't add up across days; count distinct users instead.
+    const distinctActive = async (from: number, to: number) => {
+      const users = new Set<Id<"users">>();
+      for await (const row of ctx.db
+        .query("dailyActiveUsers")
+        .withIndex("by_day", (q) => q.gte("day", dayKey(from)).lt("day", dayKey(to)))) {
+        users.add(row.userId);
+      }
+      return users.size;
+    };
+    const totals = current.reduce(addCounts, emptyCounts());
+    totals.activeUsers = await distinctActive(start, end);
+    const prevTotals = previous.reduce(addCounts, emptyCounts());
+    prevTotals.activeUsers = await distinctActive(prevStart, start);
+
+    // Top lists, from reviews posted in the period.
+    const reviews = await ctx.db
+      .query("reviews")
+      .withIndex("by_creation_time", (q) => q.gte("_creationTime", start).lt("_creationTime", end))
+      .order("desc")
+      .take(TOP_SCAN);
+    const tally = <K extends string>(keys: K[]) => {
+      const counts = new Map<K, number>();
+      for (const k of keys) counts.set(k, (counts.get(k) ?? 0) + 1);
+      return [...counts].sort((a, b) => b[1] - a[1]).slice(0, TOP_N);
+    };
+    const topModels = (
+      await Promise.all(
+        tally(reviews.map((r) => r.versionId)).map(async ([id, count]) => {
+          const version = await ctx.db.get(id);
+          return version && { versionId: version.versionId, displayName: version.displayName, count };
+        }),
+      )
+    ).filter((m) => m !== null);
+    const topReviewers = (
+      await Promise.all(
+        tally(reviews.map((r) => r.userId)).map(async ([id, count]) => {
+          const user = await ctx.db.get(id);
+          return user && { user: publicUser(user), count };
+        }),
+      )
+    ).filter((u) => u !== null);
+    const topReviews = (
+      await Promise.all(
+        reviews
+          .filter((r) => r.reactionCount > 0)
+          .sort((a, b) => b.reactionCount - a.reactionCount)
+          .slice(0, TOP_N)
+          .map(async (r) => {
+            const [user, version] = await Promise.all([ctx.db.get(r.userId), ctx.db.get(r.versionId)]);
+            return {
+              reviewId: r._id,
+              reactionCount: r.reactionCount,
+              user: user ? publicUser(user) : null,
+              model: version?.displayName ?? "Unknown model",
+            };
+          }),
+      )
+    );
+
+    return {
+      series: current,
+      totals,
+      prevTotals,
+      allTime,
+      top: {
+        models: topModels,
+        reviewers: topReviewers,
+        reviews: topReviews,
+        capped: reviews.length === TOP_SCAN,
+      },
+    };
   },
 });
