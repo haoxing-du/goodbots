@@ -32,3 +32,12 @@
     color: var(--ink);
   }
 }
+
+/* Forced colors drop backgrounds; keep the selected option distinct. */
+@media (forced-colors: active) {
+  .on {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+}

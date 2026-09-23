@@ -50,3 +50,12 @@
     scale: none;
   }
 }
+
+@media (forced-colors: active) {
+  .on {
+    forced-color-adjust: none;
+    background: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+}

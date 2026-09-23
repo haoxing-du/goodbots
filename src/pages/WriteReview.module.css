@@ -336,3 +336,12 @@
     font-size: var(--text-lg);
   }
 }
+
+@media (forced-colors: active) {
+  .numOn {
+    forced-color-adjust: none;
+    background: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+}
