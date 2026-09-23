@@ -1,0 +1,25 @@
+.footer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--s-9) var(--s-14) var(--s-11);
+  border-top: 1px solid var(--divider);
+  display: flex;
+  gap: var(--s-8);
+  font-size: var(--text-sm);
+}
+.footer a {
+  color: var(--muted-2);
+  text-decoration: none;
+}
+@media (hover: hover) {
+  .footer a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+}
+
+@media (max-width: 900px) {
+  .footer {
+    padding: var(--s-8) var(--s-7) var(--s-10);
+  }
+}

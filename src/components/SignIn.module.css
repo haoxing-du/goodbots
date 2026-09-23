@@ -211,3 +211,11 @@
     font-size: var(--text-lg);
   }
 }
+.legal {
+  font-size: var(--text-sm);
+  color: var(--muted-3);
+  line-height: 1.5;
+}
+.legal a {
+  color: inherit;
+}

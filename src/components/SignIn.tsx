@@ -3,7 +3,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import s from "./SignIn.module.css";
 
 type Ctx = {
@@ -169,6 +169,17 @@ function SignInDialog({
                 </button>
               )}
             </div>
+            <p className={s.legal}>
+              By signing in, you agree to the{" "}
+              <Link to="/terms" onClick={() => ref.current?.close()}>
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" onClick={() => ref.current?.close()}>
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </>
         )}
         {error && <p className={s.error} role="alert">{error}</p>}
