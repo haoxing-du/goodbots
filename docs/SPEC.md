@@ -19,7 +19,8 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 - **Overall**: 1–5 stars, optional.
 - **Core axes** (1–5, each optional): Smarts ("gets hard things right"), Taste ("knows what good looks like"), Vibes ("pleasant to talk to"), Aligned ("is a good bot").
 - **Custom axes** (1–5, optional): any signed-in reviewer can add an axis while reviewing ("Design", "Dessert recipes"…). Names are 2–40 characters and deduplicated by slug. The write form lists every axis anyone has rated on (core first, then by popularity). Admins can hide or merge custom axes.
-- **Text**: the only required field. Optional prompt/response snippet (two plain-text fields).
+- **Text**: the only required field. Optional screenshot (one per review update: PNG/JPEG/WebP up to 5 MB, added by file, paste or drop) with an optional caption shown under it. Older reviews may carry a prompt/response snippet, which still displays; the form no longer offers it.
+- **Head-to-head on the write page**: optional "this model > [pick another]" (swappable) under the review text, posted as a take with the review.
 - **Anti-anchoring**: the write screen never shows community scores until after you post. After posting, show avg + your delta per axis.
 
 ## Rules
@@ -28,7 +29,7 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 - **Deletion**: people can delete their own reviews (with history) and takes, and their whole account (reviews, takes, reactions, model requests and sign-in records; axes they created stay). All stats are updated in the same mutation. Admins can delete any review or take.
 - **Reactions**: Agree, Disagree, Useful, Hot take, Lol. Toggle; a user may hold several on one review.
 - **Model catalog**: synced every 6 hours from OpenRouter's public model list (routers, "latest" aliases and :free/:batch copies filtered out; entries never deleted). Any catalog model can be reviewed; its page is created on its first review. Model ids are OpenRouter-style (`provider/model`) and pages live at `/m/<provider>/<model>`. Models not in the catalog: users request them (name, id, provider, link) and admins approve, or admins add them by hand. Admins can merge duplicate models (newer review wins when someone reviewed both; the old URL redirects).
-- **No moderation, verification, screenshots, tweet embeds, divisive badges, or reviewer filter in v1.**
+- **No moderation (beyond admins removing reviews, takes and screenshots), verification, tweet embeds, divisive badges, or reviewer filter in v1.**
 
 ## Homepage
 - "What do you think of [model]?" with a text box and one randomly suggested core axis to rate (shuffleable, optional). "Finish your review" carries the text and ratings into the write page.
