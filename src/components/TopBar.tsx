@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -15,7 +15,21 @@ export function TopBar() {
   const { open } = useSignIn();
   const { signOut } = useAuthActions();
   // The homepage has its own call to action, so it drops search and "Write a review".
-  const isHome = useLocation().pathname === "/";
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+  const menu = useRef<HTMLDetailsElement>(null);
+
+  // <details> stays open across navigation and outside clicks; close it on both.
+  useEffect(() => {
+    if (menu.current) menu.current.open = false;
+  }, [location.key]);
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      if (menu.current?.open && !menu.current.contains(e.target as Node)) menu.current.open = false;
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, []);
 
   return (
     <header className={isHome ? s.barPlain : s.bar}>
@@ -58,7 +72,16 @@ export function TopBar() {
       {me === undefined ? (
         <span className={s.userSlot} />
       ) : me ? (
-        <details className={s.menu}>
+        <details
+          ref={menu}
+          className={s.menu}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" && menu.current?.open) {
+              menu.current.open = false;
+              menu.current.querySelector("summary")?.focus();
+            }
+          }}
+        >
           <summary className={s.menuButton} aria-label="Account">
             <Avatar name={me.name} image={me.image} size={32} />
           </summary>

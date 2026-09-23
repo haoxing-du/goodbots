@@ -50,6 +50,9 @@
   --cat-6-bg: oklch(0.97 0.018 305);
   --cat-6-border: oklch(0.88 0.04 305);
 
+  /* depth: only for surfaces floating over content (menus, popovers) */
+  --shadow-float: 0 8px 24px rgb(23 23 21 / 0.08);
+
   /* type */
   --font-serif: "Newsreader", Georgia, serif;
   --font-sans: "Geist", system-ui, -apple-system, sans-serif;

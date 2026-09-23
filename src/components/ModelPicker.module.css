@@ -30,14 +30,14 @@
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  box-shadow: 0 8px 24px rgb(23 23 21 / 0.08);
+  box-shadow: var(--shadow-float);
   overflow: hidden;
   text-align: left;
 }
 .list {
   list-style: none;
   margin: 0;
-  padding: 6px;
+  padding: 4px;
   max-height: 340px;
   overflow-y: auto;
 }

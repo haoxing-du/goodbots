@@ -9,6 +9,7 @@
 .barPlain {
   padding: 16px 48px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 22px;
 }
@@ -114,6 +115,11 @@
   cursor: pointer;
   display: flex;
   border-radius: 50%;
+  transition: box-shadow 120ms;
+}
+.menuButton:hover,
+.menu[open] .menuButton {
+  box-shadow: 0 0 0 2px var(--outline);
 }
 .menuButton::-webkit-details-marker {
   display: none;
@@ -125,10 +131,11 @@
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
+  box-shadow: var(--shadow-float);
   min-width: 180px;
   display: flex;
   flex-direction: column;
-  padding: 6px;
+  padding: 4px; /* 4px items + 4px padding = 8px panel radius */
   z-index: 10;
 }
 .menuList a,
@@ -158,12 +165,19 @@
     gap: 14px;
     flex-wrap: wrap;
   }
-  .spacer {
+  /* Row 1: wordmark · Write a review · account. Nav and search follow. */
+  .bar .spacer {
     display: none;
   }
+  .nav {
+    order: 5;
+  }
   .searchForm {
-    order: 10;
-    flex-basis: 100%;
+    order: 6;
+    flex: 1 1 12rem;
+  }
+  .cancel {
+    margin-left: auto;
   }
   .search {
     width: 100%;
