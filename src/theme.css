@@ -14,7 +14,7 @@
   --ink-2: #2f2e2a;
   --muted-1: #4a4943;
   --muted-2: #5f5d56;
-  --muted-3: #8a877d;
+  --muted-3: #6f6c63; /* 4.8:1 on --page; was #8a877d (3.3:1) */
   --disabled: #dcdad2;
 
   /* olive accent */
