@@ -110,7 +110,7 @@ export default defineSchema({
     reviewId: v.id("reviews"),
     text: v.string(),
     image: v.optional(v.id("_storage")), // one screenshot per entry
-    imageAlt: v.optional(v.string()),
+    imageAlt: v.optional(v.string()), // the screenshot's caption, shown under it
     prompt: v.optional(v.string()), // legacy: the form no longer offers prompt/response
     response: v.optional(v.string()),
     overallAtTime: v.optional(v.number()),

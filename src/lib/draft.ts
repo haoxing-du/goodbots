@@ -5,7 +5,7 @@ export type Draft = {
   newAxes: { name: string; hint?: string; score: number }[]; // axes this reviewer is adding
   text: string;
   image: { id: string; url: string } | null; // an uploaded, not yet posted screenshot
-  imageAlt: string;
+  imageCaption: string;
 };
 
 export const EMPTY_DRAFT: Draft = {
@@ -14,7 +14,7 @@ export const EMPTY_DRAFT: Draft = {
   newAxes: [],
   text: "",
   image: null,
-  imageAlt: "",
+  imageCaption: "",
 };
 
 const KEY = "gb.drafts"; // { [versionId]: { savedAt, draft } }

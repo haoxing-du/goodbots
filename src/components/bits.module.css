@@ -118,7 +118,7 @@ img.avatar {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--s-2);
+  gap: var(--s-3);
 }
 .shotLink {
   display: block;
@@ -132,6 +132,13 @@ img.avatar {
   border-radius: var(--r-md);
   object-fit: contain;
   background: var(--page);
+}
+
+.shotCaption {
+  font-size: var(--text-md);
+  line-height: 1.45;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
 }
 
 .deleteLink {

@@ -125,7 +125,7 @@ export function WriteReview() {
           ],
           text: draft.text,
           image: draft.image ? (draft.image.id as Id<"_storage">) : undefined,
-          imageAlt: draft.image ? draft.imageAlt : undefined,
+          imageCaption: draft.image ? draft.imageCaption : undefined,
         });
         setPosted(selected.versionId);
         saveDraft(selected.versionId, null);
@@ -303,10 +303,10 @@ export function WriteReview() {
 
           <Screenshot
             image={draft.image}
-            alt={draft.imageAlt}
+            caption={draft.imageCaption}
             disabled={done}
-            onChange={(image) => set({ image, imageAlt: image ? draft.imageAlt : "" })}
-            onAltChange={(imageAlt) => set({ imageAlt })}
+            onChange={(image) => set({ image, imageCaption: image ? draft.imageCaption : "" })}
+            onCaptionChange={(imageCaption) => set({ imageCaption })}
           />
 
           {!done && (
@@ -434,16 +434,16 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // matches convex/uploads.ts
 /** One optional screenshot: choose, paste or drop an image; it uploads right away. */
 function Screenshot({
   image,
-  alt,
+  caption,
   disabled,
   onChange,
-  onAltChange,
+  onCaptionChange,
 }: {
   image: Draft["image"];
-  alt: string;
+  caption: string;
   disabled: boolean;
   onChange: (image: Draft["image"]) => void;
-  onAltChange: (alt: string) => void;
+  onCaptionChange: (caption: string) => void;
 }) {
   const generateUploadUrl = useMutation(api.uploads.generateUploadUrl);
   const register = useMutation(api.uploads.register);
@@ -530,16 +530,16 @@ function Screenshot({
       />
       {image ? (
         <div className={s.shotChosen}>
-          <img className={s.shotThumb} src={image.url} alt={alt || "Your screenshot"} />
+          <img className={s.shotThumb} src={image.url} alt="Your screenshot" />
           <div className={s.shotSide}>
             <input
               className={ui.input}
-              value={alt}
+              value={caption}
               maxLength={300}
               disabled={disabled}
-              placeholder="Describe it for screen readers (optional)"
-              aria-label="Screenshot description"
-              onChange={(e) => onAltChange(e.target.value)}
+              placeholder="Caption: what should people notice? (optional)"
+              aria-label="Screenshot caption"
+              onChange={(e) => onCaptionChange(e.target.value)}
             />
             {!disabled && (
               <span className={s.shotActions}>

@@ -76,7 +76,7 @@ export async function hydrateReview(
     prompt: latest?.prompt,
     response: latest?.response,
     image: latest?.image
-      ? { entryId: latest._id, url: await ctx.storage.getUrl(latest.image), alt: latest.imageAlt }
+      ? { entryId: latest._id, url: await ctx.storage.getUrl(latest.image), caption: latest.imageAlt }
       : null,
     updatedAt: review.updatedAt,
     createdAt: review.createdAt,
@@ -104,15 +104,15 @@ export const upsert = mutation({
     scores: v.array(scoreInput),
     text: v.string(),
     image: v.optional(v.id("_storage")), // a screenshot from uploads.register
-    imageAlt: v.optional(v.string()),
+    imageCaption: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await requireMember(ctx);
     checkScore(args.overall, "Overall");
     if (args.scores.length > 40) throw new ConvexError("That’s a lot of axes. Keep it under 40.");
     if (!args.text.trim()) throw new ConvexError("Write a few words about it.");
-    const imageAlt = args.image ? args.imageAlt?.trim().replace(/\s+/g, " ") || undefined : undefined;
-    if (imageAlt && imageAlt.length > 300) throw new ConvexError("Keep the image description under 300 characters.");
+    const caption = args.image ? args.imageCaption?.trim().replace(/\s+/g, " ") || undefined : undefined;
+    if (caption && caption.length > 300) throw new ConvexError("Keep the caption under 300 characters.");
     const version = await findOrActivateVersion(ctx, args.versionId);
     if (!version) throw new ConvexError("That model isn’t available to review.");
     const versionId = version._id;
@@ -166,7 +166,7 @@ export const upsert = mutation({
     const entry = {
       text,
       image: args.image,
-      imageAlt,
+      imageAlt: caption,
       overallAtTime: args.overall,
     };
     const last = existing
