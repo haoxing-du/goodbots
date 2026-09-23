@@ -139,6 +139,12 @@ img.avatar {
   }
 }
 
+.deleteError {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--rust-text);
+}
+
 .loadMore {
   display: flex;
   justify-content: center;

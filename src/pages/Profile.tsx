@@ -11,6 +11,7 @@ import { NotFound } from "./NotFound";
 import ui from "../components/ui.module.css";
 import s from "./Profile.module.css";
 import { useTitle } from "../lib/useTitle";
+import { useConfirm } from "../components/Confirm";
 
 type VersionRef = {
   displayName: string;
@@ -245,8 +246,9 @@ export function Profile() {
                   <span className={s.takeMeta}>
                     {data.isMe && (
                       <ConfirmDelete
-                        label="Delete"
-                        question="Delete this take?"
+                        title="Delete this take?"
+                        body="This can't be undone."
+                        confirmLabel="Delete take"
                         run={() => removeTake({ takeId: t._id })}
                       />
                     )}
@@ -278,6 +280,7 @@ function EditProfile({
   const navigate = useNavigate();
   const [name, setName] = useState(initialName);
   const [deleting, setDeleting] = useState(false);
+  const confirm = useConfirm();
   const [handle, setHandle] = useState(initialHandle);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -348,14 +351,14 @@ function EditProfile({
         className={s.deleteAccount}
         disabled={deleting}
         onClick={async () => {
-          const typed = window.prompt(
-            `This permanently deletes your account, reviews, takes and reactions.\n\nType your handle (${initialHandle}) to confirm.`,
-          );
-          if (typed === null) return;
-          if (typed.trim().replace(/^@/, "") !== initialHandle) {
-            window.alert("That didn't match your handle. Nothing was deleted.");
-            return;
-          }
+          const ok = await confirm({
+            title: "Delete your account?",
+            body: "This permanently deletes your account, reviews, takes and reactions.",
+            confirm: "Delete account",
+            danger: true,
+            typeToConfirm: initialHandle,
+          });
+          if (!ok) return;
           setDeleting(true);
           try {
             await deleteAccount();

@@ -1,5 +1,6 @@
 import { Outlet, Route, Routes } from "react-router-dom";
 import { SignInProvider } from "./components/SignIn";
+import { ConfirmProvider } from "./components/Confirm";
 import { TopBar } from "./components/TopBar";
 import { Home } from "./pages/Home";
 import { Reviews } from "./pages/Reviews";
@@ -27,24 +28,26 @@ function Chrome() {
 export function App() {
   return (
     <SignInProvider>
-      <a href="#main" className="skip-link">
-        Skip to content
-      </a>
-      <Routes>
-        <Route element={<Chrome />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/reviews" element={<Reviews />} />
-          <Route path="/models" element={<Models />} />
-          <Route path="/m/:provider/:model" element={<ModelPage />} />
-          <Route path="/u/:handle" element={<Profile />} />
-          <Route path="/r/:id" element={<ReviewPage />} />
-          <Route path="/request" element={<RequestModel />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-        <Route path="/write" element={<WriteReview />} />
-      </Routes>
+      <ConfirmProvider>
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+        <Routes>
+          <Route element={<Chrome />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/models" element={<Models />} />
+            <Route path="/m/:provider/:model" element={<ModelPage />} />
+            <Route path="/u/:handle" element={<Profile />} />
+            <Route path="/r/:id" element={<ReviewPage />} />
+            <Route path="/request" element={<RequestModel />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+          <Route path="/write" element={<WriteReview />} />
+        </Routes>
+      </ConfirmProvider>
     </SignInProvider>
   );
 }

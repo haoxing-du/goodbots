@@ -1,0 +1,60 @@
+.dialog {
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 0;
+  width: min(420px, calc(100vw - 32px));
+  background: var(--card);
+  color: var(--ink);
+}
+.dialog::backdrop {
+  background: var(--scrim);
+}
+.inner {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: var(--text-h3);
+}
+.body {
+  color: var(--muted-2);
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--text-base);
+  color: var(--muted-1);
+}
+.field b {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: var(--ink);
+}
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+.danger {
+  background: var(--rust-text);
+  color: var(--on-ink);
+  border: 0;
+  border-radius: var(--r-sm);
+  padding: 9px 16px;
+  font-size: var(--text-base);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.danger:disabled {
+  background: var(--disabled);
+  color: var(--muted-3);
+  cursor: not-allowed;
+}

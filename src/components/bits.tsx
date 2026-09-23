@@ -6,6 +6,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { initials } from "../lib/format";
 import { AxisScore } from "../lib/axes";
+import { useConfirm } from "./Confirm";
 import s from "./bits.module.css";
 import ui from "./ui.module.css";
 
@@ -116,41 +117,58 @@ export function DeleteReview({ reviewId, authorId }: { reviewId: Id<"reviews">; 
   if (!me || (me._id !== authorId && !me.isAdmin)) return null;
   return (
     <ConfirmDelete
-      label="Delete"
-      question="Delete this review and its history? This can't be undone."
+      title="Delete this review?"
+      body="Its update history goes too. This can't be undone."
+      confirmLabel="Delete review"
       run={() => remove({ reviewId })}
     />
   );
 }
 
 export function ConfirmDelete({
-  label,
-  question,
+  title,
+  body,
+  confirmLabel,
   run,
 }: {
-  label: string;
-  question: string;
+  title: string;
+  body?: string;
+  confirmLabel: string;
   run: () => Promise<unknown>;
 }) {
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   return (
-    <button
-      type="button"
-      className={s.deleteLink}
-      disabled={busy}
-      onClick={async () => {
-        if (!window.confirm(question)) return;
-        setBusy(true);
-        try {
-          await run();
-        } catch (e) {
-          window.alert(e instanceof ConvexError ? String(e.data) : "Couldn't delete that. Check your connection and try again.");
-          setBusy(false);
-        }
-      }}
-    >
-      {busy ? "Deleting…" : label}
-    </button>
+    <>
+      <button
+        type="button"
+        className={s.deleteLink}
+        disabled={busy}
+        onClick={async () => {
+          if (!(await confirm({ title, body, confirm: confirmLabel, danger: true }))) return;
+          setBusy(true);
+          setError(null);
+          try {
+            await run();
+          } catch (e) {
+            setError(
+              e instanceof ConvexError
+                ? String(e.data)
+                : "Couldn't delete that. Check your connection and try again.",
+            );
+            setBusy(false);
+          }
+        }}
+      >
+        {busy ? "Deleting…" : "Delete"}
+      </button>
+      {error && (
+        <span className={s.deleteError} role="alert">
+          {error}
+        </span>
+      )}
+    </>
   );
 }
 

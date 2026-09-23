@@ -10,6 +10,7 @@ import ui from "../components/ui.module.css";
 import f from "./forms.module.css";
 import s from "./Admin.module.css";
 import { useTitle } from "../lib/useTitle";
+import { useConfirm } from "../components/Confirm";
 
 function errText(e: unknown, fallback: string) {
   return e instanceof ConvexError ? String(e.data) : fallback;
@@ -42,6 +43,7 @@ export function Admin() {
 }
 
 function Requests() {
+  const confirm = useConfirm();
   const requests = useQuery(api.requests.pending);
   const resolve = useMutation(api.requests.resolve);
   const [names, setNames] = useState<Record<string, string>>({});
@@ -107,10 +109,14 @@ function Requests() {
                 type="button"
                 className={`${ui.btnGhost} ${ui.btnDanger}`}
                 disabled={busyId === r._id}
-                onClick={() => {
-                  if (window.confirm(`Reject the request for ${r.name}? This can't be undone.`)) {
-                    void act(r._id, false);
-                  }
+                onClick={async () => {
+                  const ok = await confirm({
+                    title: `Reject the request for ${r.name}?`,
+                    body: "This can't be undone.",
+                    confirm: "Reject request",
+                    danger: true,
+                  });
+                  if (ok) void act(r._id, false);
                 }}
               >
                 Reject
@@ -197,6 +203,7 @@ function AddVersion() {
 }
 
 function Axes() {
+  const confirm = useConfirm();
   const axes = useQuery(api.admin.axes);
   const setStatus = useMutation(api.admin.setAxisStatus);
   const merge = useMutation(api.admin.mergeAxis);
@@ -275,13 +282,16 @@ function Axes() {
                   type="button"
                   className={ui.btnGhost}
                   disabled={!targets[a._id]}
-                  onClick={() => {
+                  onClick={async () => {
                     const into = axes.find((b) => b._id === targets[a._id]);
                     if (
                       !into ||
-                      !window.confirm(
-                        `Merge ${a.name} into ${into.name}? This can't be undone.`,
-                      )
+                      !(await confirm({
+                        title: `Merge ${a.name} into ${into.name}?`,
+                        body: "Scores move to the target axis. This can't be undone.",
+                        confirm: "Merge axes",
+                        danger: true,
+                      }))
                     )
                       return;
                     void run(async () => {
@@ -306,6 +316,7 @@ function Axes() {
 }
 
 function MergeModels() {
+  const confirm = useConfirm();
   const versions = useQuery(api.models.allVersions);
   const merge = useMutation(api.admin.mergeVersion);
   const [from, setFrom] = useState("");
@@ -350,9 +361,12 @@ function MergeModels() {
             disabled={!from || !into || from === into}
             onClick={async () => {
               if (
-                !window.confirm(
-                  `Merge ${name(from)} into ${name(into)}? This can't be undone.`,
-                )
+                !(await confirm({
+                  title: `Merge ${name(from)} into ${name(into)}?`,
+                  body: "Reviews move to the target model. This can't be undone.",
+                  confirm: "Merge models",
+                  danger: true,
+                }))
               )
                 return;
               setMsg(null);
