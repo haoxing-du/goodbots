@@ -16,7 +16,7 @@ export function About() {
     <div className={ui.page}>
       <article className={s.prose}>
         <h1 className={ui.serifTitle}>About</h1>
-        <p>GoodBots is made by Haoxing Du.</p>
+        <p>GoodBots is made by <a href="https://x.com/haoxingdu">Haoxing Du</a>.</p>
         <p>
           Questions or feedback? <Mail>Get in touch</Mail>.
         </p>
