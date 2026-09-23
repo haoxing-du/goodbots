@@ -100,8 +100,12 @@ function Requests() {
               </button>
               <button
                 type="button"
-                className={ui.btnGhost}
-                onClick={() => void act(r._id, false)}
+                className={`${ui.btnGhost} ${ui.btnDanger}`}
+                onClick={() => {
+                  if (window.confirm(`Reject the request for ${r.name}? This can't be undone.`)) {
+                    void act(r._id, false);
+                  }
+                }}
               >
                 Reject
               </button>

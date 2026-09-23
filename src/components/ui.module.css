@@ -108,6 +108,14 @@
 .btnGhost:hover {
   border-color: var(--ink);
 }
+/* Modifier for irreversible actions: rust at rest, not just on hover. */
+.btnDanger {
+  color: var(--rust-text);
+  border-color: var(--rust-border);
+}
+.btnDanger:hover {
+  border-color: var(--rust-text);
+}
 
 .input {
   background: var(--card);
