@@ -24,7 +24,7 @@ export function Admin() {
       <div className={ui.page}>
         <h1 className={ui.serifTitle}>Admins only</h1>
         <p className={f.lede}>
-          Sign in with an email listed in ADMIN_EMAILS to manage the catalog.
+          This page is for GoodBots admins. Sign in with an admin account to manage the catalog.
         </p>
       </div>
     );
@@ -52,7 +52,7 @@ function Requests() {
     try {
       await resolve({ requestId, approve, displayName: names[requestId] });
     } catch (e) {
-      setError(errText(e, "Couldn't update the request."));
+      setError(errText(e, "Couldn't update the request. Try again."));
     }
   };
 
@@ -153,7 +153,7 @@ function AddVersion() {
           } catch (err) {
             setMsg({
               ok: false,
-              text: errText(err, "Couldn't add that version."),
+              text: errText(err, "Couldn't add that version. Try again."),
             });
           }
         }}
@@ -193,7 +193,7 @@ function Axes() {
     try {
       setMsg({ ok: true, text: await fn() });
     } catch (e) {
-      setMsg({ ok: false, text: errText(e, "Couldn't update that axis.") });
+      setMsg({ ok: false, text: errText(e, "Couldn't update that axis. Try again.") });
     }
   };
 
@@ -352,7 +352,7 @@ function MergeModels() {
               } catch (e) {
                 setMsg({
                   ok: false,
-                  text: errText(e, "Couldn't merge those models."),
+                  text: errText(e, "Couldn't merge those models. Nothing was changed; try again."),
                 });
               }
             }}
@@ -453,7 +453,7 @@ function HomepageModels() {
               } catch (e) {
                 setMsg({
                   ok: false,
-                  text: errText(e, "Couldn't save the list."),
+                  text: errText(e, "Couldn't save the list. Try again."),
                 });
               }
             }}

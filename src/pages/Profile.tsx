@@ -280,7 +280,7 @@ function EditProfile({
           setError(
             err instanceof ConvexError
               ? String(err.data)
-              : "Couldn't save your profile.",
+              : "Couldn't save your profile. Try again.",
           );
         } finally {
           setBusy(false);
@@ -339,11 +339,17 @@ function EditProfile({
           }
           try {
             await deleteAccount();
-            await signOut();
-            navigate("/", { replace: true });
           } catch (err) {
-            setError(err instanceof ConvexError ? String(err.data) : "Couldn't delete your account.");
+            setError(
+              err instanceof ConvexError
+                ? String(err.data)
+                : "Couldn't delete your account. Nothing was deleted; try again.",
+            );
+            return;
           }
+          // The account is gone either way; a failed sign-out just leaves a stale session.
+          await signOut().catch(() => {});
+          navigate("/", { replace: true });
         }}
       >
         Delete account…

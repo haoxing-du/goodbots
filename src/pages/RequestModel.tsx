@@ -86,7 +86,7 @@ export function RequestModel() {
                 setError(
                   err instanceof ConvexError
                     ? String(err.data)
-                    : "Couldn't send the request.",
+                    : "Couldn't send the request. Check your connection and try again.",
                 );
               }
             }, "Sign in to request a model.");

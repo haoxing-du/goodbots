@@ -83,7 +83,7 @@ function SignInDialog({
         // OAuth leaves the page; credential sign-in (demo) completes here, so navigate ourselves.
         if (signingIn && target) navigate(target);
       })
-      .catch(() => setError("Couldn't sign in. Check that this provider is configured."));
+      .catch(() => setError("Couldn't sign in that way. Try again, or use an email link instead."));
   };
 
   const sendLink = async (e: React.FormEvent) => {

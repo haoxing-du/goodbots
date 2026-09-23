@@ -260,7 +260,7 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
         setReason("");
         setStatus("Take posted.");
       } catch (e) {
-        setStatus(e instanceof ConvexError ? String(e.data) : "Couldn't post that take.");
+        setStatus(e instanceof ConvexError ? String(e.data) : "Couldn't post that take. Try again.");
       }
     }, "Sign in to post a head-to-head take.");
 

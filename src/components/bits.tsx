@@ -130,7 +130,7 @@ export function ConfirmDelete({
         try {
           await run();
         } catch (e) {
-          window.alert(e instanceof ConvexError ? String(e.data) : "Couldn't delete that.");
+          window.alert(e instanceof ConvexError ? String(e.data) : "Couldn't delete that. Check your connection and try again.");
           setBusy(false);
         }
       }}
