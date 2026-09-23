@@ -81,7 +81,7 @@ export function Home() {
           rows={3}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Hot takes welcome"
+          placeholder="Hot takes welcome."
           aria-label="Your review"
         />
 
