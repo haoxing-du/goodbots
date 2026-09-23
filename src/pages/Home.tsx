@@ -63,10 +63,10 @@ export function Home() {
 
         <textarea
           className={s.text}
-          rows={4}
+          rows={3}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="What did you use it for? Where did it surprise you? Hot takes welcome."
+          placeholder="Hot takes welcome"
           aria-label="Your review"
         />
 

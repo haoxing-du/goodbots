@@ -52,22 +52,32 @@
 }
 
 .text {
-  width: min(680px, 100%);
+  width: min(640px, 100%);
+  min-height: calc(3lh + 40px);
+  max-height: 50vh;
+  field-sizing: content; /* grows with the text where supported */
   font-family: var(--font-serif);
-  font-size: 19px;
+  font-size: 20px;
   line-height: 1.5;
+  color: var(--ink);
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: 16px 18px;
-  resize: vertical;
-  transition: border-color 120ms;
+  border-radius: 14px;
+  padding: 20px 24px;
+  resize: none;
+  transition: border-color 150ms, box-shadow 150ms;
 }
 .text:hover {
   border-color: var(--outline);
 }
+.text:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgb(23 23 21 / 0.06);
+}
 .text::placeholder {
   color: var(--muted-3);
+  font-style: italic;
 }
 .action {
   display: flex;
