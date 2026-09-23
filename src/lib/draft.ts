@@ -6,7 +6,8 @@ export type Draft = {
   text: string;
   image: { id: string; url: string } | null; // an uploaded, not yet posted screenshot
   imageCaption: string;
-  versus: { versionId: string; reviewedWins: boolean } | null; // optional head-to-head (versions _id)
+  // Optional head-to-head take (versionId is a versions _id).
+  versus: { versionId: string; reviewedWins: boolean; reason?: string } | null;
 };
 
 export const EMPTY_DRAFT: Draft = {

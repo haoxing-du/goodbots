@@ -20,7 +20,7 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 - **Core axes** (1–5, each optional): Smarts ("gets hard things right"), Taste ("knows what good looks like"), Vibes ("pleasant to talk to"), Aligned ("is a good bot").
 - **Custom axes** (1–5, optional): any signed-in reviewer can add an axis while reviewing ("Design", "Dessert recipes"…). Names are 2–40 characters and deduplicated by slug. The write form lists every axis anyone has rated on (core first, then by popularity). Admins can hide or merge custom axes.
 - **Text**: the only required field. Optional screenshot (one per review update: PNG/JPEG/WebP up to 5 MB, added by file, paste or drop) with an optional caption shown under it. Older reviews may carry a prompt/response snippet, which still displays; the form no longer offers it.
-- **Head-to-head on the write page**: optional "this model > [pick another]" (swappable) under the review text, posted as a take with the review.
+- **Take on the write page**: optional "this model > [pick another] because …" (swappable, reason optional) under the review text, posted as a take with the review.
 - **Anti-anchoring**: the write screen never shows community scores until after you post. After posting, show avg + your delta per axis.
 
 ## Rules

@@ -132,7 +132,11 @@ export function WriteReview() {
           image: draft.image ? (draft.image.id as Id<"_storage">) : undefined,
           imageCaption: draft.image ? draft.imageCaption : undefined,
           versus: versus
-            ? { versionId: versus.versionId as Id<"versions">, reviewedWins: versus.reviewedWins }
+            ? {
+                versionId: versus.versionId as Id<"versions">,
+                reviewedWins: versus.reviewedWins,
+                reason: versus.reason || undefined,
+              }
             : undefined,
         });
         setPosted(selected.versionId);
@@ -444,7 +448,7 @@ function AxisRow({
   );
 }
 
-/** Optional "this model > another" take, posted with the review. */
+/** Optional "this model > another, because…" take, posted with the review. */
 function HeadToHead({
   model,
   opponents,
@@ -484,7 +488,7 @@ function HeadToHead({
       disabled={disabled}
       aria-label="Model to compare with"
       onChange={(e) =>
-        onChange(e.target.value ? { versionId: e.target.value, reviewedWins } : null)
+        onChange(e.target.value ? { ...value, versionId: e.target.value, reviewedWins } : null)
       }
     >
       <option value="">Pick a model to compare…</option>
@@ -506,7 +510,7 @@ function HeadToHead({
   );
   return (
     <div className={s.field}>
-      <span className={ui.sectionLabel}>Head-to-head · optional</span>
+      <span className={ui.sectionLabel}>Your take · optional</span>
       <div className={s.h2hRow}>
         {reviewedWins ? (
           <span className={s.h2hPair}>
@@ -523,6 +527,19 @@ function HeadToHead({
             {gt}
             {chip}
           </span>
+        )}
+        {value && (
+          <label className={s.h2hReason}>
+            <span className={s.h2hGt}>because</span>
+            <input
+              className={ui.input}
+              value={value.reason ?? ""}
+              maxLength={200}
+              disabled={disabled}
+              placeholder="optional"
+              onChange={(e) => onChange({ ...value, reason: e.target.value })}
+            />
+          </label>
         )}
         {value && !disabled && (
           <button type="button" className={ui.linkBtn} onClick={() => onChange(null)}>

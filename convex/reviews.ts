@@ -107,7 +107,13 @@ export const upsert = mutation({
     image: v.optional(v.id("_storage")), // a screenshot from uploads.register
     imageCaption: v.optional(v.string()),
     // Optional head-to-head posted with the review: this model vs. another on the site.
-    versus: v.optional(v.object({ versionId: v.id("versions"), reviewedWins: v.boolean() })),
+    versus: v.optional(
+      v.object({
+        versionId: v.id("versions"),
+        reviewedWins: v.boolean(),
+        reason: v.optional(v.string()),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const user = await requireMember(ctx);
@@ -197,7 +203,7 @@ export const upsert = mutation({
       const [winner, loser] = args.versus.reviewedWins
         ? [versionId, opponent._id]
         : [opponent._id, versionId];
-      await createTake(ctx, user._id, winner, loser, undefined, EDIT_WINDOW);
+      await createTake(ctx, user._id, winner, loser, args.versus.reason, EDIT_WINDOW);
     }
     return reviewId;
   },

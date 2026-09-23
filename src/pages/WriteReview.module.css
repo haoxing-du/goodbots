@@ -273,6 +273,18 @@
   max-width: 100%;
 }
 
+.h2hReason {
+  flex: 1 1 16rem;
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+  min-width: 0;
+}
+.h2hReason input {
+  flex: 1;
+  min-width: 0;
+}
+
 .shot {
   display: flex;
   flex-direction: column;
@@ -404,10 +416,17 @@
   }
 }
 
+@media (max-width: 560px) {
+  .h2hSelect {
+    flex-basis: 100%;
+  }
+}
+
 /* iOS Safari zooms the page when a focused field's text is under 16px. */
 @media (max-width: 900px) {
   .versionSelect,
   .h2hSelect,
+  .h2hReason input,
   .shotSide input {
     font-size: var(--text-lg);
   }
