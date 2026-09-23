@@ -42,6 +42,7 @@ node scripts/generateKeys.mjs                       # sets JWT_PRIVATE_KEY + JWK
 npx convex env set SITE_URL http://localhost:5173
 npx convex env set DEMO_LOGIN true                  # optional: sign in without OAuth keys
 npx convex env set ADMIN_EMAILS demo@goodbots.local # optional: demo user can use /admin
+npx convex env set ALLOW_SEED true                  # local only: lets seed:run / seed:reset run
 npx convex run seed:run                             # 7 models, 41 reviewers, 144 reviews, takes, reactions
 npx convex env set OPENROUTER_API_KEY sk-or-...     # for the model-catalog sync
 npx convex run catalog:sync                         # optional: fill the model catalog now (the cron also runs it)
@@ -71,6 +72,7 @@ All of these are set on the **Convex deployment** (`npx convex env set NAME valu
 | `AUTH_TWITTER_ID`, `AUTH_TWITTER_SECRET` | X OAuth 2.0 client. |
 | `OPENROUTER_API_KEY` | OpenRouter API key for the model-catalog sync (`catalog:sync`, every 6 hours). Listing models is free; any key from openrouter.ai → Keys works. |
 | `ADMIN_EMAILS` | Comma-separated emails allowed to use `/admin`. Matched against the signed-in user's email, so admins sign in with the email link (X doesn't share email). |
+| `ALLOW_SEED` | `true` lets `seed:run` / `seed:reset` run (fake data; reset deletes all app data). Local only — never on production. |
 | `DEMO_LOGIN` | `true` enables the local demo sign-in. Dev only. |
 
 The frontend needs only `VITE_CONVEX_URL`. `convex dev` writes it to `.env.local` locally; on Vercel it's set by the deploy command below.
@@ -102,4 +104,4 @@ Dev and prod deployments have different `.convex.site` URLs, so register both ca
    `convex deploy` pushes the backend, then runs the frontend build with `VITE_CONVEX_URL` pointing at production.
 4. **SPA routing.** `vercel.json` rewrites every path except `/api/*` to `index.html` so deep links like `/m/claude-opus-4-1` work.
    **Link previews:** when X, Slack, iMessage and similar crawlers fetch `/`, `/m/…`, `/u/…` or `/r/…`, `middleware.ts` asks Convex (`GET <CONVEX_SITE_URL>/meta?path=…`) for the page's title and description and adds Open Graph/Twitter tags pointing at `/api/og?…` for the image. Regular visitors aren't affected. Check with X's or LinkedIn's post inspector after deploying.
-5. **Seed (optional).** To load the demo data into prod: `npx convex run seed:run --prod`. Or start empty and add models from `/admin`.
+5. **First-deploy setup.** Run `npx convex run setup:init --prod` once. It creates the core axes and fills the model catalog from OpenRouter right away (the 6-hourly cron keeps both up to date afterwards). Production starts with no reviews — don't seed it (the seed refuses to run without `ALLOW_SEED`). The homepage headline shows the default featured models until you change them in `/admin`.

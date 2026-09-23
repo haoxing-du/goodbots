@@ -68,6 +68,8 @@ export function normalize(models: OpenRouterModel[]): Entry[] {
 export const sync = internalAction({
   args: {},
   handler: async (ctx) => {
+    // Keep the core axes in step with the code too (cheap and idempotent).
+    await ctx.runMutation(internal.setup.syncCoreAxes, {});
     const key = process.env.OPENROUTER_API_KEY;
     if (!key) console.warn("[catalog] OPENROUTER_API_KEY is not set; calling the models endpoint without a key");
     const res = await fetch(SOURCE, key ? { headers: { Authorization: `Bearer ${key}` } } : undefined);

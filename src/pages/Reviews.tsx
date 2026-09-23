@@ -3,7 +3,15 @@ import { Link } from "react-router-dom";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Pills } from "../components/Pills";
-import { AxisScores, Avatar, DeleteReview, LoadMore, MatchChip, Stars, UserLink } from "../components/bits";
+import {
+  AxisScores,
+  Avatar,
+  DeleteReview,
+  LoadMore,
+  MatchChip,
+  Stars,
+  UserLink,
+} from "../components/bits";
 import { Reactions } from "../components/Reactions";
 import { fmtAvg, timeAgo } from "../lib/format";
 import ui from "../components/ui.module.css";
@@ -20,7 +28,12 @@ export function Reviews() {
     { initialNumItems: 20 },
   );
   const top = useQuery(api.reviews.feedTop, tab === "top" ? {} : "skip");
-  const feed = tab === "latest" ? (latest.status === "LoadingFirstPage" ? undefined : latest.results) : top;
+  const feed =
+    tab === "latest"
+      ? latest.status === "LoadingFirstPage"
+        ? undefined
+        : latest.results
+      : top;
   const summary = useQuery(api.reviews.feedSummary);
 
   return (
@@ -29,10 +42,13 @@ export function Reviews() {
         <header className={s.head}>
           <div>
             <h1 className={ui.serifTitle}>What people think</h1>
-            {summary && (
+            {summary && (summary.today > 0 || summary.mostReviewed) && (
               <p className={s.summary}>
-                {summary.today} {summary.today === 1 ? "review" : "reviews"} today
-                {summary.mostReviewed && <> · {summary.mostReviewed} most reviewed this week</>}
+                {summary.today} {summary.today === 1 ? "review" : "reviews"}{" "}
+                today
+                {summary.mostReviewed && (
+                  <> · {summary.mostReviewed} most reviewed this week</>
+                )}
               </p>
             )}
           </div>
@@ -50,21 +66,35 @@ export function Reviews() {
         <div className={s.cards}>
           {feed && feed.length === 0 && (
             <div className={`${ui.card} ${ui.empty}`}>
-              {tab === "top" ? "No reactions this week yet." : "No reviews yet."}
+              {tab === "top" ? (
+                "No reactions this week yet."
+              ) : (
+                <>
+                  No reviews yet.{" "}
+                  <Link to="/write">Be the first to write one.</Link>
+                </>
+              )}
             </div>
           )}
           {feed?.map((r) => (
             <article key={r._id} className={`${ui.card} ${s.card}`}>
               <div className={s.cardTop}>
                 {r.version && (
-                  <Link to={versionPath(r.version.versionId)} className={s.modelChip}>
+                  <Link
+                    to={versionPath(r.version.versionId)}
+                    className={s.modelChip}
+                  >
                     {r.version.displayName}
                   </Link>
                 )}
                 <MatchChip match={r.match} />
                 <span className={s.when}>
                   <DeleteReview reviewId={r._id} authorId={r.user?._id} />
-                  <Link to={`/r/${r._id}`} className={`${ui.meta} ${s.permalink}`} title="Link to this review">
+                  <Link
+                    to={`/r/${r._id}`}
+                    className={`${ui.meta} ${s.permalink}`}
+                    title="Link to this review"
+                  >
                     {timeAgo(r.updatedAt)}
                   </Link>
                 </span>
@@ -75,10 +105,16 @@ export function Reviews() {
               </div>
               <p className={`${ui.body} ${s.text}`}>{r.text}</p>
               <AxisScores scores={r.scores} />
-              <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} />
+              <Reactions
+                reviewId={r._id}
+                counts={r.reactionCounts}
+                mine={r.myReactions}
+              />
             </article>
           ))}
-          {tab === "latest" && <LoadMore status={latest.status} loadMore={latest.loadMore} />}
+          {tab === "latest" && (
+            <LoadMore status={latest.status} loadMore={latest.loadMore} />
+          )}
         </div>
       </div>
 
@@ -95,12 +131,19 @@ function ModelsRail() {
   return (
     <section>
       <h2 className={ui.sectionLabel}>Models · overall</h2>
+      {models && !models.some((m) => m.reviewCount > 0) && (
+        <p className={s.railNote}>No ratings yet.</p>
+      )}
       <div className={`${s.railList} ${ui.rows}`}>
         {models
           ?.filter((m) => m.reviewCount > 0)
           .slice(0, 8)
           .map((m) => (
-            <Link key={m._id} to={versionPath(m.versionId)} className={s.railRow}>
+            <Link
+              key={m._id}
+              to={versionPath(m.versionId)}
+              className={s.railRow}
+            >
               <span>
                 <span className={s.railName}>{m.displayName}</span>
                 <span className={s.railVer}>{m.versionId}</span>
@@ -120,15 +163,22 @@ function ReviewersLikeYou() {
     <section>
       <h2 className={ui.sectionLabel}>Reviewers like you</h2>
       {!me ? (
-        <p className={s.railNote}>Sign in and review three models to see whose taste matches yours.</p>
+        <p className={s.railNote}>
+          Sign in and review three models to see whose taste matches yours.
+        </p>
       ) : matches && matches.length === 0 ? (
         <p className={s.railNote}>
-          Review at least three models that other people have reviewed to find your taste matches.
+          Review at least three models that other people have reviewed to find
+          your taste matches.
         </p>
       ) : (
         <div className={s.people}>
           {matches?.map((p) => (
-            <Link key={p.user._id} to={`/u/${p.user.handle}`} className={s.person}>
+            <Link
+              key={p.user._id}
+              to={`/u/${p.user.handle}`}
+              className={s.person}
+            >
               <Avatar name={p.user.name} image={p.user.image} />
               <span className={s.personName}>{p.user.name}</span>
               <span className={s.oliveChip}>{p.match}%</span>

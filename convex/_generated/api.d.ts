@@ -25,6 +25,7 @@ import type * as requests from "../requests.js";
 import type * as reviews from "../reviews.js";
 import type * as search from "../search.js";
 import type * as seed from "../seed.js";
+import type * as setup from "../setup.js";
 import type * as takes from "../takes.js";
 import type * as users from "../users.js";
 
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   reviews: typeof reviews;
   search: typeof search;
   seed: typeof seed;
+  setup: typeof setup;
   takes: typeof takes;
   users: typeof users;
 }>;

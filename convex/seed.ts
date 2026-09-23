@@ -1,9 +1,9 @@
 import { internalMutation, MutationCtx } from "./_generated/server";
+import { ensureCoreAxes } from "./setup";
 import { Id } from "./_generated/dataModel";
 import {
   applyOverallToStats,
   bumpTakeCount,
-  CORE_AXES,
   REACTION_KINDS,
   createVersion,
   replaceReviewScores,
@@ -157,6 +157,13 @@ const BULK_TEXT: Record<string, string[]> = {
 // Slugs for the positional score arrays above (`s` without overall, and BULK_PROFILES).
 const POSITIONAL_AXES = ["smarts", "taste", "vibes", "aligned", "mom-approved"];
 
+/** The seed writes fake data (and reset deletes everything), so it only runs where ALLOW_SEED=true. */
+function assertSeedAllowed() {
+  if (process.env.ALLOW_SEED !== "true") {
+    throw new Error("Seeding is disabled on this deployment. Set ALLOW_SEED=true (local dev only).");
+  }
+}
+
 function rng(seed: number) {
   return () => {
     seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -167,6 +174,7 @@ function rng(seed: number) {
 export const run = internalMutation({
   args: {},
   handler: async (ctx) => {
+    assertSeedAllowed();
     if (await ctx.db.query("versions").first()) {
       return "Already seeded. Run seed:reset first to start over.";
     }
@@ -205,12 +213,9 @@ export const run = internalMutation({
 
     // Axes: the five core ones, then a few custom ones "added" by reviewers.
     const axisBySlug = new Map<string, Id<"axes">>();
-    for (const [i, a] of CORE_AXES.entries()) {
-      axisBySlug.set(
-        a.slug,
-        await ctx.db.insert("axes", { ...a, core: true, order: i, status: "active", ratingCount: 0, createdAt: now }),
-      );
-    }
+    // Core axes come from setup (the same code path production uses).
+    await ensureCoreAxes(ctx);
+    for (const a of await ctx.db.query("axes").collect()) axisBySlug.set(a.slug, a._id);
     for (const [name, hint, by] of CUSTOM_AXES) {
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       axisBySlug.set(
@@ -395,6 +400,7 @@ async function clear(ctx: MutationCtx, table: (typeof APP_TABLES)[number]) {
 export const reset = internalMutation({
   args: {},
   handler: async (ctx) => {
+    assertSeedAllowed();
     for (const t of APP_TABLES) {
       await clear(ctx, t);
     }

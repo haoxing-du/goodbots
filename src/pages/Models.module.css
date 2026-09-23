@@ -138,3 +138,12 @@
     grid-column: span 1;
   }
 }
+
+.emptyCard {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 16px;
+  color: var(--muted-1);
+}

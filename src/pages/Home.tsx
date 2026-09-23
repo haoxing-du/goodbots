@@ -184,7 +184,7 @@ export function Home() {
           </button>
         </div>
 
-        {data && (
+        {data && data.reviewerCount > 0 && (
           <p className={s.count}>
             {fmtCount(data.reviewerCount)}{" "}
             {data.reviewerCount === 1 ? "person has" : "people have"} reviewed{" "}
@@ -194,36 +194,40 @@ export function Home() {
         )}
       </section>
 
-      <section className={s.cards} aria-label="Summary stats">
-        {data?.cards.map((c, i) => {
-          const body = (
-            <>
-              <span className={s.cardLabel}>{c.label}</span>
-              <span className={s.cardRow}>
-                <span className={s.cardModel}>
-                  {c.version?.displayName ?? "—"}
+      {/* Only cards with a winner; on a brand-new site the section is hidden. */}
+      {data?.cards.some((c) => c.version) && (
+        <section className={s.cards} aria-label="Summary stats">
+          {data.cards.map((c, i) => {
+            if (!c.version) return null;
+            const body = (
+              <>
+                <span className={s.cardLabel}>{c.label}</span>
+                <span className={s.cardRow}>
+                  <span className={s.cardModel}>
+                    {c.version?.displayName ?? "—"}
+                  </span>
+                  {c.value && <span className={s.cardNum}>{c.value}</span>}
                 </span>
-                {c.value && <span className={s.cardNum}>{c.value}</span>}
-              </span>
-              <span className={s.cardCaption}>{c.caption}</span>
-            </>
-          );
-          const cls = `${s.card} ${s[`cat${i + 1}`]}`;
-          return c.version ? (
-            <Link
-              key={c.key}
-              to={versionPath(c.version.versionId)}
-              className={cls}
-            >
-              {body}
-            </Link>
-          ) : (
-            <div key={c.key} className={`${cls} ${s.cardEmpty}`}>
-              {body}
-            </div>
-          );
-        })}
-      </section>
+                <span className={s.cardCaption}>{c.caption}</span>
+              </>
+            );
+            const cls = `${s.card} ${s[`cat${i + 1}`]}`;
+            return c.version ? (
+              <Link
+                key={c.key}
+                to={versionPath(c.version.versionId)}
+                className={cls}
+              >
+                {body}
+              </Link>
+            ) : (
+              <div key={c.key} className={`${cls} ${s.cardEmpty}`}>
+                {body}
+              </div>
+            );
+          })}
+        </section>
+      )}
     </>
   );
 }
