@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
@@ -34,6 +34,7 @@ export function WriteReview() {
   const [changing, setChanging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const textRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) open("Sign in to write a review. You can browse without an account.");
@@ -182,7 +183,10 @@ export function WriteReview() {
                 <button
                   type="button"
                   className={ui.btnGhost}
-                  onClick={() => setPosted(null)}
+                  onClick={() => {
+                    setPosted(null);
+                    requestAnimationFrame(() => textRef.current?.focus());
+                  }}
                 >
                   Edit
                 </button>
@@ -285,6 +289,7 @@ export function WriteReview() {
           <label className={s.field}>
             <span className={ui.sectionLabel}>Your review</span>
             <textarea
+              ref={textRef}
               className={s.textarea}
               rows={6}
               value={draft.text}

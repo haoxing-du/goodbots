@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
@@ -391,11 +391,18 @@ function HomepageModels() {
     setDraft(next);
     setMsg(null);
   };
+  const list = useRef<HTMLOListElement>(null);
   const move = (i: number, by: number) => {
     const next = [...models];
     const [m] = next.splice(i, 1);
     next.splice(i + by, 0, m);
     edit(next);
+    // Follow the item; if it hit an end, that arrow is now disabled, so use the other one.
+    requestAnimationFrame(() => {
+      const [up, down] = list.current?.children[i + by]?.querySelectorAll("button") ?? [];
+      const want = by < 0 ? up : down;
+      (want && !want.disabled ? want : by < 0 ? down : up)?.focus();
+    });
   };
 
   return (
@@ -409,7 +416,7 @@ function HomepageModels() {
           {data?.isDefault &&
             " Showing the built-in default list; saving makes it yours."}
         </p>
-        <ol className={s.featured}>
+        <ol ref={list} className={s.featured}>
           {models.map((m, i) => (
             <li key={m.versionId} className={s.featuredRow}>
               <span>

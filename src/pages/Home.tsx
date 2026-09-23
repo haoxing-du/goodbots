@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -25,6 +25,12 @@ export function Home() {
   // One suggested axis at a time (random); ratings persist across shuffles.
   const [axisIndex, setAxisIndex] = useState<number | null>(null);
   const [ratings, setRatings] = useState<Record<string, number>>({});
+  const selectRef = useRef<HTMLSelectElement>(null);
+  // The search replaces nothing but unmounts on pick/cancel; send focus back to the select.
+  const closeSearch = () => {
+    setSearching(false);
+    requestAnimationFrame(() => selectRef.current?.focus());
+  };
 
   const axes = data?.axes ?? [];
   useEffect(() => {
@@ -88,6 +94,7 @@ export function Home() {
                 {selectedName || "\u00a0"}
               </span>
               <select
+                ref={selectRef}
                 className={s.select}
                 value={versionId}
                 onChange={(e) => {
@@ -117,13 +124,13 @@ export function Home() {
               onPick={(m) => {
                 setExtra(m);
                 setPicked(m.versionId);
-                setSearching(false);
+                closeSearch();
               }}
             />
             <button
               type="button"
               className={s.cancelSearch}
-              onClick={() => setSearching(false)}
+              onClick={closeSearch}
             >
               Cancel
             </button>

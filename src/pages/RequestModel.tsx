@@ -38,6 +38,7 @@ export function RequestModel() {
         className={ui.input}
         value={form[key]}
         required={required}
+        autoFocus={key === "name"}
         placeholder={placeholder}
         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
       />

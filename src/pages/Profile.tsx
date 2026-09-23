@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
@@ -28,6 +28,7 @@ export function Profile() {
   useTitle(data ? `${data.user.name} (@${data.user.handle})` : undefined);
   const removeTake = useMutation(api.takes.remove);
   const [editing, setEditing] = useState(false);
+  const editButton = useRef<HTMLButtonElement>(null);
 
   if (data === undefined) return <PageLoading />;
   if (data === null) return <NotFound what="reviewer" />;
@@ -59,7 +60,10 @@ export function Profile() {
             <EditProfile
               name={data.needsName ? "" : user.name}
               handle={user.handle}
-              onDone={() => setEditing(false)}
+              onDone={() => {
+                setEditing(false);
+                requestAnimationFrame(() => editButton.current?.focus());
+              }}
             />
           ) : (
             <div>
@@ -92,6 +96,7 @@ export function Profile() {
               </p>
               {data.isMe && (
                 <button
+                  ref={editButton}
                   type="button"
                   className={`${ui.linkBtn} ${s.editLink}`}
                   onClick={() => setEditing(true)}
