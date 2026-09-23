@@ -31,7 +31,7 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 - **No moderation, verification, screenshots, tweet embeds, divisive badges, or reviewer filter in v1.**
 
 ## Homepage
-- "What did you think of [model]?" with a text box and one randomly suggested axis to rate (shuffleable, optional). "Finish your review" carries the text and ratings into the write page.
+- "What do you think of [model]?" with a text box and one randomly suggested core axis to rate (shuffleable, optional). "Finish your review" carries the text and ratings into the write page.
 - Stat cards: best overall / vibes / smarts / taste / aligned (versions with 20+ ratings on that axis) and most reviewed in the last 7 days.
 
 ## Taste match
