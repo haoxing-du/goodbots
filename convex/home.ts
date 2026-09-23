@@ -12,7 +12,7 @@ const BEST_CARDS = [
   { slug: "vibes", label: "Best vibes", caption: "vibes" },
   { slug: "smarts", label: "Smartest", caption: "smarts" },
   { slug: "taste", label: "Best taste", caption: "taste" },
-  { slug: "mom", label: "Most mom-approved", caption: "mom-approved" },
+  { slug: "aligned", label: "Most aligned", caption: "aligned" },
 ] as const;
 
 /** Everything the homepage needs in one call: hero counts, model picker, six stat cards. */

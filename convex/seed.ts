@@ -39,11 +39,13 @@ const USERS = [
 
 type Handle = (typeof USERS)[number][1];
 type Ver = (typeof MODELS)[number]["versions"][number][0];
-// overall, smarts, taste, vibes, aligned, mom (0 = skipped)
+// overall, smarts, taste, vibes, aligned, mom-approved (0 = skipped). Mom-approved
+// used to be a core axis; it's now a regular custom axis.
 type S = [number, number, number, number, number, number];
 
 // Custom axes people "added" — [name, one-line description, created by].
 const CUSTOM_AXES: [string, string, Handle][] = [
+  ["Mom-approved", "Would recommend to mom", "mirac"],
   ["Coding", "Writes code that works the first time", "kt_builds"],
   ["Design", "Makes things look good", "priya_r"],
   ["Humor", "Is actually funny", "jonahb"],
@@ -124,11 +126,11 @@ const BULK_USERS = FIRST.map((first, i) => {
   return { name, handle: `${first}_${LAST[i]}`.toLowerCase() };
 });
 
-// Per-version mean scores: overall, smarts, taste, vibes, aligned, mom.
+// Per-version mean scores: overall, smarts, taste, vibes, aligned, mom-approved.
 const BULK_PROFILES: Record<string, [number, number, number, number, number, number]> = {
-  "claude-opus-4-1": [4.3, 4.6, 4.9, 3.6, 4.3, 3.5],
+  "claude-opus-4-1": [4.3, 4.6, 4.9, 3.6, 3.9, 3.5],
   "gpt-5-2025-08-07": [4.2, 4.8, 3.4, 3.5, 3.9, 3.9],
-  "gemini-2.5-pro": [4.1, 4.2, 3.7, 3.9, 4.0, 4.5],
+  "gemini-2.5-pro": [4.1, 4.2, 3.7, 3.9, 4.6, 4.5],
   "deepseek-v3.1": [3.9, 4.1, 3.3, 3.2, 3.9, 3.1],
   "grok-4-0709": [3.3, 3.8, 3.0, 4.6, 2.6, 2.7],
 };
@@ -148,6 +150,9 @@ const BULK_TEXT: Record<string, string[]> = {
   "deepseek-v3.1": ["Great value for coding.", "Plain prose, clean reasoning.", "Does the job, nothing fancy.", "Better than the price suggests."],
   "grok-4-0709": ["Fun to talk to, hard to trust.", "Funny, fast, often wrong.", "Good for brainstorming only.", "Says what you want to hear."],
 };
+
+// Slugs for the positional score arrays above (`s` without overall, and BULK_PROFILES).
+const POSITIONAL_AXES = ["smarts", "taste", "vibes", "aligned", "mom-approved"];
 
 function rng(seed: number) {
   return () => {
@@ -227,7 +232,7 @@ export const run = internalMutation({
       userId: Id<"users">;
       versionId: Id<"versions">;
       overall: number | undefined;
-      core: (number | undefined)[]; // in CORE_AXES order
+      core: (number | undefined)[]; // positional: smarts, taste, vibes, aligned, mom-approved
       custom?: Record<string, number>;
       createdAt: number;
       updatedAt: number;
@@ -242,9 +247,9 @@ export const run = internalMutation({
       });
       await applyOverallToStats(ctx, args.versionId, null, args.overall);
       const scores = new Map<Id<"axes">, number>();
-      CORE_AXES.forEach((a, i) => {
+      POSITIONAL_AXES.forEach((slug, i) => {
         const n = args.core[i];
-        if (n) scores.set(axisBySlug.get(a.slug)!, n);
+        if (n) scores.set(axisBySlug.get(slug)!, n);
       });
       for (const [slug, n] of Object.entries(args.custom ?? {})) scores.set(axisBySlug.get(slug)!, n);
       await replaceReviewScores(ctx, { _id: reviewId, userId: args.userId, versionId: args.versionId }, scores);
@@ -294,7 +299,8 @@ export const run = internalMutation({
         if ((i + j) % 5 === 0) continue;
         const p = BULK_PROFILES[v];
         const s = p.map((mean) => clamp(mean + (bulkRand() * 2 - 1) * 1.2));
-        const core = s.slice(1).map((n) => (bulkRand() < 0.15 ? undefined : n));
+        // Core axes are skipped 15% of the time; the custom Mom-approved is rated only 20% of the time.
+        const core = s.slice(1).map((n, k) => (bulkRand() < (k === 4 ? 0.8 : 0.15) ? undefined : n));
         const custom: Record<string, number> = {};
         if (bulkRand() < 0.35) {
           const slugs = Object.keys(BULK_CUSTOM);

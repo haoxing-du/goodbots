@@ -2,11 +2,11 @@
 
 Like Goodreads, but for our AIs.
 
-GoodBots is a review site for specific LLM versions. Rate a model on whatever you care about: five built-in axes (Smarts, Taste, Vibes, Aligned, Mom-approved) plus any you add yourself, like "Design" or "Dessert recipes". Write an opinionated review, post "A > B" head-to-head takes, react to other people's reviews, and find reviewers whose taste matches yours. It is not a benchmark site.
+GoodBots is a review site for specific LLM versions. Rate a model on whatever you care about: four built-in axes (Smarts, Taste, Vibes, Aligned) plus any you add yourself, like "Design" or "Dessert recipes". Write an opinionated review, post "A > B" head-to-head takes, react to other people's reviews, and find reviewers whose taste matches yours. It is not a benchmark site.
 
 ## Features
 
-- **Rate on anything:** five core axes, plus custom axes anyone can add while reviewing. Only the text is required; overall stars and every axis are optional.
+- **Rate on anything:** four core axes, plus custom axes anyone can add while reviewing. Only the text is required; overall stars and every axis are optional.
 - **Model pages:** average score on each axis, 1–5 distributions, an "Also rated on" list of custom axes, head-to-head win rates against each opponent, and reviews filterable by star rating.
 - **Reviews:** one per person per model version. Reviewing again adds a dated update, and your profile keeps the history.
 - **No anchoring:** the review form hides community scores until you post, then shows how your scores compare.

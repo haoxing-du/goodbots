@@ -9,7 +9,6 @@ export const CORE_AXES = [
   { slug: "taste", name: "Taste", hint: "Knows what good looks like" },
   { slug: "vibes", name: "Vibes", hint: "Pleasant to talk to" },
   { slug: "aligned", name: "Aligned", hint: "Is a good bot" },
-  { slug: "mom", name: "Mom-approved", hint: "Would recommend to mom" },
 ] as const;
 
 export const REACTION_KINDS = [

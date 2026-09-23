@@ -15,7 +15,7 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 
 ## Rating model
 - **Overall**: 1–5 stars, optional.
-- **Core axes** (1–5, each optional): Smarts ("gets hard things right"), Taste ("knows what good looks like"), Vibes ("pleasant to talk to"), Aligned ("honest, not sycophantic"), Mom-approved ("would recommend to my mom").
+- **Core axes** (1–5, each optional): Smarts ("gets hard things right"), Taste ("knows what good looks like"), Vibes ("pleasant to talk to"), Aligned ("is a good bot").
 - **Custom axes** (1–5, optional): any signed-in reviewer can add an axis while reviewing ("Design", "Dessert recipes"…). Names are 2–40 characters and deduplicated by slug. The write form lists every axis anyone has rated on (core first, then by popularity). Admins can hide or merge custom axes.
 - **Text**: the only required field. Optional prompt/response snippet (two plain-text fields).
 - **Anti-anchoring**: the write screen never shows community scores until after you post. After posting, show avg + your delta per axis.
@@ -29,7 +29,7 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 
 ## Homepage
 - "What did you think of [model]?" with a text box and one randomly suggested axis to rate (shuffleable, optional). "Finish your review" carries the text and ratings into the write page.
-- Stat cards: best overall / vibes / smarts / taste / mom-approved (versions with 20+ ratings on that axis) and most reviewed in the last 7 days.
+- Stat cards: best overall / vibes / smarts / taste / aligned (versions with 20+ ratings on that axis) and most reviewed in the last 7 days.
 
 ## Taste match
 - Between viewer V and reviewer R: over model versions both have reviewed (**min 3 shared**), compare overall + any shared axis scores (core or custom).

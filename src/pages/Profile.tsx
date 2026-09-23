@@ -118,7 +118,7 @@ export function Profile() {
                 <th>Model</th>
                 <th>Overall</th>
                 {data.coreAxes.map((a) => (
-                  <th key={a._id}>{a.slug === "mom" ? "Mom" : a.name}</th>
+                  <th key={a._id}>{a.name}</th>
                 ))}
                 <th>Updated</th>
               </tr>
@@ -126,7 +126,7 @@ export function Profile() {
             <tbody>
               {data.ratings.length === 0 && (
                 <tr>
-                  <td colSpan={8} className={ui.empty}>
+                  <td colSpan={data.coreAxes.length + 3} className={ui.empty}>
                     No reviews yet.
                   </td>
                 </tr>
