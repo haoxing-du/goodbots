@@ -77,7 +77,7 @@
 }
 .write {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   border-radius: var(--r-sm);
   padding: 9px 16px;
   font-size: var(--text-base);
@@ -88,7 +88,7 @@
 }
 .write:hover {
   background: var(--ink-hover);
-  color: #fff;
+  color: var(--on-ink);
 }
 .signIn {
   background: none;

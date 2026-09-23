@@ -21,7 +21,7 @@
 }
 .on {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
 }
 .off {
   background: var(--card);

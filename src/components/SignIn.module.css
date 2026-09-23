@@ -7,7 +7,7 @@
   color: var(--ink);
 }
 .dialog::backdrop {
-  background: rgb(23 23 21 / 0.35);
+  background: var(--scrim);
 }
 .inner {
   padding: 28px;
@@ -32,7 +32,7 @@
 }
 .provider {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   border: 0;
   border-radius: var(--r-sm);
   padding: 11px 16px;

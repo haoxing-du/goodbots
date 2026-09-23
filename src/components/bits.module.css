@@ -30,9 +30,9 @@
   color: var(--muted-1);
 }
 .matchLow {
-  background: var(--rust-bg);
-  border-color: var(--rust-border);
-  color: var(--rust-text);
+  background: var(--page);
+  border-color: var(--border);
+  color: var(--muted-2);
 }
 
 .avatar {

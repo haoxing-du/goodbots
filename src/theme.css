@@ -7,6 +7,8 @@
   --border: #e4e2da;
   --divider: #eeede7;
   --outline: #cfccc2;
+  --on-ink: #ffffff; /* text and icons on --ink fills */
+  --scrim: rgb(23 23 21 / 0.35);
   --control-border: #86837a; /* form-field edges: 3.8:1 on --card (WCAG 1.4.11) */
 
   /* ink */
@@ -30,28 +32,29 @@
   --rust-bg: #fcf1ea;
   --rust-border: #efc9b3;
 
-  /* homepage stat cards: cool OKLCH band, hues 180 → 305 in card order */
-  --cat-1: oklch(0.47 0.11 180);
-  --cat-1-bg: oklch(0.97 0.018 180);
+  /* homepage stat cards: cool OKLCH band, hues 180 → 305 in card order.
+     Chroma is the largest every hue can hold inside sRGB, so none get clipped. */
+  --cat-1: oklch(0.47 0.08 180);
+  --cat-1-bg: oklch(0.97 0.014 180);
   --cat-1-border: oklch(0.88 0.04 180);
-  --cat-2: oklch(0.47 0.11 205);
-  --cat-2-bg: oklch(0.97 0.018 205);
+  --cat-2: oklch(0.47 0.08 205);
+  --cat-2-bg: oklch(0.97 0.014 205);
   --cat-2-border: oklch(0.88 0.04 205);
-  --cat-3: oklch(0.47 0.11 230);
-  --cat-3-bg: oklch(0.97 0.018 230);
+  --cat-3: oklch(0.47 0.08 230);
+  --cat-3-bg: oklch(0.97 0.014 230);
   --cat-3-border: oklch(0.88 0.04 230);
-  --cat-4: oklch(0.47 0.11 255);
-  --cat-4-bg: oklch(0.97 0.018 255);
+  --cat-4: oklch(0.47 0.08 255);
+  --cat-4-bg: oklch(0.97 0.014 255);
   --cat-4-border: oklch(0.88 0.04 255);
-  --cat-5: oklch(0.47 0.11 280);
-  --cat-5-bg: oklch(0.97 0.018 280);
+  --cat-5: oklch(0.47 0.08 280);
+  --cat-5-bg: oklch(0.97 0.014 280);
   --cat-5-border: oklch(0.88 0.04 280);
-  --cat-6: oklch(0.47 0.11 305);
-  --cat-6-bg: oklch(0.97 0.018 305);
+  --cat-6: oklch(0.47 0.08 305);
+  --cat-6-bg: oklch(0.97 0.014 305);
   --cat-6-border: oklch(0.88 0.04 305);
 
   /* depth: only for surfaces floating over content (menus, popovers) */
-  --shadow-float: 0 8px 24px rgb(23 23 21 / 0.08);
+  --shadow-float: 0 8px 24px color-mix(in srgb, var(--ink) 8%, transparent);
 
   /* type */
   --font-serif: "Newsreader", Georgia, serif;
@@ -126,7 +129,8 @@ a {
   text-underline-offset: 3px;
 }
 a:hover {
-  color: var(--olive-text);
+  color: var(--ink);
+  text-decoration-thickness: 2px;
 }
 
 textarea,
@@ -172,14 +176,14 @@ p {
   left: 8px;
   z-index: 100;
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   padding: 8px 12px;
   border-radius: var(--r-sm);
   transform: translateY(-200%);
 }
 .skip-link:focus-visible {
   transform: none;
-  color: #fff;
+  color: var(--on-ink);
 }
 main:focus {
   outline: none;

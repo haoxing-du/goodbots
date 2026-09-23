@@ -77,7 +77,7 @@
 
 .btn {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   border: 0;
   border-radius: var(--r-sm);
   padding: 9px 16px;
@@ -90,7 +90,7 @@
 }
 .btn:hover {
   background: var(--ink-hover);
-  color: #fff;
+  color: var(--on-ink);
 }
 .btn:disabled {
   background: var(--disabled);
@@ -141,7 +141,8 @@
   color: var(--ink-2);
 }
 .linkBtn:hover {
-  color: var(--olive-text);
+  color: var(--ink);
+  text-decoration-thickness: 2px;
 }
 
 .empty {

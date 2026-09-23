@@ -140,7 +140,7 @@
 .numOn {
   background: var(--ink);
   border-color: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
 }
 .rightCell {
   font-family: var(--font-mono);
@@ -153,7 +153,7 @@
   color: var(--olive-text-2);
 }
 .deltaDown {
-  color: var(--rust-text);
+  color: var(--muted-1);
 }
 .deltaFlat {
   color: var(--muted-1);

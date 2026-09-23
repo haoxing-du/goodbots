@@ -169,7 +169,7 @@
   font-size: var(--text-lg);
   font-weight: 500;
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   transition: background 120ms;
 }
 .continue:hover:not(:disabled) {

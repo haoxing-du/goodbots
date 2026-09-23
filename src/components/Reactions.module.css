@@ -22,7 +22,7 @@
 .on {
   background: var(--ink);
   border-color: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
 }
 .count {
   font-family: var(--font-mono);
