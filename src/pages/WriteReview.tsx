@@ -13,6 +13,7 @@ import ui from "../components/ui.module.css";
 import s from "./WriteReview.module.css";
 import { versionPath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
+import { radioGroupKeys, radioTabIndex } from "../lib/radioGroup";
 
 /** Matches EDIT_WINDOW in convex/reviews.ts. */
 const EDIT_WINDOW_MS = 10 * 60 * 1000;
@@ -199,8 +200,17 @@ export function WriteReview() {
                 <div className={s.axisLabel}>Overall</div>
                 <div className={s.axisHint}>Optional</div>
               </div>
-              <div className={s.starButtons} role="radiogroup" aria-label="Overall stars">
-                {[1, 2, 3, 4, 5].map((n) => {
+              <div
+                className={s.starButtons}
+                role="radiogroup"
+                aria-label="Overall stars"
+                onKeyDown={radioGroupKeys(
+                  SCORES,
+                  (n) => set({ overall: n }),
+                  () => set({ overall: 0 }),
+                )}
+              >
+                {SCORES.map((n, i) => {
                   const v = done ? (community?.mine.overall ?? 0) : draft.overall;
                   return (
                     <button
@@ -208,6 +218,7 @@ export function WriteReview() {
                       type="button"
                       role="radio"
                       aria-checked={v === n}
+                      tabIndex={radioTabIndex(SCORES, v, i)}
                       aria-label={`${n} star${n > 1 ? "s" : ""}`}
                       disabled={done}
                       className={n <= v ? s.starOn : s.starOff}
@@ -372,6 +383,8 @@ function Delta({ mine, avg }: { mine: number | null; avg: number }) {
   );
 }
 
+const SCORES = [1, 2, 3, 4, 5] as const;
+
 function axisSlug(name: string) {
   return name
     .toLowerCase()
@@ -400,13 +413,19 @@ function AxisRow({
         <div className={s.axisLabel}>{name}</div>
         {hint && <div className={s.axisHint}>{hint}</div>}
       </div>
-      <div className={s.numButtons} role="radiogroup" aria-label={name}>
-        {[1, 2, 3, 4, 5].map((n) => (
+      <div
+        className={s.numButtons}
+        role="radiogroup"
+        aria-label={name}
+        onKeyDown={radioGroupKeys(SCORES, onChange, () => onChange(0))}
+      >
+        {SCORES.map((n, i) => (
           <button
             key={n}
             type="button"
             role="radio"
             aria-checked={value === n}
+            tabIndex={radioTabIndex(SCORES, value, i)}
             disabled={disabled}
             className={value === n ? s.numOn : s.numOff}
             onClick={() => onChange(value === n ? 0 : n)}

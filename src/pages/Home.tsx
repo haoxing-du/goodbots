@@ -9,6 +9,9 @@ import { fmtCount } from "../lib/format";
 import s from "./Home.module.css";
 import { versionPath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
+import { radioGroupKeys, radioTabIndex } from "../lib/radioGroup";
+
+const SCORES = [1, 2, 3, 4, 5] as const;
 
 const OTHER = "__other__";
 
@@ -30,6 +33,15 @@ export function Home() {
   }, [axes.length, axisIndex]);
   const axis = axisIndex === null ? null : axes[axisIndex % axes.length];
   const stars = axis ? (ratings[axis._id] ?? 0) : 0;
+  const rate = (n: number) => {
+    if (!axis) return;
+    setRatings((r) => {
+      const next = { ...r };
+      if (n) next[axis._id] = n;
+      else delete next[axis._id];
+      return next;
+    });
+  };
   const shuffle = () => {
     if (axes.length < 2 || axisIndex === null) return;
     const step = 1 + Math.floor(Math.random() * (axes.length - 1)); // never the same axis
@@ -155,24 +167,18 @@ export function Home() {
             aria-label={
               axis ? `${axis.name} rating (optional)` : "Rating (optional)"
             }
+            onKeyDown={radioGroupKeys(SCORES, (n) => rate(n), () => rate(0))}
           >
-            {[1, 2, 3, 4, 5].map((n) => (
+            {SCORES.map((n, i) => (
               <button
                 key={n}
                 type="button"
                 role="radio"
                 aria-checked={stars === n}
+                tabIndex={radioTabIndex(SCORES, stars, i)}
                 aria-label={`${n} star${n > 1 ? "s" : ""}`}
                 className={n <= stars ? s.starOn : s.starOff}
-                onClick={() => {
-                  if (!axis) return;
-                  setRatings((r) => {
-                    const next = { ...r };
-                    if (stars === n) delete next[axis._id];
-                    else next[axis._id] = n;
-                    return next;
-                  });
-                }}
+                onClick={() => rate(stars === n ? 0 : n)}
               >
                 {n <= stars ? "★" : "☆"}
               </button>
