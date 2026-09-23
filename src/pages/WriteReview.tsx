@@ -207,7 +207,7 @@ export function WriteReview() {
                       className={n <= v ? s.starOn : s.starOff}
                       onClick={() => set({ overall: draft.overall === n ? 0 : n })}
                     >
-                      ★
+                      {n <= v ? "★" : "☆"}
                     </button>
                   );
                 })}

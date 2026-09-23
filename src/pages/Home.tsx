@@ -170,7 +170,7 @@ export function Home() {
                   });
                 }}
               >
-                ★
+                {n <= stars ? "★" : "☆"}
               </button>
             ))}
           </div>

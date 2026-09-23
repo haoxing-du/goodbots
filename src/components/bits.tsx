@@ -11,9 +11,9 @@ import s from "./bits.module.css";
 export function Stars({ value, size = 15 }: { value: number; size?: number }) {
   const n = Math.round(value);
   return (
-    <span className={s.stars} style={{ fontSize: size }} aria-label={`${n} of 5 stars`}>
-      <span className={s.starOn}>{"★".repeat(n)}</span>
-      <span className={s.starOff}>{"★".repeat(5 - n)}</span>
+    <span className={s.stars} style={{ fontSize: size }} role="img" aria-label={`${n} of 5 stars`}>
+      <span className={s.starOn} aria-hidden>{"★".repeat(n)}</span>
+      <span className={s.starOff} aria-hidden>{"☆".repeat(5 - n)}</span>
     </span>
   );
 }

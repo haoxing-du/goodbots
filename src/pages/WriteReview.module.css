@@ -103,10 +103,10 @@
   color: var(--ink);
 }
 .starOff {
-  color: var(--disabled);
+  color: var(--muted-3);
 }
 .starOff:hover:not(:disabled) {
-  color: var(--muted-3);
+  color: var(--muted-1);
 }
 .starOn:disabled,
 .starOff:disabled,
