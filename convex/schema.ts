@@ -50,6 +50,23 @@ export default defineSchema({
     .index("by_slug", ["slug"])
     .index("by_family", ["familyLower"]),
 
+  // Every model OpenRouter lists, synced by a cron (convex/catalog.ts). A site
+  // model page (versions row) is only created when someone first reviews one.
+  catalog: defineTable({
+    orId: v.string(), // e.g. "anthropic/claude-opus-4.1" (no :free/:batch suffix)
+    name: v.string(), // "Claude Opus 4.1"
+    provider: v.string(), // "Anthropic"
+    providerSlug: v.string(), // "anthropic"
+    releasedAt: v.optional(v.number()),
+    hfId: v.optional(v.string()),
+    contextLength: v.optional(v.number()),
+    deprecatedAt: v.optional(v.number()),
+    searchText: v.string(), // name + provider + id, for the search index
+    lastSeenAt: v.number(), // last sync that listed it (entries are never deleted)
+  })
+    .index("by_orId", ["orId"])
+    .searchIndex("search", { searchField: "searchText" }),
+
   versions: defineTable({
     modelId: v.id("models"),
     versionId: v.string(),
