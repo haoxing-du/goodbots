@@ -21,7 +21,7 @@ src/
 scripts/generateKeys.mjs   creates the JWT keys Convex Auth needs
 ```
 
-Routes: `/`, `/models`, `/m/:modelSlug/:versionId?`, `/write?v=:versionId`, `/u/:handle`, `/request`, `/admin`, `/search?q=`.
+Routes: `/`, `/reviews`, `/models`, `/m/:versionId` (one page per version; old `/m/:family[/:version]` links redirect), `/write?v=:versionId`, `/u/:handle`, `/request`, `/admin`, `/search?q=`.
 
 ## Local setup
 

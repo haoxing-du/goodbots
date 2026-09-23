@@ -8,6 +8,7 @@ import { Reactions } from "../components/Reactions";
 import { fmtAvg, timeAgo } from "../lib/format";
 import ui from "../components/ui.module.css";
 import s from "./Reviews.module.css";
+import { versionPath } from "../lib/paths";
 
 export function Reviews() {
   const [tab, setTab] = useState<"latest" | "top">("latest");
@@ -48,7 +49,7 @@ export function Reviews() {
             <article key={r._id} className={`${ui.card} ${s.card}`}>
               <div className={s.cardTop}>
                 {r.version && (
-                  <Link to={`/m/${r.version.modelSlug}/${r.version.versionId}`} className={s.modelChip}>
+                  <Link to={versionPath(r.version.versionId)} className={s.modelChip}>
                     {r.version.displayName}
                   </Link>
                 )}
@@ -82,7 +83,7 @@ function ModelsRail() {
       <h2 className={ui.sectionLabel}>Models · overall</h2>
       <div className={`${s.railList} ${ui.rows}`}>
         {models?.map((m) => (
-          <Link key={m._id} to={`/m/${m.slug}/${m.primary!.versionId}`} className={s.railRow}>
+          <Link key={m._id} to={versionPath(m.primary!.versionId)} className={s.railRow}>
             <span>
               <span className={s.railName}>{m.primary!.displayName}</span>
               <span className={s.railVer}>{m.primary!.versionId}</span>

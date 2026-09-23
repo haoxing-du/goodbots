@@ -5,6 +5,7 @@ import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Avatar, Stars } from "../components/bits";
 import { monthYear, shortDate } from "../lib/format";
+import { versionPath } from "../lib/paths";
 import { NotFound } from "./NotFound";
 import ui from "../components/ui.module.css";
 import s from "./Profile.module.css";
@@ -17,7 +18,7 @@ type VersionRef = {
 
 function VersionLink({ v }: { v: VersionRef }) {
   if (!v) return <span>Removed model</span>;
-  return <Link to={`/m/${v.modelSlug}/${v.versionId}`}>{v.displayName}</Link>;
+  return <Link to={versionPath(v.versionId)}>{v.displayName}</Link>;
 }
 
 export function Profile() {

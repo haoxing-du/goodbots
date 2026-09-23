@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
@@ -12,23 +12,25 @@ import { fmtAvg, fmtCount, timeAgo } from "../lib/format";
 import { NotFound } from "./NotFound";
 import ui from "../components/ui.module.css";
 import s from "./ModelPage.module.css";
+import { versionPath } from "../lib/paths";
 
 export function ModelPage() {
-  const { slug = "", versionId } = useParams();
-  const navigate = useNavigate();
-  const data = useQuery(api.models.page, { slug, versionId });
+  const { id = "" } = useParams();
+  const data = useQuery(api.models.page, { id });
 
   if (data === undefined) return <div className={ui.page} />;
   if (data === null) return <NotFound what="model" />;
-  if (!data.version) return <NotFound what="version" />;
-  const { model, version, versions } = data;
+  if (data.redirectTo !== null) return <Navigate to={versionPath(data.redirectTo)} replace />;
+  const { model, version } = data;
   const overall = data.overall;
 
   return (
     <div className={ui.page}>
       <header className={s.header}>
         <div>
-          <div className={ui.monoLabel}>{model.provider}</div>
+          <div className={ui.monoLabel}>
+            {model.provider} · <span className={s.versionId}>{version.versionId}</span>
+          </div>
           <h1 className={s.name}>{version.displayName}</h1>
           <p className={s.summary}>
             {fmtCount(data.reviewCount)} {data.reviewCount === 1 ? "review" : "reviews"} ·{" "}
@@ -36,17 +38,6 @@ export function ModelPage() {
             {fmtCount(data.takeCount)} head-to-head {data.takeCount === 1 ? "take" : "takes"}
           </p>
         </div>
-        {versions.length > 0 && (
-          <div className={s.versionPick}>
-            <div className={ui.monoLabel}>Version</div>
-            <Pills
-              label="Version"
-              options={versions.map((v) => ({ value: v.versionId, label: v.versionId }))}
-              value={version.versionId}
-              onChange={(v) => navigate(`/m/${model.slug}/${v}`)}
-            />
-          </div>
-        )}
       </header>
 
       <AxisGrid
@@ -197,7 +188,7 @@ function HeadToHead({
           <div key={h.opponent!._id} className={s.h2hRow}>
             <div className={s.vs}>
               vs{" "}
-              <Link to={`/m/${h.opponent!.modelSlug}/${h.opponent!.versionId}`}>
+              <Link to={versionPath(h.opponent!.versionId)}>
                 {h.opponent!.displayName}
               </Link>
             </div>

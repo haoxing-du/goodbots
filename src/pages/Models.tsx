@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Stars } from "../components/bits";
 import { fmtAvg, fmtCount } from "../lib/format";
+import { versionPath } from "../lib/paths";
 import ui from "../components/ui.module.css";
 import s from "./Models.module.css";
 
@@ -29,7 +30,7 @@ export function Models() {
               </div>
               <div className={s.versions}>
                 {m.versions.map((v) => (
-                  <Link key={v._id} to={`/m/${m.slug}/${v.versionId}`} className={s.version}>
+                  <Link key={v._id} to={versionPath(v.versionId)} className={s.version}>
                     <span>
                       <span className={s.vName}>{v.displayName}</span>
                       <span className={ui.meta}>{v.versionId}</span>

@@ -39,7 +39,7 @@ Design reference: [`DESIGN.md`](DESIGN.md) (screens 4a–4d).
 
 ## Screens
 1. **Home feed (4b)**: tabs Latest (chronological) / Top this week (most reactions in 7 days). Right rail: models by overall rating, reviewers like you.
-2. **Model page (4a)**: name, provider, version switcher, overall + review count + take count. Five axis cards with averages; "Show distributions" toggle swaps in a 1–5 histogram (off by default). Head-to-head list + inline take composer. Reviews sorted Top, filterable by star rating.
+2. **Model page (4a)**: one page per model version (`/m/<version-id>`); versions of the same family are separate pages, not tabs. Name, provider, version id, overall + review count + take count. Four core axis cards with averages, plus "Also rated on" for custom axes; "Show distributions" toggle swaps in a 1–5 histogram (off by default). Head-to-head list + inline take composer. Reviews sorted Top, filterable by star rating.
 3. **Write a review (4c)**: version picker, prior-review notice when updating, overall stars, five axes, text, optional snippet, post → reveal community comparison.
 4. **Reviewer profile (4d)**: name, X handle if signed in with X, join date, taste match with viewer, counts. Ratings table (one row per version), latest review with update history, takes list.
 5. **Request a model**: small form (not mocked).

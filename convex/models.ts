@@ -52,19 +52,27 @@ export const list = query({
 });
 
 /** The model page: header, axis stats and head-to-head for one version. */
+/**
+ * One model version's page (every version is its own page). If `id` is a family
+ * slug instead (old links like /m/claude-opus), returns a redirect to that
+ * family's newest version.
+ */
 export const page = query({
-  args: { slug: v.string(), versionId: v.optional(v.string()) },
-  handler: async (ctx, { slug, versionId }) => {
-    const model = await ctx.db
-      .query("models")
-      .withIndex("by_slug", (q) => q.eq("slug", slug))
+  args: { id: v.string() },
+  handler: async (ctx, { id }) => {
+    const version = await ctx.db
+      .query("versions")
+      .withIndex("by_versionId", (q) => q.eq("versionId", id))
       .unique();
-    if (!model) return null;
-    const versions = await versionsOf(ctx, model._id);
-    const version: Doc<"versions"> | undefined = versionId
-      ? versions.find((ver) => ver.versionId === versionId)
-      : versions[0];
-    if (!version) return { model, versions, version: null } as const;
+    if (!version || version.status !== "active") {
+      const family = await ctx.db
+        .query("models")
+        .withIndex("by_slug", (q) => q.eq("slug", id))
+        .unique();
+      const newest = family ? (await versionsOf(ctx, family._id))[0] : undefined;
+      return newest ? ({ redirectTo: newest.versionId } as const) : null;
+    }
+    const model = (await ctx.db.get(version.modelId))!;
 
     const [stats, axisStats, axisDocs] = await Promise.all([
       statsFor(ctx, version._id),
@@ -144,8 +152,8 @@ export const page = query({
     );
 
     return {
+      redirectTo: null,
       model,
-      versions,
       version,
       reviewCount: stats?.reviewCount ?? 0,
       takeCount: stats?.takeCount ?? 0,

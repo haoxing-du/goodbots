@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { Avatar } from "../components/bits";
 import ui from "../components/ui.module.css";
 import s from "./Search.module.css";
+import { versionPath } from "../lib/paths";
 
 export function Search() {
   const [params] = useSearchParams();
@@ -21,7 +22,7 @@ export function Search() {
           <div className={`${ui.card} ${ui.rows}`}>
             {results?.models.length === 0 && <div className={ui.empty}>No models match.</div>}
             {results?.models.map((m) => (
-              <Link key={m._id} to={`/m/${m.modelSlug}/${m.versionId}`} className={s.row}>
+              <Link key={m._id} to={versionPath(m.versionId)} className={s.row}>
                 <span className={s.name}>{m.displayName}</span>
                 <span className={ui.meta}>
                   {m.provider} · {m.versionId}

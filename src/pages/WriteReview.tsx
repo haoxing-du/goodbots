@@ -10,6 +10,7 @@ import { Draft, loadDraft, saveDraft } from "../lib/draft";
 import { proseDate } from "../lib/format";
 import ui from "../components/ui.module.css";
 import s from "./WriteReview.module.css";
+import { versionPath } from "../lib/paths";
 
 export function WriteReview() {
   const [params, setParams] = useSearchParams();
@@ -147,7 +148,7 @@ export function WriteReview() {
             <div className={s.posted} role="status">
               <span>Posted. Community averages are now shown next to your scores.</span>
               <span className={s.postedActions}>
-                <Link to={`/m/${selected.modelSlug}/${selected.versionId}`}>See it on the model page</Link>
+                <Link to={versionPath(selected.versionId)}>See it on the model page</Link>
                 <button
                   type="button"
                   className={ui.btnGhost}

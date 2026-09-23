@@ -6,6 +6,7 @@ import { useSignIn } from "../components/SignIn";
 import { EMPTY_DRAFT, saveDraft } from "../lib/draft";
 import { fmtCount } from "../lib/format";
 import s from "./Home.module.css";
+import { versionPath } from "../lib/paths";
 
 export function Home() {
   const data = useQuery(api.home.homeStats);
@@ -170,7 +171,7 @@ export function Home() {
           return c.version ? (
             <Link
               key={c.key}
-              to={`/m/${c.version.modelSlug}/${c.version.versionId}`}
+              to={versionPath(c.version.versionId)}
               className={cls}
             >
               {body}
