@@ -25,7 +25,7 @@ const COLORED_AXES = new Set(["overall", "smarts", "taste", "vibes", "aligned"])
 
 /**
  * CSS variables that color an element for one axis: --axis (text/fill),
- * --axis-bg and --axis-border. Undefined for custom axes, so styles fall
+ * --axis-bg, --axis-border and --axis-star (a brighter hue for star glyphs). Undefined for custom axes, so styles fall
  * back to their neutral defaults via var(--axis, …).
  */
 export function axisVars(slug: string | undefined): CSSProperties | undefined {
@@ -34,5 +34,6 @@ export function axisVars(slug: string | undefined): CSSProperties | undefined {
     "--axis": `var(--axis-${slug})`,
     "--axis-bg": `var(--axis-${slug}-bg)`,
     "--axis-border": `var(--axis-${slug}-border)`,
+    "--axis-star": `var(--axis-${slug}-star)`,
   } as CSSProperties;
 }

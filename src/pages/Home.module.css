@@ -138,7 +138,7 @@
   transition: color 120ms;
 }
 .starOn {
-  color: var(--ink);
+  color: var(--axis-star, var(--ink));
 }
 .starOff {
   color: var(--muted-3);

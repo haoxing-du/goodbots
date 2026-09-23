@@ -155,6 +155,7 @@ export function Home() {
           </div>
           <div
             className={s.stars}
+            style={axisVars(axis?.slug)}
             role="radiogroup"
             aria-label={
               axis ? `${axis.name} rating (optional)` : "Rating (optional)"
