@@ -226,6 +226,7 @@ export default defineSchema({
     // Added later, so optional (read missing as 0).
     signupsX: v.optional(v.number()), // signed up with X
     signupsEmail: v.optional(v.number()), // signed up with an email link
+    signupsGoogle: v.optional(v.number()), // signed up with Google
     reviewsWithImage: v.optional(v.number()), // new reviews whose first entry has a screenshot
     reviewsRated: v.optional(v.number()), // new reviews that score at least one axis
     reviewWords: v.optional(v.number()), // words across new reviews' first entries

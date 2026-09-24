@@ -68,7 +68,7 @@ export function Privacy() {
 
         <h2>Other services that handle this data</h2>
         <p>
-          Convex (database), Vercel (hosting), Resend (sign-in emails) and X (if you sign in with X).
+          Convex (database), Vercel (hosting), Resend (sign-in emails), X (if you sign in with X) and Google (if you sign in with Google).
         </p>
 
         <h2>Deleting your data</h2>

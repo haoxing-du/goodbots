@@ -33,6 +33,7 @@ export const rollupDay = internalMutation({
     let activated = 0;
     let signupsX = 0;
     let signupsEmail = 0;
+    let signupsGoogle = 0;
     for await (const user of ctx.db
       .query("users")
       .withIndex("by_creation_time", (q) => q.gte("_creationTime", start).lt("_creationTime", end))) {
@@ -49,6 +50,7 @@ export const rollupDay = internalMutation({
         .first();
       if (account?.provider === "twitter") signupsX++;
       else if (account?.provider === "email") signupsEmail++;
+      else if (account?.provider === "google") signupsGoogle++;
     }
 
     let reviews = 0;
@@ -137,6 +139,7 @@ export const rollupDay = internalMutation({
       activeUsers: active.size,
       signupsX,
       signupsEmail,
+      signupsGoogle,
       reviewsWithImage,
       reviewsRated,
       reviewWords,
@@ -211,6 +214,7 @@ const emptyCounts = (): Counts => ({
   activeUsers: 0,
   signupsX: 0,
   signupsEmail: 0,
+  signupsGoogle: 0,
   reviewsWithImage: 0,
   reviewsRated: 0,
   reviewWords: 0,

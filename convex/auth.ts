@@ -1,4 +1,5 @@
 import { convexAuth } from "@convex-dev/auth/server";
+import Google from "@auth/core/providers/google";
 import Twitter from "@auth/core/providers/twitter";
 import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import { internal } from "./_generated/api";
@@ -28,6 +29,19 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
           image: data.profile_image_url,
           xHandle: data.username,
           xId: data.id,
+        };
+      },
+    }),
+    Google({
+      // Keep the email only if Google has verified it. The email links this sign-in to
+      // an existing account with the same address, and ADMIN_EMAILS matches on it.
+      profile(profile) {
+        const verified = profile.email_verified === true;
+        return {
+          id: profile.sub,
+          name: profile.name,
+          image: profile.picture,
+          ...(verified ? { email: profile.email, emailVerified: true } : {}),
         };
       },
     }),

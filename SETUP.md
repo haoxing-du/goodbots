@@ -1,12 +1,12 @@
 # GoodBots — setup & deploy
 
-React + TypeScript + Vite frontend, Convex backend (database, functions, realtime) and Convex Auth with email magic-link and X sign-in.
+React + TypeScript + Vite frontend, Convex backend (database, functions, realtime) and Convex Auth with email magic-link, Google and X sign-in.
 
 ```
 convex/            backend
   schema.ts        tables (users, models, versions, reviews, reviewEntries, reactions,
                    takes, modelRequests, versionStats)
-  auth.ts          Convex Auth: email magic link, X (Twitter), local-only demo sign-in
+  auth.ts          Convex Auth: email magic link, Google, X (Twitter), local-only demo sign-in
   magicLink.ts     magic-link email provider (Resend; logs the link when no key is set)
   lib.ts           auth helpers, ADMIN_EMAILS check, versionStats upkeep, taste match
   reviews.ts       upsert (review + dated entry + stats in one mutation), feed, model reviews
@@ -69,9 +69,10 @@ All of these are set on the **Convex deployment** (`npx convex env set NAME valu
 | `SITE_URL` | Where the frontend lives; OAuth redirects back here. `http://localhost:5173` locally, your Vercel URL in prod. |
 | `AUTH_RESEND_KEY` | [Resend](https://resend.com) API key for sending magic links. Unset = links are logged instead of emailed (local dev only). |
 | `AUTH_EMAIL_FROM` | Sender, e.g. `GoodBots <login@yourdomain.com>`. The domain must be verified in Resend. Defaults to `GoodBots <onboarding@resend.dev>`, Resend's test sender, which can only deliver to your own Resend account's address. |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Google OAuth client. |
 | `AUTH_TWITTER_ID`, `AUTH_TWITTER_SECRET` | X OAuth 2.0 client. |
 | `OPENROUTER_API_KEY` | OpenRouter API key for the model-catalog sync (`catalog:sync`, every 6 hours). Listing models is free; any key from openrouter.ai → Keys works. |
-| `ADMIN_EMAILS` | Comma-separated emails allowed to use `/admin`. Matched against the signed-in user's email, so admins sign in with the email link (X doesn't share email). |
+| `ADMIN_EMAILS` | Comma-separated emails allowed to use `/admin`. Matched against the signed-in user's email, so admins sign in with the email link or Google (X doesn't share email). |
 | `ADMIN_X_IDS` | Comma-separated X account ids (the permanent numeric id, not the @username) whose X sign-ins are admins. Find yours in the Convex dashboard: Data → users → your row's `xId`. |
 | `ALLOW_SEED` | `true` lets `seed:run` / `seed:reset` run (fake data; reset deletes all app data). Local only — never on production. |
 | `DEMO_LOGIN` | `true` enables the local demo sign-in. Dev only. |
@@ -84,6 +85,16 @@ The frontend needs only `VITE_CONVEX_URL`. `convex dev` writes it to `.env.local
 2. For real users, verify a domain you own in Resend (it gives you DNS records to add), then set `AUTH_EMAIL_FROM` to an address on it. Until then, the default test sender only delivers to your own Resend account's address, which is fine for trying it out.
 
 Magic links point back to `SITE_URL` (the page you signed in from) and expire after 1 hour.
+
+### Google
+
+In the [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an OAuth client ID of type "Web application". Add the authorized redirect URI `https://<deployment>.convex.site/api/auth/callback/google` (your Convex **HTTP actions** URL plus the provider path), and your site as an authorized JavaScript origin (`http://localhost:5173` locally). Set `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` from the client.
+
+On the OAuth consent screen, fill in the app name, support email and the `/privacy` and `/terms` links, then **Publish app**. While it's in "Testing", only listed test users can sign in. Sign-in only asks for name, email and profile picture, so Google doesn't need to review the app.
+
+A Google sign-in with the same verified email as an existing email-link account signs into that account.
+
+Dev and prod deployments have different `.convex.site` URLs, so register a redirect URI for each.
 
 ### X (Twitter)
 

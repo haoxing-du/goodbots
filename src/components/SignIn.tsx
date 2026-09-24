@@ -160,6 +160,9 @@ function SignInDialog({
               or
             </div>
             <div className={s.buttons}>
+              <button type="button" className={s.secondary} onClick={() => go("google")}>
+                Continue with Google
+              </button>
               <button type="button" className={s.secondary} onClick={() => go("twitter")}>
                 Continue with X
               </button>

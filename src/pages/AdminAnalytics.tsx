@@ -151,7 +151,7 @@ function Rate({
 function Rates({ data }: { data: Overview }) {
   const { totals: t, prevTotals: p, returning } = data;
   const words = (c: Counts) => (c.reviews ? Math.round(c.reviewWords / c.reviews) : null);
-  const methodKnown = (c: Counts) => c.signupsX + c.signupsEmail;
+  const methodKnown = (c: Counts) => c.signupsX + c.signupsEmail + c.signupsGoogle;
   return (
     <div className={s.tiles}>
       <Rate
@@ -173,7 +173,14 @@ function Rates({ data }: { data: Overview }) {
         part={t.signupsX}
         whole={methodKnown(t)}
         prev={[p.signupsX, methodKnown(p)]}
-        of="signups (the rest used email)"
+        of="signups"
+      />
+      <Rate
+        label="Signups via Google"
+        part={t.signupsGoogle}
+        whole={methodKnown(t)}
+        prev={[p.signupsGoogle, methodKnown(p)]}
+        of="signups"
       />
       <Rate
         label="With screenshot"
