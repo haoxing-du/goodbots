@@ -113,6 +113,7 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_version", ["versionId"])
     .index("by_version_reactions", ["versionId", "reactionCount"])
+    .index("by_version_overall_reactions", ["versionId", "overall", "reactionCount"])
     .index("by_updatedAt", ["updatedAt"]),
 
   reviewEntries: defineTable({

@@ -248,12 +248,16 @@ export const byVersion = query({
   handler: async (ctx, { versionId, stars, paginationOpts }) => {
     const viewerId = await getAuthUserId(ctx);
     const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
-    let q = ctx.db
-      .query("reviews")
-      .withIndex("by_version_reactions", (q) => q.eq("versionId", versionId))
-      .order("desc");
-    if (stars) q = q.filter((f) => f.eq(f.field("overall"), stars));
-    const result = await q.paginate(paginationOpts);
+    const q = stars
+      ? ctx.db
+          .query("reviews")
+          .withIndex("by_version_overall_reactions", (q) =>
+            q.eq("versionId", versionId).eq("overall", stars),
+          )
+      : ctx.db
+          .query("reviews")
+          .withIndex("by_version_reactions", (q) => q.eq("versionId", versionId));
+    const result = await q.order("desc").paginate(paginationOpts);
     return {
       ...result,
       page: await Promise.all(result.page.map((r) => hydrateReview(ctx, r, viewerId, match, axes))),
