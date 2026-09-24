@@ -115,7 +115,7 @@ Dev and prod deployments have different `.convex.site` URLs, so register both ca
 
    `convex deploy` pushes the backend, then runs the frontend build with `VITE_CONVEX_URL` pointing at production.
 4. **SPA routing.** `vercel.json` rewrites every path except `/api/*` to `index.html` so deep links like `/m/claude-opus-4-1` work.
-   **Link previews:** when X, Slack, iMessage and similar crawlers fetch `/`, `/m/…`, `/u/…` or `/r/…`, `middleware.ts` asks Convex (`GET <CONVEX_SITE_URL>/meta?path=…`) for the page's title and description and adds Open Graph/Twitter tags pointing at `/api/og?…` for the image. Regular visitors aren't affected. Check with X's or LinkedIn's post inspector after deploying.
+   **Link previews:** when X, Slack, iMessage and similar crawlers fetch `/`, `/m/…`, `/u/…` or `/r/…`, `middleware.ts` asks Convex (`GET <CONVEX_SITE_URL>/meta?path=…`) for the page's title and description and adds Open Graph/Twitter tags pointing at `/api/og?path=…` for the image, which looks up the card's text from the same endpoint (so `CONVEX_SITE_URL` must be set for the image function too). Regular visitors aren't affected. Check with X's or LinkedIn's post inspector after deploying.
 5. **First-deploy setup.** Run `npx convex run setup:init --prod` once. It creates the core axes and fills the model catalog from OpenRouter right away (the 6-hourly cron keeps both up to date afterwards). Production starts with no reviews — don't seed it (the seed refuses to run without `ALLOW_SEED`). The homepage headline shows the default featured models until you change them in `/admin`.
 
 ## Branches and previews

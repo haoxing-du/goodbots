@@ -69,7 +69,7 @@ function wordmark(size: number): Node {
 
 const LABEL: Record<string, string> = { site: "", model: "Model", user: "Reviewer", review: "Review" };
 
-/** Builds the image tree from the query string (kind, title, sub, stat, stars, quote). */
+/** Builds the image tree from a card's fields (kind, title, sub, stat, stars, quote). */
 export function ogTree(p: URLSearchParams): Node {
   const kind = p.get("kind") ?? "site";
   const title = (p.get("title") ?? "GoodBots").slice(0, 80);

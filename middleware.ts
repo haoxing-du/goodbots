@@ -39,10 +39,17 @@ export default async function middleware(req: Request): Promise<Response | undef
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+/** A short FNV-1a hash, for cache-busting. */
+function hash(s: string) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193);
+  return (h >>> 0).toString(36);
+}
+
 /** Replaces the default tags between <!--meta--> and <!--/meta--> in index.html. */
 export function injectMeta(html: string, meta: PageMeta, url: URL) {
-  const params = new URLSearchParams();
-  for (const [k, v] of Object.entries(meta.image)) if (v !== undefined && v !== "") params.set(k, String(v));
+  // The image endpoint looks the card up by path; `v` changes when the card does.
+  const params = new URLSearchParams({ path: url.pathname, v: hash(JSON.stringify(meta.image)) });
   const image = `${url.origin}/api/og?${params}`;
   const tags = [
     `<title>${esc(meta.title)}</title>`,
