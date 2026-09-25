@@ -3,31 +3,13 @@ import { Link } from "react-router-dom";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Pills } from "../components/Pills";
-import {
-  AxisChips,
-  Avatar,
-  DeleteReview,
-  LoadMore,
-  MatchChip,
-  ReviewImage,
-  Snippet,
-  Stars,
-  UserLink,
-} from "../components/bits";
-import type { ReviewCard as ReviewCardData } from "../../convex/reviews";
-import type { XFeedPost } from "../../convex/xPosts";
-import { Linkified, XAuthorLink } from "../components/XPost";
-import { Reactions } from "../components/Reactions";
-import { fmtAvg, timeAgo } from "../lib/format";
+import { Avatar, LoadMore } from "../components/bits";
+import { FeedBoard, FeedCard, FeedItem, boardWide, mergeFeed } from "../components/FeedCards";
+import { fmtAvg } from "../lib/format";
 import ui from "../components/ui.module.css";
 import s from "./Reviews.module.css";
 import { versionPath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
-import { useMasonry } from "../lib/useMasonry";
-
-// Masonry grid: 4px rows, 16px between cards (matches .board in the CSS).
-const BOARD_ROW = 4;
-const BOARD_GAP = 16;
 
 export function Reviews() {
   useTitle("Reviews");
@@ -36,21 +18,14 @@ export function Reviews() {
   const latest = usePaginatedQuery(api.reviews.feedLatest, {}, { initialNumItems: 20 });
   const top = useQuery(api.reviews.feedTop, {});
   const xPosts = useQuery(api.xPosts.feed);
-  // Latest mixes in posts from X by date. While older reviews are still unloaded, only
-  // show posts at least as new as the oldest loaded review, so the order stays true.
-  const latestItems = (() => {
-    if (latest.status === "LoadingFirstPage" || xPosts === undefined) return undefined;
-    const oldest =
-      latest.status === "Exhausted" ? -Infinity : (latest.results.at(-1)?.updatedAt ?? -Infinity);
-    return [
-      ...latest.results.map((r) => ({ at: r.updatedAt, review: r })),
-      ...xPosts.filter((p) => p.postedAt >= oldest).map((p) => ({ at: p.postedAt, x: p })),
-    ].sort((a, b) => b.at - a.at);
-  })();
-  const feed =
+  // Latest mixes in posts from X by date.
+  const latestItems =
+    latest.status === "LoadingFirstPage" || xPosts === undefined
+      ? undefined
+      : mergeFeed(latest.results, xPosts, latest.status === "Exhausted");
+  const feed: FeedItem[] | undefined =
     tab === "latest" ? latestItems : top?.map((r) => ({ at: r.updatedAt, review: r }));
   const summary = useQuery(api.reviews.feedSummary);
-  const board = useMasonry<HTMLDivElement>(BOARD_ROW, BOARD_GAP);
 
   return (
     <div className={s.layout}>
@@ -85,12 +60,12 @@ export function Reviews() {
           />
         </header>
 
-        <div className={s.board} ref={board}>
+        <FeedBoard>
           {feed === undefined && (
-            <div className={`${ui.card} ${ui.skelCard} ${s.wide}`} aria-busy="true" />
+            <div className={`${ui.card} ${ui.skelCard} ${boardWide}`} aria-busy="true" />
           )}
           {feed && feed.length === 0 && (
-            <div className={`${ui.card} ${ui.empty} ${s.wide}`}>
+            <div className={`${ui.card} ${ui.empty} ${boardWide}`}>
               {tab === "top" ? (
                 "No reactions this week yet."
               ) : (
@@ -100,19 +75,13 @@ export function Reviews() {
               )}
             </div>
           )}
-          {feed?.map((item) =>
-            "review" in item && item.review ? (
-              <Post key={item.review._id} r={item.review} />
-            ) : "x" in item && item.x ? (
-              <XPostTile key={item.x._id} p={item.x} />
-            ) : null,
-          )}
+          {feed?.map((item) => <FeedCard key={item.review?._id ?? item.x?._id} item={item} />)}
           {tab === "latest" && (
-            <div className={s.wide}>
+            <div className={boardWide}>
               <LoadMore status={latest.status} loadMore={latest.loadMore} />
             </div>
           )}
-        </div>
+        </FeedBoard>
       </div>
 
       <aside className={s.rail}>
@@ -120,85 +89,6 @@ export function Reviews() {
         <ReviewersLikeYou />
       </aside>
     </div>
-  );
-}
-
-// Past this many characters a card clamps to 8 lines and links to the full review.
-const LONG_REVIEW = 420;
-
-function Post({ r }: { r: ReviewCardData }) {
-  const long = r.text.length > LONG_REVIEW;
-  return (
-    <article className={`${ui.card} ${s.post}`}>
-      <header className={s.postHead}>
-        <Avatar name={r.user?.name ?? "?"} image={r.user?.image} size={36} />
-        <div className={s.who}>
-          <UserLink user={r.user} className={s.name} />
-          <span className={s.meta}>
-            {r.user && <>@{r.user.handle} · </>}
-            <Link to={`/r/${r._id}`}>{timeAgo(r.updatedAt)}</Link>
-          </span>
-        </div>
-        <MatchChip match={r.match} />
-      </header>
-      {(r.version || r.overall) && (
-        <div className={s.postModel}>
-          {r.version && (
-            <Link to={versionPath(r.version.versionId)} className={s.modelChip}>
-              {r.version.displayName}
-            </Link>
-          )}
-          {r.overall ? <Stars value={r.overall} size={13} /> : null}
-        </div>
-      )}
-      <p className={`${s.text} ${long ? s.clamped : ""}`}>{r.text}</p>
-      {long && (
-        <Link to={`/r/${r._id}`} className={s.more}>
-          Read the full review
-        </Link>
-      )}
-      <Snippet prompt={r.prompt} response={r.response} />
-      <ReviewImage image={r.image} />
-      <AxisChips scores={r.scores} />
-      <footer className={s.postFoot}>
-        <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} compact />
-        <DeleteReview reviewId={r._id} authorId={r.user?._id} />
-      </footer>
-    </article>
-  );
-}
-
-/** A post from X in the feed, laid out like a review post. */
-function XPostTile({ p }: { p: XFeedPost }) {
-  const long = p.text.length > LONG_REVIEW;
-  return (
-    <article className={`${ui.card} ${s.post}`}>
-      <header className={s.postHead}>
-        <Avatar name={p.authorName} size={36} />
-        <div className={s.who}>
-          <XAuthorLink post={p} className={s.name} />
-          <span className={s.meta}>
-            @{p.authorHandle} ·{" "}
-            <a href={p.url} target="_blank" rel="noreferrer">
-              {timeAgo(p.postedAt)} on X ↗
-            </a>
-          </span>
-        </div>
-      </header>
-      <div className={s.postModel}>
-        <Link to={`${versionPath(p.versionId)}#from-x`} className={s.modelChip}>
-          {p.model}
-        </Link>
-      </div>
-      <p className={`${s.text} ${long ? s.clamped : ""}`}>
-        <Linkified text={p.text} />
-      </p>
-      {(long || p.text.endsWith("…")) && (
-        <a href={p.url} target="_blank" rel="noreferrer" className={s.more}>
-          Read the full post on X ↗
-        </a>
-      )}
-    </article>
   );
 }
 

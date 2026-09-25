@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "convex/react";
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSignIn } from "../components/SignIn";
 import { ModelMenu } from "../components/ModelMenu";
 import { ModelPicker, PickedModel } from "../components/ModelPicker";
 import { mergeIntoDraft } from "../lib/draft";
 import { fmtCount } from "../lib/format";
+import { FeedBoard, FeedCard, mergeFeed } from "../components/FeedCards";
+import ui from "../components/ui.module.css";
 import s from "./Home.module.css";
 import { versionPath } from "../lib/paths";
 import { useTitle } from "../lib/useTitle";
@@ -234,6 +236,34 @@ export function Home() {
           })}
         </section>
       )}
+
+      <LatestTakes />
     </>
+  );
+}
+
+const LATEST_ON_HOME = 6;
+
+/** The newest reviews and posts from X, so the homepage shows what people are saying. */
+function LatestTakes() {
+  const latest = usePaginatedQuery(api.reviews.feedLatest, {}, { initialNumItems: LATEST_ON_HOME });
+  const xPosts = useQuery(api.xPosts.feed);
+  if (latest.status === "LoadingFirstPage" || xPosts === undefined) return null;
+  const items = mergeFeed(latest.results, xPosts, latest.status === "Exhausted").slice(0, LATEST_ON_HOME);
+  if (items.length === 0) return null;
+  return (
+    <section className={s.latest}>
+      <div className={ui.sectionHead}>
+        <h2 className={ui.sectionLabel}>Latest takes</h2>
+        <Link to="/reviews" className={s.latestAll}>
+          All reviews →
+        </Link>
+      </div>
+      <FeedBoard>
+        {items.map((item) => (
+          <FeedCard key={item.review?._id ?? item.x?._id} item={item} />
+        ))}
+      </FeedBoard>
+    </section>
   );
 }

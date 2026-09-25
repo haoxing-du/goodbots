@@ -268,3 +268,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+.latest {
+  padding: 0 var(--s-14) var(--s-14);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.latestAll {
+  font-size: var(--text-sm);
+  color: var(--muted-1);
+}
+@media (max-width: 900px) {
+  .latest {
+    padding-inline: var(--s-7);
+  }
+}
