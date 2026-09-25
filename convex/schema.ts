@@ -222,7 +222,8 @@ export default defineSchema({
     .index("by_versionId", ["versionId"])
     .index("by_tweetId", ["tweetId"])
     .index("by_authorHandleLower", ["authorHandleLower"])
-    .index("by_status_and_checkedAt", ["status", "checkedAt"]),
+    .index("by_status_and_checkedAt", ["status", "checkedAt"])
+    .index("by_claimedAt", ["claimedAt"]),
 
   // Homepage headline models, in order (admin-picked). Empty = DEFAULT_FEATURED in featured.ts.
   featured: defineTable({
@@ -256,6 +257,8 @@ export default defineSchema({
     reviewsWithImage: v.optional(v.number()), // new reviews whose first entry has a screenshot
     reviewsRated: v.optional(v.number()), // new reviews that score at least one axis
     reviewWords: v.optional(v.number()), // words across new reviews' first entries
+    xPosts: v.optional(v.number()), // posts from X added to model pages
+    xClaims: v.optional(v.number()), // posts from X their authors turned into reviews
   }).index("by_day", ["day"]),
 
   // Who was active on each UTC day, so a period's distinct active users can be counted.

@@ -125,6 +125,20 @@ export const rollupDay = internalMutation({
       models++;
     }
 
+    let xPosts = 0;
+    for await (const _ of ctx.db
+      .query("xPosts")
+      .withIndex("by_creation_time", (q) => q.gte("_creationTime", start).lt("_creationTime", end))) {
+      xPosts++;
+    }
+
+    let xClaims = 0;
+    for await (const _ of ctx.db
+      .query("xPosts")
+      .withIndex("by_claimedAt", (q) => q.gte("claimedAt", start).lt("claimedAt", end))) {
+      xClaims++;
+    }
+
     const row = {
       day,
       signups,
@@ -143,6 +157,8 @@ export const rollupDay = internalMutation({
       reviewsWithImage,
       reviewsRated,
       reviewWords,
+      xPosts,
+      xClaims,
     };
     const existing = await ctx.db
       .query("dailyStats")
@@ -218,6 +234,8 @@ const emptyCounts = (): Counts => ({
   reviewsWithImage: 0,
   reviewsRated: 0,
   reviewWords: 0,
+  xPosts: 0,
+  xClaims: 0,
 });
 
 function addCounts(into: Counts, row: Counts) {
