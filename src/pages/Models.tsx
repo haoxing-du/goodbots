@@ -12,9 +12,11 @@ import s from "./Models.module.css";
 import { useTitle } from "../lib/useTitle";
 import { axisVars } from "../lib/axes";
 
-type Version = NonNullable<
+type ListedVersion = NonNullable<
   ReturnType<typeof useQuery<typeof api.models.list>>
 >[number];
+/** A model card: a reviewed model, or one that so far only has posts from X. */
+type Version = Omit<ListedVersion, "_id"> & { xCount: number };
 type View = "provider" | "all";
 
 const VIEW_KEY = "gb.modelsView";
@@ -22,8 +24,10 @@ const VIEW_KEY = "gb.modelsView";
 export function Models() {
   const navigate = useNavigate();
   useTitle("Models");
-  // Only models people have reviewed; the full catalog is reachable through search.
-  const versions = useQuery(api.models.list)?.filter((v) => v.reviewCount > 0);
+  // Only models people have reviewed or posted about on X; the full catalog is reachable through search.
+  const listed = useQuery(api.models.list);
+  const xModels = useQuery(api.xPosts.models);
+  const versions = listed && xModels ? withXModels(listed, xModels) : undefined;
   const [view, setView] = useState<View>(() => {
     try {
       return localStorage.getItem(VIEW_KEY) === "all" ? "all" : "provider";
@@ -98,6 +102,36 @@ export function Models() {
   );
 }
 
+function withXModels(
+  listed: ListedVersion[],
+  xModels: NonNullable<ReturnType<typeof useQuery<typeof api.xPosts.models>>>,
+): Version[] {
+  const xCount = new Map(xModels.map((m) => [m.versionId, m.count]));
+  const cards: Version[] = listed
+    .map((v) => ({ ...v, xCount: xCount.get(v.versionId) ?? 0 }))
+    .filter((v) => v.reviewCount > 0 || v.xCount > 0);
+  const shown = new Set(cards.map((c) => c.versionId));
+  const noRatings = (listed[0]?.axes ?? []).map((a) => ({ ...a, avg: null }));
+  for (const m of xModels) {
+    if (shown.has(m.versionId)) continue;
+    cards.push({
+      versionId: m.versionId,
+      displayName: m.displayName,
+      releasedAt: m.releasedAt,
+      provider: m.provider,
+      providerSlug: m.providerSlug,
+      reviewCount: 0,
+      overall: null,
+      axes: noRatings,
+      xCount: m.count,
+    });
+  }
+  return cards.sort(
+    (a, b) =>
+      (b.overall ?? -1) - (a.overall ?? -1) || b.reviewCount - a.reviewCount || b.xCount - a.xCount,
+  );
+}
+
 /** Group by provider: providers ordered by their best-rated model, models newest first. */
 function families(versions: Version[]) {
   const map = new Map<
@@ -152,12 +186,17 @@ function Grid({ versions }: { versions: Version[] }) {
       style={{ "--cols": Math.min(versions.length, 3) } as React.CSSProperties}
     >
       {versions.map((v) => (
-        <Link key={v._id} to={versionPath(v.versionId)} className={s.card}>
+        <Link key={v.versionId} to={versionPath(v.versionId)} className={s.card}>
           <div className={s.cardTop}>
             <span className={ui.monoLabel}>{v.provider}</span>
             <span className={ui.meta}>
-              {fmtCount(v.reviewCount)}{" "}
-              {v.reviewCount === 1 ? "review" : "reviews"}
+              {v.reviewCount > 0 && (
+                <>
+                  {fmtCount(v.reviewCount)} {v.reviewCount === 1 ? "review" : "reviews"}
+                </>
+              )}
+              {v.reviewCount > 0 && v.xCount > 0 && " · "}
+              {v.xCount > 0 && <>{fmtCount(v.xCount)} {v.xCount === 1 ? "post" : "posts"} from X</>}
             </span>
           </div>
           <div>

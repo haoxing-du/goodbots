@@ -252,6 +252,39 @@ export const feed = query({
 
 export type XFeedPost = XPost & { versionId: string; model: string };
 
+/** Every model with posts from X, with its post count, for the models page. */
+export const models = query({
+  args: {},
+  handler: async (ctx) => {
+    const counts = new Map<string, number>();
+    const posts = await ctx.db
+      .query("xPosts")
+      .withIndex("by_status_and_postedAt", (q) => q.eq("status", "active"))
+      .take(COUNT_SCAN);
+    for (const p of posts) {
+      if (!p.claimedReviewId) counts.set(p.versionId, (counts.get(p.versionId) ?? 0) + 1);
+    }
+    const out = [];
+    for (const [versionId, count] of counts) {
+      const model = await describe(ctx, versionId);
+      if (!model) continue;
+      const entry = await ctx.db
+        .query("catalog")
+        .withIndex("by_orId", (q) => q.eq("orId", versionId))
+        .unique();
+      out.push({
+        versionId,
+        displayName: model.displayName,
+        provider: model.provider,
+        providerSlug: versionId.split("/")[0],
+        releasedAt: entry?.releasedAt ?? 0,
+        count,
+      });
+    }
+    return out;
+  },
+});
+
 // ---------- claiming ----------
 
 /** The signed-in user's own posts that are on GoodBots and not yet turned into reviews. */
