@@ -7,6 +7,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { Pills } from "../components/Pills";
 import { LoadMore, UserLink, PageLoading } from "../components/bits";
 import { ReviewCard } from "../components/ReviewCard";
+import { FromX } from "../components/XPost";
 import { useSignIn } from "../components/SignIn";
 import { fmtAvg, fmtCount } from "../lib/format";
 import { NotFound } from "./NotFound";
@@ -20,6 +21,7 @@ export function ModelPage() {
   const { provider = "", model = "" } = useParams();
   const id = `${provider}/${model}`;
   const data = useQuery(api.models.page, { id });
+  const xPosts = useQuery(api.xPosts.forModel, { versionId: id });
   useTitle(
     data?.kind === "page" ? data.version.displayName : data?.kind === "catalog" ? data.entry.name : undefined,
   );
@@ -27,7 +29,13 @@ export function ModelPage() {
   if (data === undefined) return <PageLoading />;
   if (data === null) return <NotFound what="model" />;
   if (data.kind === "redirect") return <Navigate to={versionPath(data.to)} replace />;
-  if (data.kind === "catalog") return <UnreviewedModel entry={data.entry} />;
+  if (data.kind === "catalog") {
+    return (
+      <UnreviewedModel entry={data.entry}>
+        <FromX posts={xPosts} versionId={data.entry.orId} displayName={data.entry.name} />
+      </UnreviewedModel>
+    );
+  }
   const { version } = data;
   const overall = data.overall;
 
@@ -61,7 +69,9 @@ export function ModelPage() {
         rows={data.headToHead}
       />
 
-      <ReviewList versionId={version._id} slug={version.versionId} />
+      <ReviewList versionId={version._id} slug={version.versionId} xPostCount={xPosts?.length ?? 0} />
+
+      <FromX posts={xPosts} versionId={version.versionId} displayName={version.displayName} />
     </div>
   );
 }
@@ -335,7 +345,15 @@ function TakeComposer({ versionId }: { versionId: Id<"versions"> }) {
   );
 }
 
-function ReviewList({ versionId, slug }: { versionId: Id<"versions">; slug: string }) {
+function ReviewList({
+  versionId,
+  slug,
+  xPostCount,
+}: {
+  versionId: Id<"versions">;
+  slug: string;
+  xPostCount: number;
+}) {
   const [stars, setStars] = useState(0);
   const {
     results: reviews,
@@ -367,6 +385,11 @@ function ReviewList({ versionId, slug }: { versionId: Id<"versions">; slug: stri
             ) : (
               <>
                 No reviews yet. <Link to={writePath(slug)}>Write the first review</Link>
+                {xPostCount > 0 && (
+                  <>
+                    , or see <a href="#from-x">what people said on X</a>.
+                  </>
+                )}
               </>
             )}
           </div>
@@ -383,8 +406,10 @@ function ReviewList({ versionId, slug }: { versionId: Id<"versions">; slug: stri
 /** A model from the OpenRouter catalog that nobody has reviewed yet. */
 function UnreviewedModel({
   entry,
+  children,
 }: {
   entry: { orId: string; name: string; provider: string; releasedAt?: number };
+  children?: React.ReactNode;
 }) {
   return (
     <div className={ui.page}>
@@ -403,6 +428,7 @@ function UnreviewedModel({
           Write the first review
         </Link>
       </div>
+      {children}
     </div>
   );
 }

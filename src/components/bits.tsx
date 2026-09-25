@@ -160,11 +160,15 @@ export function ConfirmDelete({
   body,
   confirmLabel,
   run,
+  label = "Delete",
+  busyLabel = "Deleting…",
 }: {
   title: string;
   body?: string;
   confirmLabel: string;
   run: () => Promise<unknown>;
+  label?: string;
+  busyLabel?: string;
 }) {
   const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
@@ -191,7 +195,7 @@ export function ConfirmDelete({
           }
         }}
       >
-        {busy ? "Deleting…" : "Delete"}
+        {busy ? busyLabel : label}
       </button>
       {error && (
         <span className={s.deleteError} role="alert">
