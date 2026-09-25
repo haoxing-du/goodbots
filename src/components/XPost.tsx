@@ -39,9 +39,12 @@ export function XImportNote({ r }: { r: ReviewCard }) {
   const { open } = useSignIn();
   if (!r.xUrl) return null;
   const source = (
-    <a href={r.xUrl} target="_blank" rel="noreferrer">
-      {r.user?.imported ? "From their post on X ↗" : "From a post on X ↗"}
-    </a>
+    <>
+      <a href={r.xUrl} target="_blank" rel="noreferrer">
+        Posted on X ↗
+      </a>
+      {r.user?.imported && " · added by GoodBots"}
+    </>
   );
   const addRatings = r.version && `${writePath(r.version.versionId)}&fromX=1`;
   if (r.user?.imported) {

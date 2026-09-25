@@ -10,7 +10,8 @@ import { versionPath } from "../lib/paths";
 import { NotFound } from "./NotFound";
 import ui from "../components/ui.module.css";
 import s from "./Profile.module.css";
-import { useTitle } from "../lib/useTitle";
+import { useNoIndex, useTitle } from "../lib/useTitle";
+import { CONTACT } from "../lib/contact";
 import { useConfirm } from "../components/Confirm";
 
 type VersionRef = {
@@ -27,6 +28,7 @@ export function Profile() {
   const { handle = "" } = useParams();
   const data = useQuery(api.users.profile, { handle });
   useTitle(data ? `${data.user.name} (@${data.user.handle})` : undefined);
+  useNoIndex(!!data?.user.imported); // keep people who haven't joined out of search results
   const removeTake = useMutation(api.takes.remove);
   const [editing, setEditing] = useState(false);
   const editButton = useRef<HTMLButtonElement>(null);
@@ -98,7 +100,8 @@ export function Profile() {
               {user.imported && (
                 <p className={s.importedNote}>
                   {user.name} hasn’t joined GoodBots. These reviews are their public posts from X,
-                  added by GoodBots. Is this you? Sign in with X to claim or remove them.
+                  added by GoodBots. Is this you? Sign in with X to claim or remove them, or{" "}
+                  <a href={`mailto:${CONTACT}`}>email us</a> to have them taken down.
                 </p>
               )}
               {data.isMe && (

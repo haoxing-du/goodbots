@@ -13,6 +13,7 @@ type PageMeta = {
   title: string;
   description: string;
   image: Record<string, string | number | undefined>;
+  noindex?: boolean;
 };
 
 export default async function middleware(req: Request): Promise<Response | undefined> {
@@ -66,6 +67,7 @@ export function injectMeta(html: string, meta: PageMeta, url: URL) {
     `<meta name="twitter:title" content="${esc(meta.title)}" />`,
     `<meta name="twitter:description" content="${esc(meta.description)}" />`,
     `<meta name="twitter:image" content="${esc(image)}" />`,
+    ...(meta.noindex ? [`<meta name="robots" content="noindex" />`] : []),
   ].join("\n    ");
   return html.replace(/<!--meta-->[\s\S]*?<!--\/meta-->/, `<!--meta-->\n    ${tags}\n    <!--/meta-->`);
 }

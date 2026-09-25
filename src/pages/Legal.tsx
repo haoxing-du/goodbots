@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import ui from "../components/ui.module.css";
 import { useTitle } from "../lib/useTitle";
 import s from "./Legal.module.css";
+import { CONTACT } from "../lib/contact";
 
-const CONTACT = "hello@goodbots.review";
 const SOURCE = "https://github.com/haoxing-du/goodbots";
 const UPDATED = "September 24, 2026";
 

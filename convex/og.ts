@@ -15,6 +15,9 @@ export type PageMeta = {
     stars?: number; // 0–5
     quote?: string;
   };
+  // Ask search engines not to list the page: profiles and reviews of people who haven't
+  // joined (placeholders for posts imported from X), so their name doesn't find us.
+  noindex?: boolean;
 };
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
@@ -94,11 +97,15 @@ export const forPath = internalQuery({
             .order("desc")
             .first()
         : null;
+      const imported = !!user.importedXHandle;
       return {
-        title: `${name} (@${user.handle}) on GoodBots`,
-        description: entry
-          ? `${reviews.length} reviews. Latest, on ${latestVersion?.displayName}: “${clip(entry.text, 160)}”`
-          : `${name} reviews AI models on GoodBots.`,
+        title: imported ? `Posts from X by ${name} (@${user.handle})` : `${name} (@${user.handle}) on GoodBots`,
+        description: imported
+          ? `${name} hasn’t joined GoodBots. These are their public posts from X about AI models, added by GoodBots.`
+          : entry
+            ? `${reviews.length} reviews. Latest, on ${latestVersion?.displayName}: “${clip(entry.text, 160)}”`
+            : `${name} reviews AI models on GoodBots.`,
+        noindex: imported,
         image: {
           kind: "user",
           title: name,
@@ -125,6 +132,7 @@ export const forPath = internalQuery({
       const name = user?.displayName ?? user?.name ?? user?.handle ?? "Someone";
       const stars = review.overall ? ` ${"★".repeat(review.overall)}${"☆".repeat(5 - review.overall)}` : "";
       return {
+        noindex: !!user?.importedXHandle,
         title: `${name} on ${version?.displayName}:${stars}`,
         description: clip(
           [entry?.text ?? "", scores.map((s) => `${s.name} ${s.score}`).join(" · ")].filter(Boolean).join(" — "),
