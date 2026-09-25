@@ -5,7 +5,7 @@ import s from "./Legal.module.css";
 
 const CONTACT = "hello@goodbots.review";
 const SOURCE = "https://github.com/haoxing-du/goodbots";
-const UPDATED = "September 23, 2026";
+const UPDATED = "September 24, 2026";
 
 function Mail({ children }: { children: React.ReactNode }) {
   return <a href={`mailto:${CONTACT}`}>{children}</a>;
@@ -45,7 +45,13 @@ export function Privacy() {
           <li>
             <b>X sign-in:</b> your X name, username and profile picture. We get no email address, and we
             can’t post to your X account. X’s sign-in permission technically also covers reading your
-            posts, but we never read or store them.
+            posts, but we never use it to read them.
+          </li>
+          <li>
+            <b>Public posts from X:</b> model pages can show public posts from X about a model, with the
+            author’s name and username, copied from X’s public embed of the post. If one is yours, sign in
+            with X to remove it or turn it into a review, or <Mail>email us</Mail>. Posts deleted on X
+            disappear from GoodBots within a day.
           </li>
           <li>
             <b>What you post:</b> your name, handle, reviews, scores, takes, reactions, screenshots and model
@@ -59,7 +65,11 @@ export function Privacy() {
         </p>
         <p>
           In the future, we may also analyze site data, for example for research about AI models. This covers what you post, which is already public, and
-          aggregate statistics. We may also add analytics tools to see how the site is used.
+          aggregate statistics.
+        </p>
+        <p>
+          We use Vercel Web Analytics to count page visits and see which sites link here. It doesn’t use
+          cookies or identify you.
         </p>
         <p>
           Your email address stays private. We don’t sell it or share it, except with the services below
@@ -68,7 +78,7 @@ export function Privacy() {
 
         <h2>Other services that handle this data</h2>
         <p>
-          Convex (database), Vercel (hosting), Resend (sign-in emails), X (if you sign in with X) and Google (if you sign in with Google).
+          Convex (database), Vercel (hosting), Resend (sign-in emails), X (if you sign in with X, and for the public posts shown on model pages) and Google (if you sign in with Google).
         </p>
 
         <h2>Deleting your data</h2>
