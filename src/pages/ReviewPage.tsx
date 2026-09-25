@@ -28,7 +28,7 @@ export function ReviewPage() {
           </h1>
         )}
       </header>
-      <ReviewCard r={r} />
+      <ReviewCard r={r} linked={false} />
       {r.version && (
         <p>
           <Link to={versionPath(r.version.versionId)} className={s.more}>

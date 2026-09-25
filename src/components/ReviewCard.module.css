@@ -53,3 +53,14 @@
   }
 }
 
+
+/* The whole card opens the review (useCardLink). */
+.linked {
+  cursor: pointer;
+  transition: border-color 120ms;
+}
+@media (hover: hover) {
+  .linked:hover {
+    border-color: var(--outline);
+  }
+}

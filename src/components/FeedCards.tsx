@@ -7,6 +7,7 @@ import { ReviewText, XImportNote } from "./XPost";
 import { timeAgo } from "../lib/format";
 import { versionPath } from "../lib/paths";
 import { useMasonry } from "../lib/useMasonry";
+import { useCardLink } from "../lib/useCardLink";
 import ui from "./ui.module.css";
 import s from "./FeedCards.module.css";
 
@@ -33,8 +34,9 @@ const LONG_REVIEW = 420;
 
 export function ReviewPost({ r }: { r: ReviewCardData }) {
   const long = r.text.length > LONG_REVIEW;
+  const cardLink = useCardLink(`/r/${r._id}`);
   return (
-    <article className={`${ui.card} ${s.post}`}>
+    <article className={`${ui.card} ${s.post} ${s.linked}`} {...cardLink}>
       <header className={s.postHead}>
         <Avatar name={r.user?.name ?? "?"} image={r.user?.image} size={36} />
         <div className={s.who}>

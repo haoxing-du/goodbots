@@ -4,13 +4,18 @@ import { AxisChips, Avatar, DeleteReview, MatchChip, ReviewImage, Snippet, Stars
 import { Reactions } from "./Reactions";
 import { ReviewText, XImportNote } from "./XPost";
 import { timeAgo } from "../lib/format";
+import { useCardLink } from "../lib/useCardLink";
 import ui from "./ui.module.css";
 import s from "./ReviewCard.module.css";
 
-/** A full review: reviewer column (name, match, axis scores) + stars, text, snippet, reactions. */
-export function ReviewCard({ r }: { r: ReviewCardData }) {
+/**
+ * A full review: reviewer column (name, match, axis scores) + stars, text, snippet, reactions.
+ * Clicking the card opens the review's page, except on that page itself (`linked={false}`).
+ */
+export function ReviewCard({ r, linked = true }: { r: ReviewCardData; linked?: boolean }) {
+  const cardLink = useCardLink(`/r/${r._id}`);
   return (
-    <article className={`${ui.card} ${s.review}`}>
+    <article className={`${ui.card} ${s.review} ${linked ? s.linked : ""}`} {...(linked ? cardLink : {})}>
       <div className={s.reviewer}>
         <div className={s.who}>
           <Avatar name={r.user?.name ?? "?"} image={r.user?.image} />
