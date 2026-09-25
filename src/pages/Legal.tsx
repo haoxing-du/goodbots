@@ -48,10 +48,11 @@ export function Privacy() {
             posts, but we never use it to read them.
           </li>
           <li>
-            <b>Public posts from X:</b> model pages can show public posts from X about a model, with the
-            author’s name and username, copied from X’s public embed of the post. If one is yours, sign in
-            with X to remove it or turn it into a review, or <Mail>email us</Mail>. Posts deleted on X
-            disappear from GoodBots within a day.
+            <b>Public posts from X:</b> we may add public posts from X about a model as reviews, under the
+            author’s X name and username, copied from X’s public embed of the post. Their GoodBots profile
+            says they haven’t joined. If one is yours, sign in with X to claim it (then you can edit or
+            delete it), or <Mail>email us</Mail>. Until it’s claimed, a post deleted on X disappears from
+            GoodBots within a day.
           </li>
           <li>
             <b>What you post:</b> your name, handle, reviews, scores, takes, reactions, screenshots and model

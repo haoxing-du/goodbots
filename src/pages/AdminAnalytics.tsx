@@ -360,8 +360,8 @@ function Reactions({ totals }: { totals: Counts }) {
     { label: "Custom axes", n: totals.axes },
     { label: "Model requests", n: totals.requests },
     { label: "New model pages", n: totals.models },
-    { label: "Posts from X added", n: totals.xPosts },
-    { label: "Posts from X turned into reviews", n: totals.xClaims },
+    { label: "Posts from X imported", n: totals.xPosts },
+    { label: "Posts from X claimed by their authors", n: totals.xClaims },
   ];
   return (
     <div className={s.pair}>
