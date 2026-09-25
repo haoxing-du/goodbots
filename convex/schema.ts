@@ -223,6 +223,7 @@ export default defineSchema({
     .index("by_tweetId", ["tweetId"])
     .index("by_authorHandleLower", ["authorHandleLower"])
     .index("by_status_and_checkedAt", ["status", "checkedAt"])
+    .index("by_status_and_postedAt", ["status", "postedAt"])
     .index("by_claimedAt", ["claimedAt"]),
 
   // Homepage headline models, in order (admin-picked). Empty = DEFAULT_FEATURED in featured.ts.

@@ -64,3 +64,11 @@
   text-decoration: none;
   white-space: nowrap;
 }
+.author {
+  text-decoration: none;
+}
+@media (hover: hover) {
+  .author:hover {
+    text-decoration: underline;
+  }
+}

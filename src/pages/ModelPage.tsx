@@ -31,7 +31,7 @@ export function ModelPage() {
   if (data.kind === "redirect") return <Navigate to={versionPath(data.to)} replace />;
   if (data.kind === "catalog") {
     return (
-      <UnreviewedModel entry={data.entry}>
+      <UnreviewedModel entry={data.entry} xPostCount={xPosts?.length ?? 0}>
         <FromX posts={xPosts} versionId={data.entry.orId} displayName={data.entry.name} />
       </UnreviewedModel>
     );
@@ -51,6 +51,12 @@ export function ModelPage() {
             {fmtCount(data.reviewCount)} {data.reviewCount === 1 ? "review" : "reviews"} ·{" "}
             <span className={s.rating}>{fmtAvg(overall.avg)} overall</span> ·{" "}
             {fmtCount(data.takeCount)} head-to-head {data.takeCount === 1 ? "take" : "takes"}
+            {!!xPosts?.length && (
+              <>
+                {" "}
+                · <a href="#from-x">{fmtCount(xPosts.length)} {xPosts.length === 1 ? "post" : "posts"} from X</a>
+              </>
+            )}
           </p>
         </div>
         <Link to={writePath(version.versionId)} className={ui.btn}>
@@ -406,9 +412,11 @@ function ReviewList({
 /** A model from the OpenRouter catalog that nobody has reviewed yet. */
 function UnreviewedModel({
   entry,
+  xPostCount,
   children,
 }: {
   entry: { orId: string; name: string; provider: string; releasedAt?: number };
+  xPostCount: number;
   children?: React.ReactNode;
 }) {
   return (
@@ -419,7 +427,15 @@ function UnreviewedModel({
             {entry.provider} · <span className={s.versionId}>{entry.orId}</span>
           </div>
           <h1 className={s.name}>{entry.name}</h1>
-          <p className={s.summary}>No reviews yet.</p>
+          <p className={s.summary}>
+            No reviews yet
+            {xPostCount > 0 && (
+              <>
+                {" "}
+                · <a href="#from-x">{fmtCount(xPostCount)} {xPostCount === 1 ? "post" : "posts"} from X</a>
+              </>
+            )}
+          </p>
         </div>
       </header>
       <div className={`${ui.card} ${s.firstReview}`}>

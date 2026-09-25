@@ -7,6 +7,7 @@ import {
   mutation,
   MutationCtx,
   query,
+  QueryCtx,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
@@ -201,6 +202,55 @@ export const remove = mutation({
     await ctx.db.patch(postId, { status: "removed", removedReason: author ? "author" : "admin" });
   },
 });
+
+// ---------- site-wide ----------
+
+// Active posts scanned for site-wide counts; far more than we expect to add by hand.
+const COUNT_SCAN = 5000;
+
+/** Distinct authors and models among the posts on the site, and how many were posted since `since`. */
+export async function xPostCounts(ctx: QueryCtx, since: number) {
+  const authors = new Set<string>();
+  const models = new Set<string>();
+  let recent = 0;
+  const posts = await ctx.db
+    .query("xPosts")
+    .withIndex("by_status_and_postedAt", (q) => q.eq("status", "active"))
+    .order("desc")
+    .take(COUNT_SCAN);
+  for (const p of posts) {
+    if (p.claimedReviewId) continue; // its author's review is counted instead
+    authors.add(p.authorHandleLower);
+    models.add(p.versionId);
+    if (p.postedAt >= since) recent++;
+  }
+  return { authors, models, recent };
+}
+
+/** The newest posts from X across all models, for the reviews feed. */
+export const feed = query({
+  args: {},
+  handler: async (ctx) => {
+    const viewer = await getViewer(ctx);
+    const posts = await ctx.db
+      .query("xPosts")
+      .withIndex("by_status_and_postedAt", (q) => q.eq("status", "active"))
+      .order("desc")
+      .take(100);
+    const names = new Map<string, string>();
+    const out = [];
+    for (const p of posts) {
+      if (p.claimedReviewId) continue;
+      if (!names.has(p.versionId)) {
+        names.set(p.versionId, (await describe(ctx, p.versionId))?.displayName ?? p.versionId);
+      }
+      out.push({ ...publicPost(p, viewer), versionId: p.versionId, model: names.get(p.versionId)! });
+    }
+    return out;
+  },
+});
+
+export type XFeedPost = XPost & { versionId: string; model: string };
 
 // ---------- claiming ----------
 

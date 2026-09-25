@@ -15,6 +15,8 @@ import {
   UserLink,
 } from "../components/bits";
 import type { ReviewCard as ReviewCardData } from "../../convex/reviews";
+import type { XFeedPost } from "../../convex/xPosts";
+import { Linkified, XAuthorLink } from "../components/XPost";
 import { Reactions } from "../components/Reactions";
 import { fmtAvg, timeAgo } from "../lib/format";
 import ui from "../components/ui.module.css";
@@ -33,12 +35,20 @@ export function Reviews() {
   // Both feeds stay subscribed so switching tabs doesn't blank the list.
   const latest = usePaginatedQuery(api.reviews.feedLatest, {}, { initialNumItems: 20 });
   const top = useQuery(api.reviews.feedTop, {});
+  const xPosts = useQuery(api.xPosts.feed);
+  // Latest mixes in posts from X by date. While older reviews are still unloaded, only
+  // show posts at least as new as the oldest loaded review, so the order stays true.
+  const latestItems = (() => {
+    if (latest.status === "LoadingFirstPage" || xPosts === undefined) return undefined;
+    const oldest =
+      latest.status === "Exhausted" ? -Infinity : (latest.results.at(-1)?.updatedAt ?? -Infinity);
+    return [
+      ...latest.results.map((r) => ({ at: r.updatedAt, review: r })),
+      ...xPosts.filter((p) => p.postedAt >= oldest).map((p) => ({ at: p.postedAt, x: p })),
+    ].sort((a, b) => b.at - a.at);
+  })();
   const feed =
-    tab === "latest"
-      ? latest.status === "LoadingFirstPage"
-        ? undefined
-        : latest.results
-      : top;
+    tab === "latest" ? latestItems : top?.map((r) => ({ at: r.updatedAt, review: r }));
   const summary = useQuery(api.reviews.feedSummary);
   const board = useMasonry<HTMLDivElement>(BOARD_ROW, BOARD_GAP);
 
@@ -48,9 +58,15 @@ export function Reviews() {
         <header className={s.head}>
           <div>
             <h1 className={ui.serifTitle}>What people think</h1>
-            {summary && (summary.today > 0 || summary.mostReviewed) && (
+            {summary && (summary.today > 0 || summary.xToday > 0 || summary.mostReviewed) && (
               <p className={s.summary}>
-                {summary.today} {summary.today === 1 ? "review" : "reviews"}{" "}
+                {summary.today} {summary.today === 1 ? "review" : "reviews"}
+                {summary.xToday > 0 && (
+                  <>
+                    {" "}
+                    and {summary.xToday} {summary.xToday === 1 ? "post" : "posts"} from X
+                  </>
+                )}{" "}
                 today
                 {summary.mostReviewed && (
                   <> · {summary.mostReviewed} most reviewed this week</>
@@ -84,7 +100,13 @@ export function Reviews() {
               )}
             </div>
           )}
-          {feed?.map((r) => <Post key={r._id} r={r} />)}
+          {feed?.map((item) =>
+            "review" in item && item.review ? (
+              <Post key={item.review._id} r={item.review} />
+            ) : "x" in item && item.x ? (
+              <XPostTile key={item.x._id} p={item.x} />
+            ) : null,
+          )}
           {tab === "latest" && (
             <div className={s.wide}>
               <LoadMore status={latest.status} loadMore={latest.loadMore} />
@@ -142,6 +164,40 @@ function Post({ r }: { r: ReviewCardData }) {
         <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} compact />
         <DeleteReview reviewId={r._id} authorId={r.user?._id} />
       </footer>
+    </article>
+  );
+}
+
+/** A post from X in the feed, laid out like a review post. */
+function XPostTile({ p }: { p: XFeedPost }) {
+  const long = p.text.length > LONG_REVIEW;
+  return (
+    <article className={`${ui.card} ${s.post}`}>
+      <header className={s.postHead}>
+        <Avatar name={p.authorName} size={36} />
+        <div className={s.who}>
+          <XAuthorLink post={p} className={s.name} />
+          <span className={s.meta}>
+            @{p.authorHandle} ·{" "}
+            <a href={p.url} target="_blank" rel="noreferrer">
+              {timeAgo(p.postedAt)} on X ↗
+            </a>
+          </span>
+        </div>
+      </header>
+      <div className={s.postModel}>
+        <Link to={`${versionPath(p.versionId)}#from-x`} className={s.modelChip}>
+          {p.model}
+        </Link>
+      </div>
+      <p className={`${s.text} ${long ? s.clamped : ""}`}>
+        <Linkified text={p.text} />
+      </p>
+      {(long || p.text.endsWith("…")) && (
+        <a href={p.url} target="_blank" rel="noreferrer" className={s.more}>
+          Read the full post on X ↗
+        </a>
+      )}
     </article>
   );
 }

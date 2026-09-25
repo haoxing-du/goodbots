@@ -10,7 +10,7 @@ import rc from "./ReviewCard.module.css";
 import s from "./XPost.module.css";
 
 /** Post text with its links (X's t.co short links) made clickable. */
-function Linkified({ text }: { text: string }) {
+export function Linkified({ text }: { text: string }) {
   const parts = text.split(/(https?:\/\/\S+)/g);
   return (
     <>
@@ -27,6 +27,15 @@ function Linkified({ text }: { text: string }) {
   );
 }
 
+/** The author's name, linking to their X profile (styled like a reviewer's name). */
+export function XAuthorLink({ post, className = "" }: { post: { authorName: string; authorHandle: string }; className?: string }) {
+  return (
+    <a href={`https://x.com/${post.authorHandle}`} target="_blank" rel="noreferrer" className={`${s.author} ${className}`}>
+      {post.authorName}
+    </a>
+  );
+}
+
 /** A public post from X shown on a model page, laid out like a review card. */
 export function XPostCard({ post, versionId }: { post: XPost; versionId: string }) {
   const remove = useMutation(api.xPosts.remove);
@@ -37,9 +46,7 @@ export function XPostCard({ post, versionId }: { post: XPost; versionId: string 
         <div className={rc.who}>
           <Avatar name={post.authorName} />
           <div>
-            <a href={`https://x.com/${post.authorHandle}`} target="_blank" rel="noreferrer" className={rc.whoName}>
-              {post.authorName}
-            </a>
+            <XAuthorLink post={post} className={rc.whoName} />
             <div className={ui.meta}>@{post.authorHandle}</div>
           </div>
         </div>

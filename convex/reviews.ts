@@ -27,7 +27,7 @@ import {
   versionLabel,
 } from "./lib";
 import { claimImage, releaseImage } from "./uploads";
-import { claimXPosts } from "./xPosts";
+import { claimXPosts, xPostCounts } from "./xPosts";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 /** Re-posting within this long of your last post edits it instead of adding a dated update. */
@@ -316,11 +316,12 @@ export const feedSummary = query({
       .withIndex("by_updatedAt", (q) => q.gte("updatedAt", now - WEEK))
       .collect();
     const today = week.filter((r) => r.updatedAt >= now - DAY).length;
+    const xToday = (await xPostCounts(ctx, now - DAY)).recent;
     const perVersion = new Map<Id<"versions">, number>();
     for (const r of week) perVersion.set(r.versionId, (perVersion.get(r.versionId) ?? 0) + 1);
     const [mostId] = [...perVersion.entries()].sort((a, b) => b[1] - a[1])[0] ?? [];
     const most = mostId ? await versionLabel(ctx, mostId) : null;
-    return { today, mostReviewed: most?.displayName ?? null };
+    return { today, xToday, mostReviewed: most?.displayName ?? null };
   },
 });
 

@@ -192,7 +192,7 @@ export function Home() {
         {data && data.reviewerCount > 0 && (
           <p className={s.count}>
             {fmtCount(data.reviewerCount)}{" "}
-            {data.reviewerCount === 1 ? "person has" : "people have"} reviewed{" "}
+            {data.reviewerCount === 1 ? "person has" : "people have"} weighed in on{" "}
             {fmtCount(data.reviewedModelCount)}{" "}
             {data.reviewedModelCount === 1 ? "model" : "models"}
           </p>
