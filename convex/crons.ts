@@ -14,4 +14,7 @@ crons.interval("clean up unposted uploads", { hours: 6 }, internal.uploads.clean
 crons.interval("roll up today's analytics", { minutes: 10 }, internal.analytics.refreshToday);
 crons.interval("roll up analytics", { hours: 1 }, internal.analytics.refresh);
 
+// Hide posts from X that were deleted there, and pick up edits.
+crons.interval("recheck posts from X", { hours: 1 }, internal.xPosts.recheck);
+
 export default crons;

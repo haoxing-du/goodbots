@@ -30,6 +30,7 @@ import type * as setup from "../setup.js";
 import type * as takes from "../takes.js";
 import type * as uploads from "../uploads.js";
 import type * as users from "../users.js";
+import type * as xPosts from "../xPosts.js";
 
 import type {
   ApiFromModules,
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   takes: typeof takes;
   uploads: typeof uploads;
   users: typeof users;
+  xPosts: typeof xPosts;
 }>;
 
 /**

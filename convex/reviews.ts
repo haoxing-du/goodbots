@@ -27,6 +27,7 @@ import {
   versionLabel,
 } from "./lib";
 import { claimImage, releaseImage } from "./uploads";
+import { claimXPosts } from "./xPosts";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 /** Re-posting within this long of your last post edits it instead of adding a dated update. */
@@ -198,6 +199,7 @@ export const upsert = mutation({
     } else {
       await ctx.db.insert("reviewEntries", { reviewId, ...entry, createdAt: now });
     }
+    await claimXPosts(ctx, user, version.versionId, reviewId);
     if (args.versus && opponent) {
       // An edit re-posted within the window replaces its take rather than adding another.
       const [winner, loser] = args.versus.reviewedWins

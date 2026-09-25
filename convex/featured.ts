@@ -16,7 +16,7 @@ export const DEFAULT_FEATURED = [
 export type FeaturedModel = { versionId: string; displayName: string; provider: string };
 
 /** Resolves a model id to a name, from its page if it has one, else from the catalog. */
-async function describe(ctx: QueryCtx, versionId: string): Promise<FeaturedModel | null> {
+export async function describe(ctx: QueryCtx, versionId: string): Promise<FeaturedModel | null> {
   const version = await ctx.db
     .query("versions")
     .withIndex("by_versionId", (q) => q.eq("versionId", versionId))

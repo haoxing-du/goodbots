@@ -113,6 +113,13 @@ export const mergeVersion = mutation({
       }
     }
 
+    for (const post of await ctx.db
+      .query("xPosts")
+      .withIndex("by_versionId", (q) => q.eq("versionId", from.versionId))
+      .collect()) {
+      await ctx.db.patch(post._id, { versionId: into.versionId });
+    }
+
     await ctx.db.patch(from._id, { status: "hidden", mergedInto: into.versionId });
     return { moved, dropped };
   },

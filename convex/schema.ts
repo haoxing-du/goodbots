@@ -199,6 +199,31 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_user", ["userId"]),
 
+  // Public posts from X about a model, added by an admin to seed model pages.
+  // The text is a copy from X's embed endpoint; a cron hides posts deleted on X.
+  xPosts: defineTable({
+    tweetId: v.string(),
+    url: v.string(), // https://x.com/<handle>/status/<id>
+    versionId: v.string(), // "<provider>/<model>"; may be a catalog model without a page yet
+    authorName: v.string(),
+    authorHandle: v.string(), // as X shows it, e.g. "karpathy"
+    authorHandleLower: v.string(),
+    text: v.string(), // X cuts long posts off with "…"
+    postedAt: v.number(),
+    addedBy: v.id("users"),
+    status: v.union(v.literal("active"), v.literal("removed")),
+    removedReason: v.optional(
+      v.union(v.literal("deleted"), v.literal("author"), v.literal("admin")),
+    ),
+    claimedReviewId: v.optional(v.id("reviews")), // the author turned it into this review
+    claimedAt: v.optional(v.number()),
+    checkedAt: v.number(), // last time X confirmed the post still exists
+  })
+    .index("by_versionId", ["versionId"])
+    .index("by_tweetId", ["tweetId"])
+    .index("by_authorHandleLower", ["authorHandleLower"])
+    .index("by_status_and_checkedAt", ["status", "checkedAt"]),
+
   // Homepage headline models, in order (admin-picked). Empty = DEFAULT_FEATURED in featured.ts.
   featured: defineTable({
     versionId: v.string(), // "<provider>/<model>"; may be a catalog model without a page yet
