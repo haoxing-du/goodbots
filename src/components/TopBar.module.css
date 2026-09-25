@@ -221,6 +221,35 @@
   }
 }
 
+/* Phones: wordmark, nav, "Write a review" and "Sign in" don't fit on one row (334px
+   of text in 328–358px), so use two rows on purpose: wordmark with the account on
+   the right, then the nav (with "Write a review" on the right); search below. */
+@media (max-width: 480px) {
+  .signIn,
+  .menu,
+  .userSlot {
+    margin-inline-start: auto;
+  }
+  .barPlain .spacer {
+    display: none;
+  }
+  .barPlain .nav {
+    order: 5;
+    flex-basis: 100%;
+  }
+  /* Too wide to share row 1 with the wordmark and account, narrow enough to share
+     row 2 with "Write a review" (about 125px + gap). */
+  .bar .nav {
+    flex-basis: calc(100% - 140px);
+  }
+  .bar .write {
+    order: 5;
+  }
+  .bar .searchForm {
+    flex-basis: 100%;
+  }
+}
+
 /* iOS Safari zooms the page when a focused field's text is under 16px. */
 @media (max-width: 900px) {
   .search {
