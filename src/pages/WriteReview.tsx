@@ -60,6 +60,19 @@ export function WriteReview() {
     if (draftFor && draftFor === selectedId && !posted) saveDraft(draftFor, draft);
   }, [draft, draftFor, selectedId, posted]);
 
+  // "Turn into a review" from a post of yours on X: start the review from its text.
+  const fromX = params.get("fromX");
+  const myXPosts = useQuery(api.xPosts.mine, fromX ? {} : "skip");
+  useEffect(() => {
+    if (!fromX || !myXPosts || !draftFor || draftFor !== selectedId) return;
+    const post = myXPosts.find((p) => p._id === fromX && p.versionId === selectedId);
+    if (post && !draft.text.trim()) {
+      // X cuts long posts off with "…"; leave the end for the author to finish.
+      setDraft((d) => ({ ...d, text: post.text.replace(/…$/, "") }));
+    }
+    setParams({ v: selectedId }, { replace: true });
+  }, [fromX, myXPosts, draftFor, selectedId, draft.text, setParams]);
+
   const community = useQuery(
     api.reviews.communityAfterPost,
     posted ? { versionId: posted } : "skip",

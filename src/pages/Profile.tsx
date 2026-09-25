@@ -12,6 +12,7 @@ import ui from "../components/ui.module.css";
 import s from "./Profile.module.css";
 import { useTitle } from "../lib/useTitle";
 import { useConfirm } from "../components/Confirm";
+import { YourXPosts } from "../components/XPost";
 
 type VersionRef = {
   displayName: string;
@@ -118,6 +119,8 @@ export function Profile() {
           </span>
         </div>
       </header>
+
+      {data.isMe && <YourXPosts />}
 
       <section>
         <h2 className={ui.sectionLabel}>Ratings</h2>

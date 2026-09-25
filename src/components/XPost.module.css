@@ -35,3 +35,32 @@
   font-size: var(--text-base);
   color: var(--olive-text-2);
 }
+.yourRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-7);
+  padding: var(--s-6) var(--s-8);
+}
+.yourText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+  font-size: var(--text-md);
+}
+.snippet {
+  font-size: var(--text-sm);
+  color: var(--muted-2);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .yourRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+.noUnderline {
+  text-decoration: none;
+  white-space: nowrap;
+}

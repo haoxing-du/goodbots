@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { XPost } from "../../convex/xPosts";
 import { Avatar, ConfirmDelete } from "./bits";
 import { proseDate } from "../lib/format";
-import { writePath } from "../lib/paths";
+import { versionPath, writePath } from "../lib/paths";
 import ui from "./ui.module.css";
 import rc from "./ReviewCard.module.css";
 import s from "./XPost.module.css";
@@ -110,6 +110,32 @@ export function FromX({
       <div className={s.cards}>
         {posts.map((p) => (
           <XPostCard key={p._id} post={p} versionId={versionId} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** On your own profile: your posts from X that GoodBots features, to turn into reviews. */
+export function YourXPosts() {
+  const posts = useQuery(api.xPosts.mine);
+  if (!posts?.length) return null;
+  return (
+    <section>
+      <h2 className={ui.sectionLabel}>Your posts from X on GoodBots</h2>
+      <div className={`${ui.card} ${ui.rows}`}>
+        {posts.map((p) => (
+          <div key={p._id} className={s.yourRow}>
+            <div className={s.yourText}>
+              <Link to={`${versionPath(p.versionId)}#from-x`}>{p.model}</Link>
+              <span className={s.snippet}>
+                {p.text.length > 120 ? `${p.text.slice(0, 120).trimEnd()}…` : p.text}
+              </span>
+            </div>
+            <Link to={`${writePath(p.versionId)}&fromX=${p._id}`} className={`${ui.btnGhost} ${s.noUnderline}`}>
+              Turn into a review
+            </Link>
+          </div>
         ))}
       </div>
     </section>
