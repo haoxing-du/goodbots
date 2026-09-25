@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -36,6 +36,7 @@ export function Admin() {
       <h1 className={ui.serifTitle}>Admin</h1>
       <Analytics />
       <HomepageModels />
+      <XPosts />
       <Requests />
       <AddVersion />
       <MergeModels />
@@ -510,6 +511,99 @@ function HomepageModels() {
           )}
         </div>
         {msg && <p className={msg.ok ? f.ok : ui.error} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
+      </div>
+    </section>
+  );
+}
+
+function XPosts() {
+  const add = useAction(api.xPosts.add);
+  const remove = useMutation(api.xPosts.remove);
+  const recent = useQuery(api.xPosts.recent);
+  const [model, setModel] = useState<PickedModel | null>(null);
+  const [url, setUrl] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <section>
+      <h2 className={ui.sectionLabel}>Posts from X</h2>
+      <div className={`${ui.card} ${f.cardPad} ${f.form}`}>
+        <p className={f.hint}>
+          Put a public post from X on a model&rsquo;s page, under &ldquo;From X&rdquo;. Its author can
+          sign in with X to turn it into a review, or remove it. Posts deleted on X disappear within a day.
+        </p>
+        {model ? (
+          <p className={s.picked}>
+            Model: <b>{model.displayName}</b> <span className={ui.meta}>{model.versionId}</span>{" "}
+            <button type="button" className={ui.linkBtn} onClick={() => setModel(null)}>
+              Change
+            </button>
+          </p>
+        ) : (
+          <ModelPicker label="Model" placeholder="Which model is the post about?" onPick={setModel} />
+        )}
+        <form
+          className={`${s.mergeRow} ${s.urlRow}`}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (busy || !model) return;
+            setMsg(null);
+            setBusy(true);
+            try {
+              const { authorHandle } = await add({ url, versionId: model.versionId });
+              setMsg({ ok: true, text: `Added @${authorHandle}’s post to ${model.displayName}.` });
+              setUrl("");
+            } catch (err) {
+              setMsg({ ok: false, text: errText(err, "Couldn’t add that post. Try again.") });
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <input
+            className={ui.input}
+            type="url"
+            required
+            aria-label="Link to the post on X"
+            placeholder="https://x.com/someone/status/…"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <button type="submit" className={ui.btn} disabled={busy || !model}>
+            {busy ? "Adding…" : "Add post"}
+          </button>
+        </form>
+        {msg && <p className={msg.ok ? f.ok : ui.error} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
+        {recent && recent.length > 0 && (
+          <ul className={`${s.featured} ${s.plainList}`}>
+            {recent.map((p) => (
+              <li key={p._id} className={s.featuredRow}>
+                <span className={s.xPostLine}>
+                  <a href={p.url} target="_blank" rel="noreferrer">
+                    @{p.authorHandle}
+                  </a>{" "}
+                  on {p.model}: <span className={s.xPostText}>{p.text.slice(0, 80)}{p.text.length > 80 ? "…" : ""}</span>
+                </span>
+                {p.status === "active" ? (
+                  <button type="button" className={ui.btnGhost} onClick={() => remove({ postId: p._id })}>
+                    Remove
+                  </button>
+                ) : (
+                  <span className={ui.meta}>
+                    {p.status === "claimed"
+                      ? "Now a review"
+                      : p.removedReason === "deleted"
+                        ? "Deleted on X"
+                        : p.removedReason === "author"
+                          ? "Removed by author"
+                          : "Removed"}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );

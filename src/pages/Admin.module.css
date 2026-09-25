@@ -69,3 +69,21 @@
   font-family: var(--font-mono);
   color: var(--muted-3);
 }
+
+.picked {
+  font-size: var(--text-md);
+}
+.xPostLine {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.plainList {
+  list-style: none;
+}
+.urlRow input {
+  flex: 1;
+  min-width: 220px;
+}
+.xPostText {
+  color: var(--muted-3);
+}
