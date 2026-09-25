@@ -37,7 +37,7 @@ export const rollupDay = internalMutation({
     for await (const user of ctx.db
       .query("users")
       .withIndex("by_creation_time", (q) => q.gte("_creationTime", start).lt("_creationTime", end))) {
-      if (user.isAnonymous) continue;
+      if (user.isAnonymous || user.importedXHandle) continue; // placeholders for X authors aren't signups
       signups++;
       const first = await ctx.db
         .query("reviews")
@@ -60,8 +60,6 @@ export const rollupDay = internalMutation({
     for await (const review of ctx.db
       .query("reviews")
       .withIndex("by_creation_time", (q) => q.gte("_creationTime", start).lt("_creationTime", end))) {
-      reviews++;
-      active.add(review.userId);
       const [entry, score] = await Promise.all([
         ctx.db
           .query("reviewEntries")
@@ -72,6 +70,9 @@ export const rollupDay = internalMutation({
           .withIndex("by_review", (q) => q.eq("reviewId", review._id))
           .first(),
       ]);
+      if (entry?.xUrl) continue; // imported from X; counted as posts from X instead
+      reviews++;
+      active.add(review.userId);
       if (entry?.image) reviewsWithImage++;
       if (entry) reviewWords += entry.text.split(/\s+/).filter(Boolean).length;
       if (score) reviewsRated++;
@@ -82,7 +83,7 @@ export const rollupDay = internalMutation({
       .query("reviewEntries")
       .withIndex("by_creation_time", (q) => q.gte("_creationTime", start).lt("_creationTime", end))) {
       const review = await ctx.db.get(entry.reviewId);
-      if (!review) continue;
+      if (!review || entry.xUrl) continue;
       active.add(review.userId);
       // A review's first entry is written in the same mutation, with the same timestamp.
       if (entry.createdAt !== review.createdAt) updates++;

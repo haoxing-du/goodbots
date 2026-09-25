@@ -2,7 +2,6 @@ import { query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { avg, compareAxes, publicAxis } from "./lib";
 import { featuredModels } from "./featured";
-import { xPostCounts } from "./xPosts";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 /** A version needs this many ratings (on that axis) to win a "best" card. */
@@ -105,15 +104,9 @@ export const homeStats = query({
       },
     ];
 
-    // Hero line: reviewers plus the people whose posts from X are on the site, and every
-    // model with a review or a post. (An author who also reviewed another model may count twice.)
-    const x = await xPostCounts(ctx, 0);
-    const models = new Set(x.models);
-    for (const r of rows) if (r.stats.reviewCount > 0) models.add(r.version.versionId);
-
     return {
-      reviewerCount: (site?.reviewerCount ?? 0) + x.authors.size,
-      reviewedModelCount: models.size,
+      reviewerCount: site?.reviewerCount ?? 0,
+      reviewedModelCount: rows.filter((r) => r.stats.reviewCount > 0).length,
       // Headline select: the admin-picked featured models (the hero defaults to the first).
       versions: await featuredModels(ctx),
       // Axes the hero can suggest: the core ones only.

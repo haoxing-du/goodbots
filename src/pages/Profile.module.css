@@ -341,3 +341,15 @@
   position: absolute;
   inset: -6px -4px;
 }
+
+.importedNote {
+  margin-top: var(--s-5);
+  max-width: 60ch;
+  padding: var(--s-5) var(--s-7);
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--muted-1);
+}

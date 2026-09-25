@@ -27,7 +27,6 @@ import {
   versionLabel,
 } from "./lib";
 import { claimImage, releaseImage } from "./uploads";
-import { claimXPosts, xPostCounts } from "./xPosts";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 /** Re-posting within this long of your last post edits it instead of adding a dated update. */
@@ -80,6 +79,7 @@ export async function hydrateReview(
     image: latest?.image
       ? { entryId: latest._id, url: await ctx.storage.getUrl(latest.image), caption: latest.imageAlt }
       : null,
+    xUrl: latest?.xUrl, // the text is a post imported from X
     updatedAt: review.updatedAt,
     createdAt: review.createdAt,
     reactionCounts: counts,
@@ -190,7 +190,10 @@ export const upsert = mutation({
           .order("desc")
           .first()
       : null;
-    if (last && now - last.createdAt < EDIT_WINDOW) {
+    if (last && last.text === text && !args.image && !last.image) {
+      // Same text as before (e.g. adding ratings to a review imported from X): the
+      // new scores are saved above; no new dated entry.
+    } else if (last && now - last.createdAt < EDIT_WINDOW) {
       // A quick fix (typo, tweak): replace the last entry instead of adding history.
       await ctx.db.patch(last._id, { ...entry, prompt: undefined, response: undefined });
       if (last.image && last.image !== args.image) {
@@ -199,7 +202,6 @@ export const upsert = mutation({
     } else {
       await ctx.db.insert("reviewEntries", { reviewId, ...entry, createdAt: now });
     }
-    await claimXPosts(ctx, user, version.versionId, reviewId);
     if (args.versus && opponent) {
       // An edit re-posted within the window replaces its take rather than adding another.
       const [winner, loser] = args.versus.reviewedWins
@@ -316,12 +318,11 @@ export const feedSummary = query({
       .withIndex("by_updatedAt", (q) => q.gte("updatedAt", now - WEEK))
       .collect();
     const today = week.filter((r) => r.updatedAt >= now - DAY).length;
-    const xToday = (await xPostCounts(ctx, now - DAY)).recent;
     const perVersion = new Map<Id<"versions">, number>();
     for (const r of week) perVersion.set(r.versionId, (perVersion.get(r.versionId) ?? 0) + 1);
     const [mostId] = [...perVersion.entries()].sort((a, b) => b[1] - a[1])[0] ?? [];
     const most = mostId ? await versionLabel(ctx, mostId) : null;
-    return { today, xToday, mostReviewed: most?.displayName ?? null };
+    return { today, mostReviewed: most?.displayName ?? null };
   },
 });
 
@@ -362,7 +363,8 @@ export const forWrite = query({
       .sort(compareAxes)
       .map(publicAxis);
     // Your existing reviews by version: when you first reviewed it and when you last posted.
-    const prior: Record<string, { createdAt: number; lastPostAt: number }> = {};
+    // `xText`: the latest entry's text when it was imported from X, to start from.
+    const prior: Record<string, { createdAt: number; lastPostAt: number; xText?: string }> = {};
     if (viewerId) {
       const mine = await ctx.db
         .query("reviews")
@@ -376,7 +378,13 @@ export const forWrite = query({
           .order("desc")
           .first();
         const key = versionIdOf.get(r.versionId);
-        if (key) prior[key] = { createdAt: r.createdAt, lastPostAt: last?.createdAt ?? r.updatedAt };
+        if (key) {
+          prior[key] = {
+            createdAt: r.createdAt,
+            lastPostAt: last?.createdAt ?? r.updatedAt,
+            xText: last?.xUrl ? last.text : undefined,
+          };
+        }
       }
     }
     return { options, axes, prior };

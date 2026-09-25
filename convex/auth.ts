@@ -6,6 +6,8 @@ import { internal } from "./_generated/api";
 import { MagicLink } from "./magicLink";
 import { MutationCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { claimImports } from "./xPosts";
+import { ensureHandle } from "./lib";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
@@ -58,42 +60,9 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   ],
   callbacks: {
     async afterUserCreatedOrUpdated(ctx, { userId }) {
+      // Take over reviews imported from this X account first, so its handle is free.
+      await claimImports(ctx as unknown as MutationCtx, userId as Id<"users">);
       await ensureHandle(ctx as unknown as MutationCtx, userId as Id<"users">);
     },
   },
 });
-
-function slugify(s: string) {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9_]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 20);
-}
-
-async function ensureHandle(ctx: MutationCtx, userId: Id<"users">) {
-  const user = await ctx.db.get(userId);
-  if (!user) return;
-  const patch: Record<string, string> = {};
-  const shownName = user.displayName ?? user.name;
-  if (shownName && user.nameLower !== shownName.toLowerCase()) {
-    patch.nameLower = shownName.toLowerCase();
-  }
-  // Only X sign-ins get a handle automatically (their public X username).
-  // Email sign-ups choose one on first sign-in, so we never derive it from the address.
-  if (!user.handle && user.xHandle) {
-    const base = slugify(user.xHandle) || "reader";
-    let handle = base;
-    for (let i = 2; ; i++) {
-      const taken = await ctx.db
-        .query("users")
-        .withIndex("by_handle", (q) => q.eq("handleLower", handle))
-        .first();
-      if (!taken || taken._id === userId) break;
-      handle = `${base}${i}`;
-    }
-    patch.handle = handle;
-    patch.handleLower = handle;
-  }
-  if (Object.keys(patch).length) await ctx.db.patch(userId, patch);
-}

@@ -45,8 +45,12 @@ export default defineSchema({
     xHandle: v.optional(v.string()),
     xId: v.optional(v.string()), // X's permanent numeric account id (usernames can change)
     joinedAt: v.optional(v.number()), // seeded users only; real users use _creationTime
+    // Set only on placeholder authors of posts imported from X (lowercased X handle).
+    // They can't sign in; signing in with that X account takes over their reviews.
+    importedXHandle: v.optional(v.string()),
   })
     .index("email", ["email"])
+    .index("by_importedXHandle", ["importedXHandle"])
     .index("by_handle", ["handleLower"])
     .index("by_name", ["nameLower"]),
 
@@ -124,6 +128,7 @@ export default defineSchema({
     prompt: v.optional(v.string()), // legacy: the form no longer offers prompt/response
     response: v.optional(v.string()),
     overallAtTime: v.optional(v.number()),
+    xUrl: v.optional(v.string()), // imported from this post on X
     createdAt: v.number(),
   }).index("by_review", ["reviewId", "createdAt"]),
 
@@ -199,8 +204,9 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_user", ["userId"]),
 
-  // Public posts from X about a model, added by an admin to seed model pages.
-  // The text is a copy from X's embed endpoint; a cron hides posts deleted on X.
+  // Public posts from X imported as reviews (by an admin, to seed the site). Each one is
+  // an entry on a review by a placeholder user for its author, until the author signs
+  // in with X and claims it. A cron deletes unclaimed ones that were deleted on X.
   xPosts: defineTable({
     tweetId: v.string(),
     url: v.string(), // https://x.com/<handle>/status/<id>
@@ -211,12 +217,14 @@ export default defineSchema({
     text: v.string(), // X cuts long posts off with "…"
     postedAt: v.number(),
     addedBy: v.id("users"),
-    status: v.union(v.literal("active"), v.literal("removed")),
+    status: v.union(v.literal("active"), v.literal("removed"), v.literal("claimed")),
+    reviewId: v.optional(v.id("reviews")), // the review it was imported into
+    entryId: v.optional(v.id("reviewEntries")),
     removedReason: v.optional(
       v.union(v.literal("deleted"), v.literal("author"), v.literal("admin")),
     ),
-    claimedReviewId: v.optional(v.id("reviews")), // the author turned it into this review
-    claimedAt: v.optional(v.number()),
+    claimedReviewId: v.optional(v.id("reviews")), // unused since imports became reviews
+    claimedAt: v.optional(v.number()), // when its author signed in with X and took it over
     checkedAt: v.number(), // last time X confirmed the post still exists
   })
     .index("by_versionId", ["versionId"])

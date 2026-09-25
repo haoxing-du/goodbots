@@ -56,22 +56,19 @@ export function WriteReview() {
     setDraftFor(selectedId);
   }, [selectedId]);
 
+  // "Add ratings" on a review imported from X: start from the post's text. Keeping it
+  // unchanged saves just the ratings, without a new dated entry.
+  const fromX = params.get("fromX") === "1";
+  const xText = selectedId ? data?.prior[selectedId]?.xText : undefined;
+  useEffect(() => {
+    if (!fromX || !data || draftFor !== selectedId) return;
+    if (xText && !draft.text.trim()) setDraft((d) => ({ ...d, text: xText }));
+    if (selectedId) setParams({ v: selectedId }, { replace: true });
+  }, [fromX, data, xText, draftFor, selectedId, draft.text, setParams]);
+
   useEffect(() => {
     if (draftFor && draftFor === selectedId && !posted) saveDraft(draftFor, draft);
   }, [draft, draftFor, selectedId, posted]);
-
-  // "Turn into a review" from a post of yours on X: start the review from its text.
-  const fromX = params.get("fromX");
-  const myXPosts = useQuery(api.xPosts.mine, fromX ? {} : "skip");
-  useEffect(() => {
-    if (!fromX || !myXPosts || !draftFor || draftFor !== selectedId) return;
-    const post = myXPosts.find((p) => p._id === fromX && p.versionId === selectedId);
-    if (post && !draft.text.trim()) {
-      // X cuts long posts off with "…"; leave the end for the author to finish.
-      setDraft((d) => ({ ...d, text: post.text.replace(/…$/, "") }));
-    }
-    setParams({ v: selectedId }, { replace: true });
-  }, [fromX, myXPosts, draftFor, selectedId, draft.text, setParams]);
 
   const community = useQuery(
     api.reviews.communityAfterPost,
@@ -217,7 +214,9 @@ export function WriteReview() {
 
           {prior && !done && (
             <div className={s.notice}>
-              {Date.now() - prior.lastPostAt < EDIT_WINDOW_MS
+              {prior.xText
+                ? "This review is your post from X. Keep the text as it is to just add ratings and a head-to-head, or change it to post a dated update."
+                : Date.now() - prior.lastPostAt < EDIT_WINDOW_MS
                 ? "You posted this a few minutes ago. Posting again replaces it (edits within 10 minutes don’t add an update)."
                 : `You reviewed this model on ${proseDate(prior.createdAt)}. Posting now adds a dated update to that review; the new scores replace the old ones.`}
             </div>

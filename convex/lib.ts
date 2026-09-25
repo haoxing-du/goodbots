@@ -452,6 +452,8 @@ export function publicUser(u: Doc<"users">) {
     handle: u.handle ?? "",
     image: u.image,
     xHandle: u.xHandle,
+    // A placeholder for the author of posts imported from X; hasn't joined GoodBots.
+    imported: !!u.importedXHandle,
   };
 }
 
@@ -548,4 +550,43 @@ export async function findOrActivateVersion(ctx: MutationCtx, versionId: string)
     source: "catalog",
   });
   return (await ctx.db.get(id))!;
+}
+
+// ---------- handles ----------
+
+/** Lowercased, underscore-separated, at most 20 characters: a handle's shape. */
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 20);
+}
+
+/** Keeps `nameLower` current and gives X users their X username (made unique) as a handle. */
+export async function ensureHandle(ctx: MutationCtx, userId: Id<"users">) {
+  const user = await ctx.db.get(userId);
+  if (!user) return;
+  const patch: Record<string, string> = {};
+  const shownName = user.displayName ?? user.name;
+  if (shownName && user.nameLower !== shownName.toLowerCase()) {
+    patch.nameLower = shownName.toLowerCase();
+  }
+  // Only X sign-ins get a handle automatically (their public X username).
+  // Email sign-ups choose one on first sign-in, so we never derive it from the address.
+  if (!user.handle && user.xHandle) {
+    const base = slugify(user.xHandle) || "reader";
+    let handle = base;
+    for (let i = 2; ; i++) {
+      const taken = await ctx.db
+        .query("users")
+        .withIndex("by_handle", (q) => q.eq("handleLower", handle))
+        .first();
+      if (!taken || taken._id === userId) break;
+      handle = `${base}${i}`;
+    }
+    patch.handle = handle;
+    patch.handleLower = handle;
+  }
+  if (Object.keys(patch).length) await ctx.db.patch(userId, patch);
 }

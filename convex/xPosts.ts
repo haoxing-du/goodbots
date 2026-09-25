@@ -7,11 +7,17 @@ import {
   mutation,
   MutationCtx,
   query,
-  QueryCtx,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
-import { getViewer, isAdmin, requireAdmin, requireUser } from "./lib";
+import {
+  applyOverallToStats,
+  bumpReviewerCount,
+  deleteReviewCascade,
+  findOrActivateVersion,
+  ensureHandle,
+  requireAdmin,
+} from "./lib";
 import { describe } from "./featured";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -73,9 +79,26 @@ async function fetchPost(tweetId: string): Promise<FetchedPost | null> {
   return { authorName: author_name, authorHandle, text };
 }
 
-// ---------- admin ----------
+// ---------- importing ----------
 
-/** Adds a post from X to a model's page (admin). */
+/** The placeholder user for an X account, created on its first imported post. */
+async function placeholderFor(ctx: MutationCtx, authorName: string, authorHandle: string) {
+  const importedXHandle = authorHandle.toLowerCase();
+  const existing = await ctx.db
+    .query("users")
+    .withIndex("by_importedXHandle", (q) => q.eq("importedXHandle", importedXHandle))
+    .first();
+  if (existing) return existing._id;
+  const userId = await ctx.db.insert("users", {
+    name: authorName,
+    xHandle: authorHandle,
+    importedXHandle,
+  });
+  await ensureHandle(ctx, userId); // their X username, like an X sign-in gets
+  return userId;
+}
+
+/** Adds a post from X to a model as a review by its author (admin). */
 export const add = action({
   args: { url: v.string(), versionId: v.string() },
   handler: async (ctx, { url, versionId }): Promise<{ authorHandle: string }> => {
@@ -100,40 +123,99 @@ export const insert = internalMutation({
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx); // the calling action's identity carries through
-    if (!(await describe(ctx, args.versionId))) throw new ConvexError("Unknown model.");
-    const existing = (
+    const version = await findOrActivateVersion(ctx, args.versionId);
+    if (!version) throw new ConvexError("Unknown model.");
+    const earlier = (
       await ctx.db
         .query("xPosts")
         .withIndex("by_tweetId", (q) => q.eq("tweetId", args.tweetId))
         .collect()
-    ).find((p) => p.versionId === args.versionId);
+    ).find((p) => p.versionId === version.versionId);
+    if (earlier?.status === "active" || earlier?.status === "claimed") {
+      throw new ConvexError("That post is already on this model.");
+    }
     const now = Date.now();
-    const fields = {
+    const postId = await ctx.db.insert("xPosts", {
+      tweetId: args.tweetId,
       url: `https://x.com/${args.authorHandle}/status/${args.tweetId}`,
+      versionId: version.versionId,
       authorName: args.authorName,
       authorHandle: args.authorHandle,
       authorHandleLower: args.authorHandle.toLowerCase(),
       text: args.text,
-      checkedAt: now,
-    };
-    if (existing) {
-      if (existing.status === "active") throw new ConvexError("That post is already on this model.");
-      if (existing.removedReason === "author") {
-        throw new ConvexError("Its author removed this post from GoodBots, so it can’t be added back.");
-      }
-      await ctx.db.patch(existing._id, { ...fields, status: "active", removedReason: undefined });
-      return;
-    }
-    await ctx.db.insert("xPosts", {
-      ...fields,
-      tweetId: args.tweetId,
-      versionId: args.versionId,
       postedAt: snowflakeTime(args.tweetId),
       addedBy: admin._id,
       status: "active",
+      checkedAt: now,
     });
+    if (earlier) await ctx.db.delete(earlier._id); // re-adding a removed post starts over
+    await importAsReview(ctx, (await ctx.db.get(postId))!, version._id);
   },
 });
+
+/**
+ * Makes a post an entry on its author's review of the model: a new review, or a
+ * dated update if they already have one there (several posts about one model).
+ */
+async function importAsReview(ctx: MutationCtx, post: Doc<"xPosts">, versionId: Id<"versions">) {
+  const userId = await placeholderFor(ctx, post.authorName, post.authorHandle);
+  let review = await ctx.db
+    .query("reviews")
+    .withIndex("by_user_version", (q) => q.eq("userId", userId).eq("versionId", versionId))
+    .unique();
+  if (review) {
+    await ctx.db.patch(review._id, { updatedAt: Math.max(review.updatedAt, post.postedAt) });
+  } else {
+    const first = (await ctx.db
+      .query("reviews")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first()) === null;
+    if (first) await bumpReviewerCount(ctx, 1);
+    const reviewId = await ctx.db.insert("reviews", {
+      userId,
+      versionId,
+      reactionCount: 0,
+      createdAt: post.postedAt,
+      updatedAt: post.postedAt,
+    });
+    await applyOverallToStats(ctx, versionId, null, undefined);
+    review = (await ctx.db.get(reviewId))!;
+  }
+  const entryId = await ctx.db.insert("reviewEntries", {
+    reviewId: review._id,
+    text: post.text,
+    xUrl: post.url,
+    createdAt: post.postedAt,
+  });
+  await ctx.db.patch(post._id, { reviewId: review._id, entryId });
+}
+
+/**
+ * Takes an unclaimed imported post off the site: its entry, its review if that was
+ * the only entry, and its placeholder author if they have nothing left.
+ */
+async function removeImported(ctx: MutationCtx, post: Doc<"xPosts">, reason: "deleted" | "admin") {
+  await ctx.db.patch(post._id, { status: "removed", removedReason: reason });
+  const review = post.reviewId ? await ctx.db.get(post.reviewId) : null;
+  if (!review) return;
+  const author = await ctx.db.get(review.userId);
+  if (!author?.importedXHandle) return; // claimed: it's their review now
+  if (post.entryId) await ctx.db.delete(post.entryId);
+  const entries = await ctx.db
+    .query("reviewEntries")
+    .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+    .collect();
+  if (entries.length === 0) {
+    await deleteReviewCascade(ctx, review);
+    const more = await ctx.db
+      .query("reviews")
+      .withIndex("by_user", (q) => q.eq("userId", author._id))
+      .first();
+    if (!more) await ctx.db.delete(author._id);
+  } else {
+    await ctx.db.patch(review._id, { updatedAt: entries[entries.length - 1].createdAt });
+  }
+}
 
 /** The most recently added posts, for the admin page. */
 export const recent = query({
@@ -148,188 +230,97 @@ export const recent = query({
         authorHandle: p.authorHandle,
         text: p.text,
         versionId: p.versionId,
+        reviewId: p.reviewId,
         model: (await describe(ctx, p.versionId))?.displayName ?? p.versionId,
-        status: p.claimedReviewId ? ("claimed" as const) : p.status,
+        status: p.status,
         removedReason: p.removedReason,
       })),
     );
   },
 });
 
-// ---------- model pages ----------
-
-function publicPost(p: Doc<"xPosts">, viewer: Doc<"users"> | null) {
-  const mine = !!viewer?.xHandle && viewer.xHandle.toLowerCase() === p.authorHandleLower;
-  return {
-    _id: p._id,
-    url: p.url,
-    authorName: p.authorName,
-    authorHandle: p.authorHandle,
-    text: p.text,
-    postedAt: p.postedAt,
-    mine,
-    canRemove: mine || isAdmin(viewer),
-  };
-}
-
-export type XPost = ReturnType<typeof publicPost>;
-
-/** A model's posts from X, newest first; ones their author turned into a review drop out. */
-export const forModel = query({
-  args: { versionId: v.string() },
-  handler: async (ctx, { versionId }) => {
-    const viewer = await getViewer(ctx);
-    const posts = await ctx.db
-      .query("xPosts")
-      .withIndex("by_versionId", (q) => q.eq("versionId", versionId))
-      .take(200);
-    return posts
-      .filter((p) => p.status === "active" && !p.claimedReviewId)
-      .sort((a, b) => b.postedAt - a.postedAt)
-      .map((p) => publicPost(p, viewer));
-  },
-});
-
-/** Take a post off GoodBots: its author (signed in with that X account) or an admin. */
+/** Take an imported post off the site (admin). Once claimed, it's a normal review. */
 export const remove = mutation({
   args: { postId: v.id("xPosts") },
   handler: async (ctx, { postId }) => {
-    const user = await requireUser(ctx);
+    await requireAdmin(ctx);
     const post = await ctx.db.get(postId);
-    if (!post) return;
-    const author = !!user.xHandle && user.xHandle.toLowerCase() === post.authorHandleLower;
-    if (!author && !isAdmin(user)) throw new ConvexError("Only its author or an admin can remove this post.");
-    await ctx.db.patch(postId, { status: "removed", removedReason: author ? "author" : "admin" });
+    if (post?.status === "active") await removeImported(ctx, post, "admin");
   },
 });
 
-// ---------- site-wide ----------
-
-// Active posts scanned for site-wide counts; far more than we expect to add by hand.
-const COUNT_SCAN = 5000;
-
-/** Distinct authors and models among the posts on the site, and how many were posted since `since`. */
-export async function xPostCounts(ctx: QueryCtx, since: number) {
-  const authors = new Set<string>();
-  const models = new Set<string>();
-  let recent = 0;
-  const posts = await ctx.db
-    .query("xPosts")
-    .withIndex("by_status_and_postedAt", (q) => q.eq("status", "active"))
-    .order("desc")
-    .take(COUNT_SCAN);
-  for (const p of posts) {
-    if (p.claimedReviewId) continue; // its author's review is counted instead
-    authors.add(p.authorHandleLower);
-    models.add(p.versionId);
-    if (p.postedAt >= since) recent++;
-  }
-  return { authors, models, recent };
-}
-
-/** The newest posts from X across all models, for the reviews feed. */
-export const feed = query({
+/** One-off: turn posts added before imports became reviews into reviews. */
+export const convertLegacy = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const viewer = await getViewer(ctx);
-    const posts = await ctx.db
-      .query("xPosts")
-      .withIndex("by_status_and_postedAt", (q) => q.eq("status", "active"))
-      .order("desc")
-      .take(100);
-    const names = new Map<string, string>();
-    const out = [];
-    for (const p of posts) {
-      if (p.claimedReviewId) continue;
-      if (!names.has(p.versionId)) {
-        names.set(p.versionId, (await describe(ctx, p.versionId))?.displayName ?? p.versionId);
-      }
-      out.push({ ...publicPost(p, viewer), versionId: p.versionId, model: names.get(p.versionId)! });
+    let converted = 0;
+    for (const post of await ctx.db.query("xPosts").collect()) {
+      if (post.status !== "active" || post.reviewId || post.claimedReviewId) continue;
+      const version = await findOrActivateVersion(ctx, post.versionId);
+      if (!version) continue;
+      await importAsReview(ctx, post, version._id);
+      converted++;
     }
-    return out;
-  },
-});
-
-export type XFeedPost = XPost & { versionId: string; model: string };
-
-/** Every model with posts from X, with its post count, for the models page. */
-export const models = query({
-  args: {},
-  handler: async (ctx) => {
-    const counts = new Map<string, number>();
-    const posts = await ctx.db
-      .query("xPosts")
-      .withIndex("by_status_and_postedAt", (q) => q.eq("status", "active"))
-      .take(COUNT_SCAN);
-    for (const p of posts) {
-      if (!p.claimedReviewId) counts.set(p.versionId, (counts.get(p.versionId) ?? 0) + 1);
-    }
-    const out = [];
-    for (const [versionId, count] of counts) {
-      const model = await describe(ctx, versionId);
-      if (!model) continue;
-      const entry = await ctx.db
-        .query("catalog")
-        .withIndex("by_orId", (q) => q.eq("orId", versionId))
-        .unique();
-      out.push({
-        versionId,
-        displayName: model.displayName,
-        provider: model.provider,
-        providerSlug: versionId.split("/")[0],
-        releasedAt: entry?.releasedAt ?? 0,
-        count,
-      });
-    }
-    return out;
+    return converted;
   },
 });
 
 // ---------- claiming ----------
 
-/** The signed-in user's own posts that are on GoodBots and not yet turned into reviews. */
-export const mine = query({
-  args: {},
-  handler: async (ctx) => {
-    const viewer = await getViewer(ctx);
-    if (!viewer?.xHandle) return [];
-    const handle = viewer.xHandle.toLowerCase();
-    const posts = await ctx.db
-      .query("xPosts")
-      .withIndex("by_authorHandleLower", (q) => q.eq("authorHandleLower", handle))
-      .take(100);
-    return await Promise.all(
-      posts
-        .filter((p) => p.status === "active" && !p.claimedReviewId)
-        .map(async (p) => ({
-          _id: p._id,
-          versionId: p.versionId,
-          model: (await describe(ctx, p.versionId))?.displayName ?? p.versionId,
-          text: p.text,
-        })),
-    );
-  },
-});
+/**
+ * Called on every sign-in: if this user signed in with an X account that has a
+ * placeholder, their imported reviews become theirs and the placeholder goes away.
+ * Where they already reviewed the same model, their own review wins.
+ */
+export async function claimImports(ctx: MutationCtx, userId: Id<"users">) {
+  const user = await ctx.db.get(userId);
+  if (!user?.xHandle || user.importedXHandle) return;
+  const placeholder = await ctx.db
+    .query("users")
+    .withIndex("by_importedXHandle", (q) => q.eq("importedXHandle", user.xHandle!.toLowerCase()))
+    .first();
+  if (!placeholder) return;
 
-/** Called when someone posts a review: their posts about that model count as claimed. */
-export async function claimXPosts(
-  ctx: MutationCtx,
-  user: Doc<"users">,
-  versionId: string,
-  reviewId: Id<"reviews">,
-) {
-  if (!user.xHandle) return;
-  const handle = user.xHandle.toLowerCase();
-  const posts = await ctx.db
-    .query("xPosts")
-    .withIndex("by_authorHandleLower", (q) => q.eq("authorHandleLower", handle))
-    .take(100);
-  const now = Date.now();
-  for (const p of posts) {
-    if (p.versionId === versionId && p.status === "active" && !p.claimedReviewId) {
-      await ctx.db.patch(p._id, { claimedReviewId: reviewId, claimedAt: now });
+  const hadReviews =
+    (await ctx.db
+      .query("reviews")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first()) !== null;
+  const theirs = await ctx.db
+    .query("reviews")
+    .withIndex("by_user", (q) => q.eq("userId", placeholder._id))
+    .collect();
+  const conflicts = [];
+  for (const review of theirs) {
+    const own = await ctx.db
+      .query("reviews")
+      .withIndex("by_user_version", (q) => q.eq("userId", userId).eq("versionId", review.versionId))
+      .unique();
+    if (own) {
+      conflicts.push(review);
+      continue;
+    }
+    await ctx.db.patch(review._id, { userId });
+    for (const score of await ctx.db
+      .query("reviewScores")
+      .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+      .collect()) {
+      await ctx.db.patch(score._id, { userId });
     }
   }
+  // Deleting the last placeholder review drops them from the reviewer count; if nothing
+  // was deleted, they still leave it when two reviewers become one.
+  for (const review of conflicts) await deleteReviewCascade(ctx, review);
+  if (conflicts.length === 0 && hadReviews && theirs.length > 0) await bumpReviewerCount(ctx, -1);
+
+  const now = Date.now();
+  for (const post of await ctx.db
+    .query("xPosts")
+    .withIndex("by_authorHandleLower", (q) => q.eq("authorHandleLower", placeholder.importedXHandle!))
+    .collect()) {
+    if (post.status === "active") await ctx.db.patch(post._id, { status: "claimed", claimedAt: now });
+  }
+  await ctx.db.delete(placeholder._id);
 }
 
 // ---------- keeping up with X ----------
@@ -357,20 +348,17 @@ export const markChecked = internalMutation({
     const existing = await ctx.db.get(postId);
     if (!existing || existing.status !== "active") return;
     if (!post) {
-      await ctx.db.patch(postId, { status: "removed", removedReason: "deleted", checkedAt: Date.now() });
+      await removeImported(ctx, existing, "deleted");
       return;
     }
-    // Pick up edits and renamed accounts.
-    await ctx.db.patch(postId, {
-      ...post,
-      authorHandleLower: post.authorHandle.toLowerCase(),
-      url: `https://x.com/${post.authorHandle}/status/${existing.tweetId}`,
-      checkedAt: Date.now(),
-    });
+    await ctx.db.patch(postId, { text: post.text, authorName: post.authorName, checkedAt: Date.now() });
+    // Pick up edits to the post while it's still unclaimed.
+    const entry = existing.entryId ? await ctx.db.get(existing.entryId) : null;
+    if (entry && entry.text !== post.text) await ctx.db.patch(entry._id, { text: post.text });
   },
 });
 
-/** Cron: re-look-up posts not checked in a day; hide ones deleted on X. */
+/** Cron: re-look-up unclaimed posts not checked in a day; remove ones deleted on X. */
 export const recheck = internalAction({
   args: {},
   handler: async (ctx) => {

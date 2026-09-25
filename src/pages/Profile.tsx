@@ -12,7 +12,6 @@ import ui from "../components/ui.module.css";
 import s from "./Profile.module.css";
 import { useTitle } from "../lib/useTitle";
 import { useConfirm } from "../components/Confirm";
-import { YourXPosts } from "../components/XPost";
 
 type VersionRef = {
   displayName: string;
@@ -85,7 +84,7 @@ export function Profile() {
                 ) : (
                   <>@{user.handle}</>
                 )}{" "}
-                · joined {monthYear(user.joinedAt)}
+                {!user.imported && <>· joined {monthYear(user.joinedAt)}</>}
                 {data.match != null && (
                   <>
                     {" "}
@@ -96,6 +95,12 @@ export function Profile() {
                   </>
                 )}
               </p>
+              {user.imported && (
+                <p className={s.importedNote}>
+                  {user.name} hasn’t joined GoodBots. These reviews are their public posts from X,
+                  added by GoodBots. Is this you? Sign in with X to claim them.
+                </p>
+              )}
               {data.isMe && (
                 <button
                   ref={editButton}
@@ -119,8 +124,6 @@ export function Profile() {
           </span>
         </div>
       </header>
-
-      {data.isMe && <YourXPosts />}
 
       <section>
         <h2 className={ui.sectionLabel}>Ratings</h2>

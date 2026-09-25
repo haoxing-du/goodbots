@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "../../convex/_generated/api";
@@ -530,8 +531,9 @@ function XPosts() {
       <h2 className={ui.sectionLabel}>Posts from X</h2>
       <div className={`${ui.card} ${f.cardPad} ${f.form}`}>
         <p className={f.hint}>
-          Put a public post from X on a model&rsquo;s page, under &ldquo;From X&rdquo;. Its author can
-          sign in with X to turn it into a review, or remove it. Posts deleted on X disappear within a day.
+          Import a public post from X as a review of a model, by its author. Until the author signs
+          in with X and claims it, their profile says they haven&rsquo;t joined, and the review goes away
+          within a day if the post is deleted on X.
         </p>
         {model ? (
           <p className={s.picked}>
@@ -552,7 +554,7 @@ function XPosts() {
             setBusy(true);
             try {
               const { authorHandle } = await add({ url, versionId: model.versionId });
-              setMsg({ ok: true, text: `Added @${authorHandle}’s post to ${model.displayName}.` });
+              setMsg({ ok: true, text: `Imported @${authorHandle}’s post as a review of ${model.displayName}.` });
               setUrl("");
             } catch (err) {
               setMsg({ ok: false, text: errText(err, "Couldn’t add that post. Try again.") });
@@ -571,7 +573,7 @@ function XPosts() {
             onChange={(e) => setUrl(e.target.value)}
           />
           <button type="submit" className={ui.btn} disabled={busy || !model}>
-            {busy ? "Adding…" : "Add post"}
+            {busy ? "Importing…" : "Import post"}
           </button>
         </form>
         {msg && <p className={msg.ok ? f.ok : ui.error} role={msg.ok ? "status" : "alert"}>{msg.text}</p>}
@@ -586,18 +588,23 @@ function XPosts() {
                   on {p.model}: <span className={s.xPostText}>{p.text.slice(0, 80)}{p.text.length > 80 ? "…" : ""}</span>
                 </span>
                 {p.status === "active" ? (
-                  <button type="button" className={ui.btnGhost} onClick={() => remove({ postId: p._id })}>
-                    Remove
-                  </button>
+                  <span className={s.actions}>
+                    {p.reviewId && (
+                      <Link to={`/r/${p.reviewId}`} className={ui.meta}>
+                        View
+                      </Link>
+                    )}
+                    <button type="button" className={ui.btnGhost} onClick={() => remove({ postId: p._id })}>
+                      Remove
+                    </button>
+                  </span>
                 ) : (
                   <span className={ui.meta}>
                     {p.status === "claimed"
-                      ? "Now a review"
+                      ? "Claimed by author"
                       : p.removedReason === "deleted"
                         ? "Deleted on X"
-                        : p.removedReason === "author"
-                          ? "Removed by author"
-                          : "Removed"}
+                        : "Removed"}
                   </span>
                 )}
               </li>

@@ -4,7 +4,7 @@ import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Pills } from "../components/Pills";
 import { Avatar, LoadMore } from "../components/bits";
-import { FeedBoard, FeedCard, FeedItem, boardWide, mergeFeed } from "../components/FeedCards";
+import { FeedBoard, ReviewPost, boardWide } from "../components/FeedCards";
 import { fmtAvg } from "../lib/format";
 import ui from "../components/ui.module.css";
 import s from "./Reviews.module.css";
@@ -17,14 +17,12 @@ export function Reviews() {
   // Both feeds stay subscribed so switching tabs doesn't blank the list.
   const latest = usePaginatedQuery(api.reviews.feedLatest, {}, { initialNumItems: 20 });
   const top = useQuery(api.reviews.feedTop, {});
-  const xPosts = useQuery(api.xPosts.feed);
-  // Latest mixes in posts from X by date.
-  const latestItems =
-    latest.status === "LoadingFirstPage" || xPosts === undefined
-      ? undefined
-      : mergeFeed(latest.results, xPosts, latest.status === "Exhausted");
-  const feed: FeedItem[] | undefined =
-    tab === "latest" ? latestItems : top?.map((r) => ({ at: r.updatedAt, review: r }));
+  const feed =
+    tab === "latest"
+      ? latest.status === "LoadingFirstPage"
+        ? undefined
+        : latest.results
+      : top;
   const summary = useQuery(api.reviews.feedSummary);
 
   return (
@@ -33,15 +31,9 @@ export function Reviews() {
         <header className={s.head}>
           <div>
             <h1 className={ui.serifTitle}>What people think</h1>
-            {summary && (summary.today > 0 || summary.xToday > 0 || summary.mostReviewed) && (
+            {summary && (summary.today > 0 || summary.mostReviewed) && (
               <p className={s.summary}>
-                {summary.today} {summary.today === 1 ? "review" : "reviews"}
-                {summary.xToday > 0 && (
-                  <>
-                    {" "}
-                    and {summary.xToday} {summary.xToday === 1 ? "post" : "posts"} from X
-                  </>
-                )}{" "}
+                {summary.today} {summary.today === 1 ? "review" : "reviews"}{" "}
                 today
                 {summary.mostReviewed && (
                   <> · {summary.mostReviewed} most reviewed this week</>
@@ -75,7 +67,7 @@ export function Reviews() {
               )}
             </div>
           )}
-          {feed?.map((item) => <FeedCard key={item.review?._id ?? item.x?._id} item={item} />)}
+          {feed?.map((r) => <ReviewPost key={r._id} r={r} />)}
           {tab === "latest" && (
             <div className={boardWide}>
               <LoadMore status={latest.status} loadMore={latest.loadMore} />
