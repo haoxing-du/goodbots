@@ -52,13 +52,15 @@ export function XImportNote({ r }: { r: ReviewCard }) {
           type="button"
           className={s.claim}
           onClick={() =>
+            // After signing in, land on the review itself: it has both "Delete" and
+            // "Add ratings or a head-to-head".
             open(
-              `Sign in with X as @${r.user?.xHandle} to claim this review. You can then add ratings and a head-to-head.`,
-              addRatings || undefined,
+              `Sign in with X as @${r.user?.xHandle} to claim this review. Then you can add ratings and a head-to-head, or delete it.`,
+              `/r/${r._id}`,
             )
           }
         >
-          Sign in with X to claim it
+          Sign in with X to claim or remove it
         </button>
       </p>
     );

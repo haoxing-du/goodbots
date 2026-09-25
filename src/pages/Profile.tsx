@@ -98,7 +98,7 @@ export function Profile() {
               {user.imported && (
                 <p className={s.importedNote}>
                   {user.name} hasn’t joined GoodBots. These reviews are their public posts from X,
-                  added by GoodBots. Is this you? Sign in with X to claim them.
+                  added by GoodBots. Is this you? Sign in with X to claim or remove them.
                 </p>
               )}
               {data.isMe && (
