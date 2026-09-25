@@ -130,10 +130,10 @@ export const forPath = internalQuery({
         scoresForReview(ctx, review._id, await axisIndex(ctx)),
       ]);
       const name = user?.displayName ?? user?.name ?? user?.handle ?? "Someone";
-      const stars = review.overall ? ` ${"★".repeat(review.overall)}${"☆".repeat(5 - review.overall)}` : "";
+      const stars = review.overall ? `: ${"★".repeat(review.overall)}${"☆".repeat(5 - review.overall)}` : "";
       return {
         noindex: !!user?.importedXHandle,
-        title: `${name} on ${version?.displayName}:${stars}`,
+        title: `${name} on ${version?.displayName}${stars}`,
         description: clip(
           [entry?.text ?? "", scores.map((s) => `${s.name} ${s.score}`).join(" · ")].filter(Boolean).join(" — "),
           280,
