@@ -201,53 +201,39 @@ export function Home() {
         )}
       </section>
 
-      {/* Only cards with a winner; on a brand-new site the section is hidden. */}
-      {data?.cards.some((c) => c.version) && (
-        <section className={s.cards} aria-label="Summary stats">
-          {data.cards.map((c) => {
-            if (!c.version) return null;
-            const body = (
-              <>
-                <span className={s.cardLabel}>{c.label}</span>
-                <span className={s.cardRow}>
-                  <span className={s.cardModel}>
-                    {c.version?.displayName ?? "—"}
-                  </span>
-                  {c.value && <span className={s.cardNum}>{c.value}</span>}
-                </span>
-                <span className={s.cardCaption}>{c.caption}</span>
-              </>
-            );
-            const cls = s.card;
-            return c.version ? (
-              <Link
-                key={c.key}
-                to={versionPath(c.version.versionId)}
-                className={cls}
-                style={axisVars(c.key)}
-              >
-                {body}
-              </Link>
-            ) : (
-              <div key={c.key} className={`${cls} ${s.cardEmpty}`} style={axisVars(c.key)}>
-                {body}
-              </div>
-            );
-          })}
-        </section>
-      )}
-
-      <LatestTakes />
+      <HomeBoard cards={data?.cards.filter((c) => c.version !== null)} />
     </>
   );
 }
 
-const LATEST_ON_HOME = 6;
+const LATEST_ON_HOME = 9;
 
-/** The newest reviews, so the homepage shows what people are saying. */
-function LatestTakes() {
+type StatCard = NonNullable<ReturnType<typeof useQuery<typeof api.home.homeStats>>>["cards"][number];
+
+/**
+ * Under the hero: the newest reviews with the "best at" stat cards spread among them
+ * on one board, so both show up near the top instead of stats first, reviews after.
+ */
+function HomeBoard({ cards }: { cards: StatCard[] | undefined }) {
   const latest = usePaginatedQuery(api.reviews.feedLatest, {}, { initialNumItems: LATEST_ON_HOME });
-  if (latest.status === "LoadingFirstPage" || latest.results.length === 0) return null;
+  if (latest.status === "LoadingFirstPage" || cards === undefined) return null;
+  const reviews = latest.results.slice(0, LATEST_ON_HOME);
+  if (reviews.length === 0 && cards.length === 0) return null;
+
+  // Stat card k goes at an even spacing through the combined list (first one second).
+  const total = reviews.length + cards.length;
+  const statAt = new Map(cards.map((c, k) => [Math.min(total - 1, Math.floor((k * total) / cards.length) + 1), c]));
+  const items = [];
+  const queue = [...reviews];
+  for (let i = 0; i < total; i++) {
+    const card = statAt.get(i);
+    const review = card ? undefined : queue.shift();
+    if (card) items.push(<StatTile key={card.key} c={card} />);
+    else if (review) items.push(<ReviewPost key={review._id} r={review} />);
+  }
+  // Any stat cards whose slot collided go last.
+  for (const c of cards) if (![...statAt.values()].includes(c)) items.push(<StatTile key={c.key} c={c} />);
+
   return (
     <section className={s.latest}>
       <div className={ui.sectionHead}>
@@ -256,11 +242,21 @@ function LatestTakes() {
           All reviews →
         </Link>
       </div>
-      <FeedBoard>
-        {latest.results.slice(0, LATEST_ON_HOME).map((r) => (
-          <ReviewPost key={r._id} r={r} />
-        ))}
-      </FeedBoard>
+      <FeedBoard>{items}</FeedBoard>
     </section>
+  );
+}
+
+function StatTile({ c }: { c: StatCard }) {
+  if (!c.version) return null;
+  return (
+    <Link to={versionPath(c.version.versionId)} className={s.card} style={axisVars(c.key)}>
+      <span className={s.cardLabel}>{c.label}</span>
+      <span className={s.cardRow}>
+        <span className={s.cardModel}>{c.version.displayName}</span>
+        {c.value && <span className={s.cardNum}>{c.value}</span>}
+      </span>
+      <span className={s.cardCaption}>{c.caption}</span>
+    </Link>
   );
 }
