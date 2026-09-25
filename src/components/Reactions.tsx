@@ -59,7 +59,8 @@ export function Reactions({
             <span className={s.emoji} aria-hidden>
               {emoji}
             </span>
-            {!compact && label} <span className={s.count}>{n}</span>
+            {/* No "0": a row of zeros makes a new site look unused. */}
+            {!compact && label} {n > 0 && <span className={s.count}>{n}</span>}
           </button>
         );
       })}
