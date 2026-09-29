@@ -27,6 +27,20 @@ export function ReviewCard({ r, linked = true }: { r: Post; linked?: boolean }) 
   const [editing, setEditing] = useState(false);
   const cardLink = useCardLink(`/p/${r._id}`);
   const link = linked && !editing;
+  const meta = (
+    <span className={s.reviewMeta}>
+      {!editing && <EditPostLink r={r} onEdit={() => setEditing(true)} />}
+      <DeletePost entryId={r._id} authorId={r.user?._id} />
+      <PostTime r={r} className={`${ui.meta} ${s.permalink}`} />
+    </span>
+  );
+  const body = editing ? (
+    <EditPostForm entryId={r._id} text={r.text} onDone={() => setEditing(false)} />
+  ) : (
+    <p className={ui.body}>
+      <ReviewText r={r} />
+    </p>
+  );
   return (
     <article className={`${ui.card} ${s.review} ${link ? s.linked : ""}`} {...(link ? cardLink : {})}>
       <div className={s.reviewer}>
@@ -41,20 +55,20 @@ export function ReviewCard({ r, linked = true }: { r: Post; linked?: boolean }) 
         <AxisChips scores={r.scores} />
       </div>
       <div className={s.reviewBody}>
-        <div className={s.reviewTop}>
-          {r.overall ? <Stars value={r.overall} /> : <span />}
-          <span className={s.reviewMeta}>
-            {!editing && <EditPostLink r={r} onEdit={() => setEditing(true)} />}
-            <DeletePost entryId={r._id} authorId={r.user?._id} />
-            <PostTime r={r} className={`${ui.meta} ${s.permalink}`} />
-          </span>
-        </div>
-        {editing ? (
-          <EditPostForm entryId={r._id} text={r.text} onDone={() => setEditing(false)} />
+        {r.overall ? (
+          <>
+            <div className={s.reviewTop}>
+              <Stars value={r.overall} />
+              {meta}
+            </div>
+            {body}
+          </>
         ) : (
-          <p className={ui.body}>
-            <ReviewText r={r} />
-          </p>
+          // No stars to sit beside: the date and actions go next to the text instead.
+          <div className={s.textRow}>
+            {body}
+            {meta}
+          </div>
         )}
         <XImportNote r={r} />
         <Snippet prompt={r.prompt} response={r.response} />

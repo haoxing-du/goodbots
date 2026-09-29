@@ -37,6 +37,19 @@
   justify-content: space-between;
   align-items: center;
 }
+.textRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-6);
+}
+.textRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.textRow > .reviewMeta {
+  flex: none;
+  margin-left: auto;
+}
 .permalink {
   text-decoration: none;
 }
