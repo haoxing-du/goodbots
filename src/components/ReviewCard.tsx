@@ -1,9 +1,20 @@
-import { Link } from "react-router-dom";
-import type { ReviewCard as ReviewCardData } from "../../convex/reviews";
-import { AxisChips, Avatar, DeleteReview, MatchChip, ReviewImage, Snippet, Stars, UserLink } from "./bits";
+import { useState } from "react";
+import type { Post } from "../../convex/reviews";
+import {
+  AxisChips,
+  Avatar,
+  DeletePost,
+  EditPostForm,
+  EditPostLink,
+  MatchChip,
+  ReviewImage,
+  Snippet,
+  Stars,
+  UserLink,
+} from "./bits";
 import { Reactions } from "./Reactions";
 import { ReviewText, XImportNote } from "./XPost";
-import { timeAgo } from "../lib/format";
+import { PostTime } from "./PostTime";
 import { useCardLink } from "../lib/useCardLink";
 import ui from "./ui.module.css";
 import s from "./ReviewCard.module.css";
@@ -12,10 +23,12 @@ import s from "./ReviewCard.module.css";
  * A full review: reviewer column (name, match, axis scores) + stars, text, snippet, reactions.
  * Clicking the card opens the review's page, except on that page itself (`linked={false}`).
  */
-export function ReviewCard({ r, linked = true }: { r: ReviewCardData; linked?: boolean }) {
-  const cardLink = useCardLink(`/r/${r._id}`);
+export function ReviewCard({ r, linked = true }: { r: Post; linked?: boolean }) {
+  const [editing, setEditing] = useState(false);
+  const cardLink = useCardLink(`/p/${r._id}`);
+  const link = linked && !editing;
   return (
-    <article className={`${ui.card} ${s.review} ${linked ? s.linked : ""}`} {...(linked ? cardLink : {})}>
+    <article className={`${ui.card} ${s.review} ${link ? s.linked : ""}`} {...(link ? cardLink : {})}>
       <div className={s.reviewer}>
         <div className={s.who}>
           <Avatar name={r.user?.name ?? "?"} image={r.user?.image} />
@@ -31,20 +44,24 @@ export function ReviewCard({ r, linked = true }: { r: ReviewCardData; linked?: b
         <div className={s.reviewTop}>
           {r.overall ? <Stars value={r.overall} /> : <span />}
           <span className={s.reviewMeta}>
-            <DeleteReview reviewId={r._id} authorId={r.user?._id} />
-            <Link to={`/r/${r._id}`} className={`${ui.meta} ${s.permalink}`} title="Link to this review">
-              {timeAgo(r.updatedAt)}
-            </Link>
+            {!editing && <EditPostLink r={r} onEdit={() => setEditing(true)} />}
+            <DeletePost entryId={r._id} authorId={r.user?._id} />
+            <PostTime r={r} className={`${ui.meta} ${s.permalink}`} />
           </span>
         </div>
-        <p className={ui.body}>
-          <ReviewText r={r} />
-        </p>
+        {editing ? (
+          <EditPostForm entryId={r._id} text={r.text} onDone={() => setEditing(false)} />
+        ) : (
+          <p className={ui.body}>
+            <ReviewText r={r} />
+          </p>
+        )}
         <XImportNote r={r} />
         <Snippet prompt={r.prompt} response={r.response} />
         <ReviewImage image={r.image} />
-        <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} />
+        <Reactions entryId={r._id} counts={r.reactionCounts} mine={r.myReactions} />
       </div>
     </article>
   );
 }
+

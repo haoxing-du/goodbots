@@ -117,47 +117,10 @@
   gap: var(--s-11);
   align-items: start;
 }
-.latest {
-  padding: var(--s-9) var(--s-10);
+.posts {
   display: flex;
   flex-direction: column;
-  gap: var(--s-8);
-}
-.latestHead {
-  display: flex;
-  align-items: center;
-  gap: var(--s-5);
-}
-.latestModel {
-  font-family: var(--font-serif);
-  font-size: var(--text-h3);
-}
-.latestModel a {
-  text-decoration: none;
-}
-.entryLatest,
-.entryOld {
-  padding-inline-start: var(--s-7);
-  border-inline-start: 2px solid;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3);
-}
-.entryLatest {
-  border-color: var(--ink);
-}
-.entryOld {
-  border-color: var(--disabled);
-}
-.entryOld p {
-  color: var(--muted-2);
-}
-.entryHead {
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted-1);
+  gap: var(--s-6);
 }
 .takeCards {
   display: flex;
@@ -205,9 +168,6 @@
   }
 }
 @media (max-width: 900px) {
-  .latest {
-    padding: var(--s-8);
-  }
   .identity {
     gap: var(--s-6);
   }

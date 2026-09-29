@@ -13,8 +13,11 @@ import { Doc, Id } from "./_generated/dataModel";
 import {
   applyOverallToStats,
   bumpReviewerCount,
+  deletePost,
   deleteReviewCascade,
   findOrActivateVersion,
+  insertPost,
+  retagPosts,
   ensureHandle,
   requireAdmin,
 } from "./lib";
@@ -164,9 +167,9 @@ export const insert = internalMutation({
 });
 
 /**
- * Makes a post an entry on its author's review of the model: a new review, or a
- * dated update if they already have one there (several posts about one model).
- * If the author is already a member, it's theirs from the start.
+ * Makes a post from X a post on GoodBots by its author, under their rating of the
+ * model (created, without stars, if they don't have one). If the author is already
+ * a member, it's theirs from the start.
  */
 async function importAsReview(ctx: MutationCtx, post: Doc<"xPosts">, versionId: Id<"versions">) {
   const author = await authorFor(ctx, post.authorName, post.authorHandle);
@@ -186,15 +189,13 @@ async function importAsReview(ctx: MutationCtx, post: Doc<"xPosts">, versionId: 
     const reviewId = await ctx.db.insert("reviews", {
       userId,
       versionId,
-      reactionCount: 0,
       createdAt: post.postedAt,
       updatedAt: post.postedAt,
     });
     await applyOverallToStats(ctx, versionId, null, undefined);
     review = (await ctx.db.get(reviewId))!;
   }
-  const entryId = await ctx.db.insert("reviewEntries", {
-    reviewId: review._id,
+  const entryId = await insertPost(ctx, review, {
     text: post.text,
     xUrl: post.url,
     createdAt: post.postedAt,
@@ -216,21 +217,13 @@ async function removeImported(ctx: MutationCtx, post: Doc<"xPosts">, reason: "de
   if (!review) return;
   const author = await ctx.db.get(review.userId);
   if (!author?.importedXHandle) return; // claimed: it's their review now
-  if (post.entryId) await ctx.db.delete(post.entryId);
-  const entries = await ctx.db
-    .query("reviewEntries")
-    .withIndex("by_review", (q) => q.eq("reviewId", review._id))
-    .collect();
-  if (entries.length === 0) {
-    await deleteReviewCascade(ctx, review);
-    const more = await ctx.db
-      .query("reviews")
-      .withIndex("by_user", (q) => q.eq("userId", author._id))
-      .first();
-    if (!more) await ctx.db.delete(author._id);
-  } else {
-    await ctx.db.patch(review._id, { updatedAt: entries[entries.length - 1].createdAt });
-  }
+  const entry = post.entryId ? await ctx.db.get(post.entryId) : null;
+  if (entry) await deletePost(ctx, entry);
+  const more = await ctx.db
+    .query("reviews")
+    .withIndex("by_user", (q) => q.eq("userId", author._id))
+    .first();
+  if (!more) await ctx.db.delete(author._id);
 }
 
 /** The most recently added posts, for the admin page. */
@@ -303,8 +296,8 @@ export const convertLegacy = internalMutation({
 /**
  * Called on every sign-in: if this user signed in with an X account that has a
  * placeholder, their imported reviews become theirs and the placeholder goes away.
- * Where they already reviewed the same model, the imported posts become dated
- * entries on their own review (its ratings stay).
+ * Where they already rated the same model, the imported posts join their posts
+ * about it (their rating stays).
  */
 export async function claimImports(ctx: MutationCtx, userId: Id<"users">) {
   const user = await ctx.db.get(userId);
@@ -335,6 +328,7 @@ export async function claimImports(ctx: MutationCtx, userId: Id<"users">) {
       continue;
     }
     await ctx.db.patch(review._id, { userId });
+    await retagPosts(ctx, review._id);
     for (const score of await ctx.db
       .query("reviewScores")
       .withIndex("by_review", (q) => q.eq("reviewId", review._id))
@@ -342,7 +336,7 @@ export async function claimImports(ctx: MutationCtx, userId: Id<"users">) {
       await ctx.db.patch(score._id, { userId });
     }
   }
-  // Move the posts onto their own review, then drop the emptied placeholder review.
+  // Move the posts under their own rating, then drop the emptied placeholder review.
   // Deleting the last one drops the placeholder from the reviewer count; if nothing
   // was deleted, they still leave it when two reviewers become one.
   const movedTo = new Map<Id<"reviews">, Id<"reviews">>();
@@ -352,7 +346,7 @@ export async function claimImports(ctx: MutationCtx, userId: Id<"users">) {
       .query("reviewEntries")
       .withIndex("by_review", (q) => q.eq("reviewId", review._id))
       .collect()) {
-      await ctx.db.patch(entry._id, { reviewId: own._id });
+      await ctx.db.patch(entry._id, { reviewId: own._id, userId });
       updatedAt = Math.max(updatedAt, entry.createdAt);
     }
     await ctx.db.patch(own._id, { updatedAt });

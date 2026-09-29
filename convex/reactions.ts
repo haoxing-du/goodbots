@@ -4,28 +4,29 @@ import { reactionKind } from "./schema";
 import { requireMember } from "./lib";
 
 export const toggle = mutation({
-  args: { reviewId: v.id("reviews"), kind: reactionKind },
-  handler: async (ctx, { reviewId, kind }) => {
+  args: { entryId: v.id("reviewEntries"), kind: reactionKind },
+  handler: async (ctx, { entryId, kind }) => {
     const user = await requireMember(ctx);
-    const review = await ctx.db.get(reviewId);
-    if (!review) return;
+    const entry = await ctx.db.get(entryId);
+    if (!entry) return;
+    const count = entry.reactionCount ?? 0;
     const existing = await ctx.db
       .query("reactions")
-      .withIndex("by_review_user_kind", (q) =>
-        q.eq("reviewId", reviewId).eq("userId", user._id).eq("kind", kind),
+      .withIndex("by_entry_user_kind", (q) =>
+        q.eq("entryId", entryId).eq("userId", user._id).eq("kind", kind),
       )
       .unique();
     if (existing) {
       await ctx.db.delete(existing._id);
-      await ctx.db.patch(reviewId, { reactionCount: review.reactionCount - 1 });
+      await ctx.db.patch(entryId, { reactionCount: Math.max(0, count - 1) });
     } else {
       await ctx.db.insert("reactions", {
-        reviewId,
+        entryId,
         userId: user._id,
         kind,
         createdAt: Date.now(),
       });
-      await ctx.db.patch(reviewId, { reactionCount: review.reactionCount + 1 });
+      await ctx.db.patch(entryId, { reactionCount: count + 1 });
     }
   },
 });

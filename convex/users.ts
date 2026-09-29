@@ -6,6 +6,7 @@ import { Id } from "./_generated/dataModel";
 import {
   getViewer,
   isAdmin,
+  matcherFor,
   publicUser,
   deleteReviewCascade,
   deleteTake,
@@ -18,6 +19,7 @@ import {
   tasteMatch,
   versionLabel,
 } from "./lib";
+import { hydratePost } from "./reviews";
 
 export const me = query({
   args: {},
@@ -66,27 +68,14 @@ export const profile = query({
       })),
     );
 
-    // Most recently touched review, with its full history (newest first).
-    const latest = reviews[0];
-    const latestReview = latest
-      ? {
-          _id: latest._id,
-          version: await versionLabel(ctx, latest.versionId),
-          overall: latest.overall,
-          entries: (
-            await ctx.db
-              .query("reviewEntries")
-              .withIndex("by_review", (q) => q.eq("reviewId", latest._id))
-              .order("desc")
-              .collect()
-          ).map((e) => ({
-            _id: e._id,
-            text: e.text,
-            overallAtTime: e.overallAtTime,
-            createdAt: e.createdAt,
-          })),
-        }
-      : null;
+    // Their latest posts, newest first.
+    const recentPosts = await ctx.db
+      .query("reviewEntries")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .take(10);
+    const [matchFn, axes2] = [await matcherFor(ctx, viewerId), axes];
+    const posts = await Promise.all(recentPosts.map((e) => hydratePost(ctx, e, viewerId, matchFn, axes2)));
 
     const takeDocs = await ctx.db
       .query("takes")
@@ -111,9 +100,15 @@ export const profile = query({
       match,
       coreAxes,
       reviewCount: reviews.length,
+      postCount: (
+        await ctx.db
+          .query("reviewEntries")
+          .withIndex("by_user", (q) => q.eq("userId", user._id))
+          .take(1000)
+      ).length,
       takeCount: takeDocs.length,
       ratings,
-      latestReview,
+      posts,
       takes,
     };
   },
@@ -215,8 +210,8 @@ export const deleteAccount = mutation({
       .query("reactions")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect()) {
-      const review = await ctx.db.get(reaction.reviewId);
-      if (review) await ctx.db.patch(review._id, { reactionCount: Math.max(0, review.reactionCount - 1) });
+      const entry = reaction.entryId && (await ctx.db.get(reaction.entryId));
+      if (entry) await ctx.db.patch(entry._id, { reactionCount: Math.max(0, (entry.reactionCount ?? 0) - 1) });
       await ctx.db.delete(reaction._id);
     }
     for (const req of await ctx.db

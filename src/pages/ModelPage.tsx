@@ -40,7 +40,7 @@ export function ModelPage() {
           </div>
           <h1 className={s.name}>{version.displayName}</h1>
           <p className={s.summary}>
-            {fmtCount(data.reviewCount)} {data.reviewCount === 1 ? "review" : "reviews"} ·{" "}
+            {fmtCount(data.reviewCount)} {data.reviewCount === 1 ? "reviewer" : "reviewers"} ·{" "}
             <span className={s.rating}>{fmtAvg(overall.avg)} overall</span> ·{" "}
             {fmtCount(data.takeCount)} head-to-head {data.takeCount === 1 ? "take" : "takes"}
           </p>

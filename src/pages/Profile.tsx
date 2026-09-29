@@ -4,7 +4,8 @@ import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../convex/_generated/api";
-import { Avatar, ConfirmDelete, DeleteReview, Stars, PageLoading } from "../components/bits";
+import { Avatar, ConfirmDelete, Stars, PageLoading } from "../components/bits";
+import { ReviewPost } from "../components/FeedCards";
 import { monthYear, shortDate } from "../lib/format";
 import { versionPath } from "../lib/paths";
 import { NotFound } from "./NotFound";
@@ -35,7 +36,7 @@ export function Profile() {
 
   if (data === undefined) return <PageLoading />;
   if (data === null) return <NotFound what="reviewer" />;
-  const { user, latestReview } = data;
+  const { user } = data;
 
   return (
     <div className={ui.page}>
@@ -119,7 +120,7 @@ export function Profile() {
         </div>
         <div className={s.counts}>
           <span>
-            {data.reviewCount} {data.reviewCount === 1 ? "review" : "reviews"}
+            {data.postCount} {data.postCount === 1 ? "review" : "reviews"}
           </span>
           <span className={s.countSep} aria-hidden />
           <span>
@@ -179,7 +180,9 @@ export function Profile() {
                     </td>
                   ))}
                   <td className={s.num} data-label="Updated">
-                    {shortDate(r.updatedAt)}
+                    <Link to={`/r/${r._id}`} title="All their reviews of this model">
+                      {shortDate(r.updatedAt)}
+                    </Link>
                   </td>
                 </tr>
               ))}
@@ -190,48 +193,17 @@ export function Profile() {
 
       <div className={s.columns}>
         <section>
-          <h2 className={ui.sectionLabel}>Latest review · with updates</h2>
-          {latestReview ? (
-            <div className={`${ui.card} ${s.latest}`}>
-              <div className={s.latestHead}>
-                <span className={s.latestModel}>
-                  <VersionLink v={latestReview.version} />
-                </span>
-                {latestReview.overall && <Stars value={latestReview.overall} />}
-                {data.isMe && (
-                  <span className={s.headDelete}>
-                    <DeleteReview reviewId={latestReview._id} authorId={user._id} />
-                  </span>
-                )}
+          <h2 className={ui.sectionLabel}>Latest reviews</h2>
+          <div className={s.posts}>
+            {data.posts.length === 0 && (
+              <div className={`${ui.card} ${ui.empty}`}>
+                {data.isMe ? "Your reviews will show here." : `No reviews from @${user.handle} yet.`}
               </div>
-              {latestReview.entries.map((e, i) => {
-                const older = latestReview.entries[i + 1];
-                const isOriginal = !older;
-                const stars = !e.overallAtTime
-                  ? null
-                  : older?.overallAtTime && older.overallAtTime !== e.overallAtTime
-                    ? `${older.overallAtTime}★ → ${e.overallAtTime}★`
-                    : `${e.overallAtTime}★`;
-                return (
-                  <div
-                    key={e._id}
-                    className={i === 0 ? s.entryLatest : s.entryOld}
-                  >
-                    <div className={s.entryHead}>
-                      {isOriginal ? "Original" : "Update"} ·{" "}
-                      {shortDate(e.createdAt)}
-                      {stars && ` · ${stars}`}
-                    </div>
-                    <p className={ui.body}>{e.text}</p>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className={`${ui.card} ${ui.empty}`}>
-              {data.isMe ? "Your latest review will show here." : `No reviews from @${user.handle} yet.`}
-            </div>
-          )}
+            )}
+            {data.posts.map((p) => (
+              <ReviewPost key={p._id} r={p} />
+            ))}
+          </div>
         </section>
 
         <section>

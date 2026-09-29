@@ -81,13 +81,13 @@ export const homeStats = query({
       });
     }
 
-    // Most reviewed this week: reviews posted or updated in the last 7 days.
+    // Most reviewed this week: reviews posted in the last 7 days.
     const recent = await ctx.db
-      .query("reviews")
-      .withIndex("by_updatedAt", (q) => q.gte("updatedAt", Date.now() - WEEK))
+      .query("reviewEntries")
+      .withIndex("by_createdAt", (q) => q.gte("createdAt", Date.now() - WEEK))
       .collect();
     const weekly = new Map<Id<"versions">, number>();
-    for (const r of recent) weekly.set(r.versionId, (weekly.get(r.versionId) ?? 0) + 1);
+    for (const e of recent) if (e.versionId) weekly.set(e.versionId, (weekly.get(e.versionId) ?? 0) + 1);
     const topWeekly = rows
       .map((row) => ({ row, n: weekly.get(row.version._id) ?? 0 }))
       .filter((x) => x.n > 0)

@@ -11,10 +11,13 @@ import {
   checkScore,
   compareAxes,
   createTake,
-  deleteReviewCascade,
+  currentScores,
+  deletePost,
   findOrActivateVersion,
+  insertPost,
   isAdmin,
   matcherFor,
+  namedScores,
   publicAxis,
   publicUser,
   REACTION_KINDS,
@@ -26,37 +29,36 @@ import {
   statsFor,
   versionLabel,
 } from "./lib";
-import { claimImage, releaseImage } from "./uploads";
+import { claimImage } from "./uploads";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
-/** Re-posting within this long of your last post edits it instead of adding a dated update. */
-export const EDIT_WINDOW = 10 * 60 * 1000;
+/** Re-posting the same head-to-head within this long replaces it instead of adding another. */
+const TAKE_REPLACE_WINDOW = 10 * 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
 
 type Matcher = Awaited<ReturnType<typeof matcherFor>>;
 type AxisMap = Awaited<ReturnType<typeof axisIndex>>;
 
-/** Everything a review card (model page or feed) needs. */
-export async function hydrateReview(
+/** Everything a post card (model page, feeds, a review's page) needs. */
+export async function hydratePost(
   ctx: QueryCtx,
-  review: Doc<"reviews">,
+  entry: Doc<"reviewEntries">,
   viewerId: Id<"users"> | null,
   match: Matcher,
   axes: AxisMap,
 ) {
-  const [user, version, latest, reactions, scores] = await Promise.all([
-    ctx.db.get(review.userId),
-    versionLabel(ctx, review.versionId),
-    ctx.db
-      .query("reviewEntries")
-      .withIndex("by_review", (q) => q.eq("reviewId", review._id))
-      .order("desc")
-      .first(),
+  // Posts carry their author and model; older ones get them from the review until backfilled.
+  const owner =
+    entry.userId && entry.versionId
+      ? { userId: entry.userId, versionId: entry.versionId }
+      : await ctx.db.get(entry.reviewId);
+  const [user, version, reactions] = await Promise.all([
+    owner ? ctx.db.get(owner.userId) : null,
+    owner ? versionLabel(ctx, owner.versionId) : null,
     ctx.db
       .query("reactions")
-      .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+      .withIndex("by_entry", (q) => q.eq("entryId", entry._id))
       .collect(),
-    scoresForReview(ctx, review._id, axes),
   ]);
   const counts = Object.fromEntries(REACTION_KINDS.map((k) => [k, 0])) as Record<
     ReactionKind,
@@ -68,27 +70,35 @@ export async function hydrateReview(
     if (viewerId && r.userId === viewerId) mine.push(r.kind);
   }
   return {
-    _id: review._id,
+    _id: entry._id,
+    reviewId: entry.reviewId,
     user: user ? publicUser(user) : null,
     version,
-    overall: review.overall,
-    scores,
-    text: latest?.text ?? "",
-    prompt: latest?.prompt,
-    response: latest?.response,
-    image: latest?.image
-      ? { entryId: latest._id, url: await ctx.storage.getUrl(latest.image), caption: latest.imageAlt }
+    // The ratings the author had when they wrote it.
+    overall: entry.overallAtTime,
+    scores: namedScores(entry.scoresAtTime ?? [], axes),
+    text: entry.text,
+    prompt: entry.prompt,
+    response: entry.response,
+    image: entry.image
+      ? { entryId: entry._id, url: await ctx.storage.getUrl(entry.image), caption: entry.imageAlt }
       : null,
-    xUrl: latest?.xUrl, // the text is a post imported from X
-    updatedAt: review.updatedAt,
-    createdAt: review.createdAt,
+    xUrl: entry.xUrl, // the text is a post imported from X
+    createdAt: entry.createdAt,
+    editedAt: entry.editedAt,
     reactionCounts: counts,
     myReactions: mine,
-    match: await match(review.userId),
+    match: owner ? await match(owner.userId) : null,
   };
 }
 
-export type ReviewCard = Awaited<ReturnType<typeof hydrateReview>>;
+export type Post = Awaited<ReturnType<typeof hydratePost>>;
+
+async function hydrateAll(ctx: QueryCtx, entries: Doc<"reviewEntries">[]) {
+  const viewerId = await getAuthUserId(ctx);
+  const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
+  return await Promise.all(entries.map((e) => hydratePost(ctx, e, viewerId, match, axes)));
+}
 
 // ---------- mutations ----------
 
@@ -99,6 +109,11 @@ const scoreInput = v.object({
   score: v.number(),
 });
 
+/**
+ * Posts a review of a model and sets your rating of it (which replaces your
+ * previous one). With no text, or the same text as your latest post (adding
+ * ratings to a post from X), it only updates the rating.
+ */
 export const upsert = mutation({
   args: {
     versionId: v.string(), // "<provider>/<model>"; a catalog model gets its page on first review
@@ -120,7 +135,6 @@ export const upsert = mutation({
     const user = await requireMember(ctx);
     checkScore(args.overall, "Overall");
     if (args.scores.length > 40) throw new ConvexError("That’s a lot of axes. Keep it under 40.");
-    if (!args.text.trim()) throw new ConvexError("Write a few words about it.");
     const caption = args.image ? args.imageCaption?.trim().replace(/\s+/g, " ") || undefined : undefined;
     if (caption && caption.length > 300) throw new ConvexError("Keep the caption under 300 characters.");
     const version = await findOrActivateVersion(ctx, args.versionId);
@@ -131,7 +145,6 @@ export const upsert = mutation({
       throw new ConvexError("That model isn’t available for a head-to-head.");
     }
     const text = args.text.trim();
-    const scores = await resolveScores(ctx, user._id, args.scores);
 
     const now = Date.now();
     const existing = await ctx.db
@@ -140,20 +153,14 @@ export const upsert = mutation({
         q.eq("userId", user._id).eq("versionId", versionId),
       )
       .unique();
+    if (!text && (!existing || args.image)) throw new ConvexError("Write a few words about it.");
+    const scores = await resolveScores(ctx, user._id, args.scores);
 
-    let reviewId: Id<"reviews">;
+    let review: Doc<"reviews">;
     if (existing) {
-      // An update: new scores replace the old ones; the entry is appended to history.
       await applyOverallToStats(ctx, versionId, existing.overall, args.overall);
-      await ctx.db.replace(existing._id, {
-        userId: existing.userId,
-        versionId: existing.versionId,
-        overall: args.overall,
-        reactionCount: existing.reactionCount,
-        createdAt: existing.createdAt,
-        updatedAt: now,
-      });
-      reviewId = existing._id;
+      await ctx.db.patch(existing._id, { overall: args.overall, updatedAt: now });
+      review = (await ctx.db.get(existing._id))!;
     } else {
       const firstReview =
         (await ctx.db
@@ -161,75 +168,92 @@ export const upsert = mutation({
           .withIndex("by_user", (q) => q.eq("userId", user._id))
           .first()) === null;
       if (firstReview) await bumpReviewerCount(ctx, 1);
-      reviewId = await ctx.db.insert("reviews", {
+      const reviewId = await ctx.db.insert("reviews", {
         userId: user._id,
         versionId: versionId,
         overall: args.overall,
-        reactionCount: 0,
         createdAt: now,
         updatedAt: now,
       });
       await applyOverallToStats(ctx, versionId, null, args.overall);
+      review = (await ctx.db.get(reviewId))!;
     }
-    await replaceReviewScores(
-      ctx,
-      { _id: reviewId, userId: user._id, versionId: versionId },
-      scores,
-    );
+    await replaceReviewScores(ctx, review, scores);
     if (args.image) await claimImage(ctx, user._id, existing?._id ?? null, args.image);
-    const entry = {
-      text,
-      image: args.image,
-      imageAlt: caption,
+
+    const ratings = {
       overallAtTime: args.overall,
+      scoresAtTime: [...scores].map(([axisId, score]) => ({ axisId, score })),
     };
-    const last = existing
+    const latest = existing
       ? await ctx.db
           .query("reviewEntries")
-          .withIndex("by_review", (q) => q.eq("reviewId", reviewId))
+          .withIndex("by_review", (q) => q.eq("reviewId", review._id))
           .order("desc")
           .first()
       : null;
-    if (last && last.text === text && !args.image && !last.image) {
-      // Same text as before (e.g. adding ratings to a review imported from X): the
-      // new scores are saved above; no new dated entry.
-    } else if (last && now - last.createdAt < EDIT_WINDOW) {
-      // A quick fix (typo, tweak): replace the last entry instead of adding history.
-      await ctx.db.patch(last._id, { ...entry, prompt: undefined, response: undefined });
-      if (last.image && last.image !== args.image) {
-        await releaseImage(ctx, reviewId, last.image, last._id);
+    let postId: Id<"reviewEntries"> | null = null;
+    if (!text || (latest && latest.text === text && !args.image && !latest.image)) {
+      // Only the rating changed. A post that was written without ratings (one from X)
+      // takes these as its own; others keep the ratings they were written with.
+      if (latest && !latest.overallAtTime && !latest.scoresAtTime?.length) {
+        await ctx.db.patch(latest._id, ratings);
       }
     } else {
-      await ctx.db.insert("reviewEntries", { reviewId, ...entry, createdAt: now });
+      postId = await insertPost(ctx, review, {
+        text,
+        image: args.image,
+        imageAlt: caption,
+        ...ratings,
+        createdAt: now,
+      });
     }
     if (args.versus && opponent) {
-      // An edit re-posted within the window replaces its take rather than adding another.
       const [winner, loser] = args.versus.reviewedWins
         ? [versionId, opponent._id]
         : [opponent._id, versionId];
-      await createTake(ctx, user._id, winner, loser, args.versus.reason, EDIT_WINDOW);
+      await createTake(ctx, user._id, winner, loser, args.versus.reason, TAKE_REPLACE_WINDOW);
     }
-    return reviewId;
+    return { reviewId: review._id, postId };
   },
 });
 
-/** Delete your own review (admins can delete any). */
-export const remove = mutation({
-  args: { reviewId: v.id("reviews") },
-  handler: async (ctx, { reviewId }) => {
+/** Edit the text of one of your posts. */
+export const editPost = mutation({
+  args: { entryId: v.id("reviewEntries"), text: v.string() },
+  handler: async (ctx, { entryId, text }) => {
     const user = await requireMember(ctx);
-    const review = await ctx.db.get(reviewId);
-    if (!review) return;
-    if (review.userId !== user._id && !isAdmin(user)) {
+    const entry = await ctx.db.get(entryId);
+    const review = entry && (await ctx.db.get(entry.reviewId));
+    if (!entry || review?.userId !== user._id) throw new ConvexError("You can only edit your own reviews.");
+    if (entry.xUrl) throw new ConvexError("This is your post from X, so it can’t be edited here. Post a new review instead.");
+    const trimmed = text.trim();
+    if (!trimmed) throw new ConvexError("Write a few words about it.");
+    if (trimmed !== entry.text) await ctx.db.patch(entryId, { text: trimmed, editedAt: Date.now() });
+  },
+});
+
+/** Delete one of your posts (admins can delete any). Deleting your last one on a model removes your rating too. */
+export const removePost = mutation({
+  args: { entryId: v.id("reviewEntries") },
+  handler: async (ctx, { entryId }) => {
+    const user = await requireMember(ctx);
+    const entry = await ctx.db.get(entryId);
+    if (!entry) return;
+    const review = await ctx.db.get(entry.reviewId);
+    if (review?.userId !== user._id && !isAdmin(user)) {
       throw new ConvexError("You can only delete your own reviews.");
     }
-    await deleteReviewCascade(ctx, review);
+    await deletePost(ctx, entry);
   },
 });
 
 // ---------- queries ----------
 
-/** One review, for its share page (/r/:id). */
+/**
+ * One person's reviews of one model (/r/:id): their current rating and every
+ * post, newest first.
+ */
 export const get = query({
   args: { id: v.string() },
   handler: async (ctx, { id }) => {
@@ -237,12 +261,48 @@ export const get = query({
     const review = reviewId ? await ctx.db.get(reviewId) : null;
     if (!review) return null;
     const viewerId = await getAuthUserId(ctx);
-    const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
-    return await hydrateReview(ctx, review, viewerId, match, axes);
+    const [user, version, match, axes, entries] = await Promise.all([
+      ctx.db.get(review.userId),
+      versionLabel(ctx, review.versionId),
+      matcherFor(ctx, viewerId),
+      axisIndex(ctx),
+      ctx.db
+        .query("reviewEntries")
+        .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+        .order("desc")
+        .collect(),
+    ]);
+    return {
+      _id: review._id,
+      user: user ? publicUser(user) : null,
+      version,
+      overall: review.overall,
+      scores: await scoresForReview(ctx, review._id, axes),
+      createdAt: review.createdAt,
+      updatedAt: review.updatedAt,
+      match: await match(review.userId),
+      posts: await Promise.all(entries.map((e) => hydratePost(ctx, e, viewerId, match, axes))),
+    };
   },
 });
 
-/** A version's reviews, most reactions first, optionally only one star rating. Paginated. */
+/** One post, for its share page (/p/:id), with how many its author wrote about the model. */
+export const post = query({
+  args: { id: v.string() },
+  handler: async (ctx, { id }) => {
+    const entryId = ctx.db.normalizeId("reviewEntries", id);
+    const entry = entryId ? await ctx.db.get(entryId) : null;
+    if (!entry) return null;
+    const [post] = await hydrateAll(ctx, [entry]);
+    const siblings = await ctx.db
+      .query("reviewEntries")
+      .withIndex("by_review", (q) => q.eq("reviewId", entry.reviewId))
+      .take(100);
+    return { ...post, postCount: siblings.length };
+  },
+});
+
+/** A version's posts, most reactions first, optionally only ones with some star rating. Paginated. */
 export const byVersion = query({
   args: {
     versionId: v.id("versions"),
@@ -250,61 +310,49 @@ export const byVersion = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, { versionId, stars, paginationOpts }) => {
-    const viewerId = await getAuthUserId(ctx);
-    const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
     const q = stars
       ? ctx.db
-          .query("reviews")
+          .query("reviewEntries")
           .withIndex("by_version_overall_reactions", (q) =>
-            q.eq("versionId", versionId).eq("overall", stars),
+            q.eq("versionId", versionId).eq("overallAtTime", stars),
           )
       : ctx.db
-          .query("reviews")
+          .query("reviewEntries")
           .withIndex("by_version_reactions", (q) => q.eq("versionId", versionId));
     const result = await q.order("desc").paginate(paginationOpts);
-    return {
-      ...result,
-      page: await Promise.all(result.page.map((r) => hydrateReview(ctx, r, viewerId, match, axes))),
-    };
+    return { ...result, page: await hydrateAll(ctx, result.page) };
   },
 });
 
-/** Latest reviews (new or updated), newest first. Paginated. */
+/** Latest posts, newest first. Paginated. */
 export const feedLatest = query({
   args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, { paginationOpts }) => {
-    const viewerId = await getAuthUserId(ctx);
-    const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
     const result = await ctx.db
-      .query("reviews")
-      .withIndex("by_updatedAt")
+      .query("reviewEntries")
+      .withIndex("by_createdAt")
       .order("desc")
       .paginate(paginationOpts);
-    return {
-      ...result,
-      page: await Promise.all(result.page.map((r) => hydrateReview(ctx, r, viewerId, match, axes))),
-    };
+    return { ...result, page: await hydrateAll(ctx, result.page) };
   },
 });
 
-/** The 50 reviews with the most reactions in the last 7 days. */
+/** The 50 posts with the most reactions in the last 7 days. */
 export const feedTop = query({
   args: {},
   handler: async (ctx) => {
-    const viewerId = await getAuthUserId(ctx);
-    const [match, axes] = await Promise.all([matcherFor(ctx, viewerId), axisIndex(ctx)]);
     const since = Date.now() - WEEK;
     const recent = await ctx.db
       .query("reactions")
       .withIndex("by_createdAt", (q) => q.gte("createdAt", since))
       .collect();
-    const tally = new Map<Id<"reviews">, number>();
-    for (const r of recent) tally.set(r.reviewId, (tally.get(r.reviewId) ?? 0) + 1);
+    const tally = new Map<Id<"reviewEntries">, number>();
+    for (const r of recent) if (r.entryId) tally.set(r.entryId, (tally.get(r.entryId) ?? 0) + 1);
     const top = [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 50);
-    const reviews = (await Promise.all(top.map(([id]) => ctx.db.get(id)))).filter(
-      (r): r is Doc<"reviews"> => r !== null,
+    const entries = (await Promise.all(top.map(([id]) => ctx.db.get(id)))).filter(
+      (e): e is Doc<"reviewEntries"> => e !== null,
     );
-    return await Promise.all(reviews.map((r) => hydrateReview(ctx, r, viewerId, match, axes)));
+    return await hydrateAll(ctx, entries);
   },
 });
 
@@ -314,12 +362,12 @@ export const feedSummary = query({
   handler: async (ctx) => {
     const now = Date.now();
     const week = await ctx.db
-      .query("reviews")
-      .withIndex("by_updatedAt", (q) => q.gte("updatedAt", now - WEEK))
+      .query("reviewEntries")
+      .withIndex("by_createdAt", (q) => q.gte("createdAt", now - WEEK))
       .collect();
-    const today = week.filter((r) => r.updatedAt >= now - DAY).length;
+    const today = week.filter((e) => e.createdAt >= now - DAY).length;
     const perVersion = new Map<Id<"versions">, number>();
-    for (const r of week) perVersion.set(r.versionId, (perVersion.get(r.versionId) ?? 0) + 1);
+    for (const e of week) if (e.versionId) perVersion.set(e.versionId, (perVersion.get(e.versionId) ?? 0) + 1);
     const [mostId] = [...perVersion.entries()].sort((a, b) => b[1] - a[1])[0] ?? [];
     const most = mostId ? await versionLabel(ctx, mostId) : null;
     return { today, mostReviewed: most?.displayName ?? null };
@@ -362,9 +410,18 @@ export const forWrite = query({
       .filter((a) => a.status === "active" && (a.core || a.ratingCount > 0))
       .sort(compareAxes)
       .map(publicAxis);
-    // Your existing reviews by version: when you first reviewed it and when you last posted.
-    // `xText`: the latest entry's text when it was imported from X, to start from.
-    const prior: Record<string, { createdAt: number; lastPostAt: number; xText?: string }> = {};
+    // Your ratings by version (to start the form from) and when you last posted.
+    // `xText`: your latest post's text when it's from X, to add ratings to.
+    const prior: Record<
+      string,
+      {
+        createdAt: number;
+        lastPostAt: number;
+        overall?: number;
+        scores: Record<string, number>;
+        xText?: string;
+      }
+    > = {};
     if (viewerId) {
       const mine = await ctx.db
         .query("reviews")
@@ -372,19 +429,22 @@ export const forWrite = query({
         .collect();
       const versionIdOf = new Map(versions.map((ver) => [ver._id, ver.versionId]));
       for (const r of mine) {
+        const key = versionIdOf.get(r.versionId);
+        if (!key) continue;
         const last = await ctx.db
           .query("reviewEntries")
           .withIndex("by_review", (q) => q.eq("reviewId", r._id))
           .order("desc")
           .first();
-        const key = versionIdOf.get(r.versionId);
-        if (key) {
-          prior[key] = {
-            createdAt: r.createdAt,
-            lastPostAt: last?.createdAt ?? r.updatedAt,
-            xText: last?.xUrl ? last.text : undefined,
-          };
-        }
+        const scores: Record<string, number> = {};
+        for (const row of await currentScores(ctx, r._id)) scores[row.axisId] = row.score;
+        prior[key] = {
+          createdAt: r.createdAt,
+          lastPostAt: last?.createdAt ?? r.updatedAt,
+          overall: r.overall,
+          scores,
+          xText: last?.xUrl ? last.text : undefined,
+        };
       }
     }
     return { options, axes, prior };

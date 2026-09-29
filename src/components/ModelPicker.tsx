@@ -113,7 +113,7 @@ export function ModelPicker({
                 <span className={s.name}>{m.displayName}</span>
                 <span className={s.meta}>
                   {m.provider}
-                  {m.reviewCount > 0 ? ` · ${m.reviewCount} ${m.reviewCount === 1 ? "review" : "reviews"}` : " · new"}
+                  {m.reviewCount > 0 ? ` · ${m.reviewCount} ${m.reviewCount === 1 ? "reviewer" : "reviewers"}` : " · new"}
                 </span>
               </li>
             ))}

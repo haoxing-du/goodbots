@@ -12,7 +12,7 @@ import { Profile } from "./pages/Profile";
 import { RequestModel } from "./pages/RequestModel";
 import { Admin } from "./pages/Admin";
 import { Search } from "./pages/Search";
-import { ReviewPage } from "./pages/ReviewPage";
+import { PostPage, ReviewPage } from "./pages/ReviewPage";
 import { NotFound } from "./pages/NotFound";
 import { About, Privacy, Terms } from "./pages/Legal";
 
@@ -43,6 +43,7 @@ export function App() {
             <Route path="/m/:provider/:model" element={<ModelPage />} />
             <Route path="/u/:handle" element={<Profile />} />
             <Route path="/r/:id" element={<ReviewPage />} />
+            <Route path="/p/:id" element={<PostPage />} />
             <Route path="/request" element={<RequestModel />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/search" element={<Search />} />

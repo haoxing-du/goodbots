@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import type { ReviewCard } from "../../convex/reviews";
+import type { Post } from "../../convex/reviews";
 import { useSignIn } from "./SignIn";
 import { writePath } from "../lib/paths";
 import s from "./XPost.module.css";
@@ -25,7 +25,7 @@ export function Linkified({ text }: { text: string }) {
 }
 
 /** A review's text, with links made clickable when it was imported from X. */
-export function ReviewText({ r }: { r: Pick<ReviewCard, "text" | "xUrl"> }) {
+export function ReviewText({ r }: { r: Pick<Post, "text" | "xUrl"> }) {
   return r.xUrl ? <Linkified text={r.text} /> : <>{r.text}</>;
 }
 
@@ -34,7 +34,7 @@ export function ReviewText({ r }: { r: Pick<ReviewCard, "text" | "xUrl"> }) {
  * invitation for its author to claim it (sign in with X) or, once they have, to
  * add the ratings and head-to-head an X post can't carry.
  */
-export function XImportNote({ r }: { r: ReviewCard }) {
+export function XImportNote({ r }: { r: Post }) {
   const me = useQuery(api.users.me);
   const { open } = useSignIn();
   if (!r.xUrl) return null;
@@ -59,7 +59,7 @@ export function XImportNote({ r }: { r: ReviewCard }) {
             // "Add ratings or a head-to-head".
             open(
               `Sign in with X as @${r.user?.xHandle} to claim this review. Then you can add ratings and a head-to-head, or delete it.`,
-              `/r/${r._id}`,
+              `/p/${r._id}`,
             )
           }
         >

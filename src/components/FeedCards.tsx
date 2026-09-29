@@ -1,10 +1,21 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link } from "react-router-dom";
-import type { ReviewCard as ReviewCardData } from "../../convex/reviews";
-import { AxisChips, Avatar, DeleteReview, MatchChip, ReviewImage, Snippet, Stars, UserLink } from "./bits";
+import type { Post } from "../../convex/reviews";
+import {
+  AxisChips,
+  Avatar,
+  DeletePost,
+  EditPostForm,
+  EditPostLink,
+  MatchChip,
+  ReviewImage,
+  Snippet,
+  Stars,
+  UserLink,
+} from "./bits";
 import { Reactions } from "./Reactions";
 import { ReviewText, XImportNote } from "./XPost";
-import { timeAgo } from "../lib/format";
+import { PostTime } from "./PostTime";
 import { versionPath } from "../lib/paths";
 import { useMasonry } from "../lib/useMasonry";
 import { useCardLink } from "../lib/useCardLink";
@@ -32,18 +43,19 @@ export const boardWide = s.wide;
 // Past this many characters a card clamps to 8 lines and links to the full review.
 const LONG_REVIEW = 420;
 
-export function ReviewPost({ r }: { r: ReviewCardData }) {
+export function ReviewPost({ r }: { r: Post }) {
+  const [editing, setEditing] = useState(false);
   const long = r.text.length > LONG_REVIEW;
-  const cardLink = useCardLink(`/r/${r._id}`);
+  const cardLink = useCardLink(`/p/${r._id}`);
   return (
-    <article className={`${ui.card} ${s.post} ${s.linked}`} {...cardLink}>
+    <article className={`${ui.card} ${s.post} ${editing ? "" : s.linked}`} {...(editing ? {} : cardLink)}>
       <header className={s.postHead}>
         <Avatar name={r.user?.name ?? "?"} image={r.user?.image} size={36} />
         <div className={s.who}>
           <UserLink user={r.user} className={s.name} />
           <span className={s.meta}>
             {r.user && <>@{r.user.handle} · </>}
-            <Link to={`/r/${r._id}`}>{timeAgo(r.updatedAt)}</Link>
+            <PostTime r={r} />
           </span>
         </div>
         <MatchChip match={r.match} />
@@ -58,11 +70,15 @@ export function ReviewPost({ r }: { r: ReviewCardData }) {
           {r.overall ? <Stars value={r.overall} size={13} /> : null}
         </div>
       )}
-      <p className={`${s.text} ${long ? s.clamped : ""}`}>
-        <ReviewText r={r} />
-      </p>
-      {long && (
-        <Link to={`/r/${r._id}`} className={s.more}>
+      {editing ? (
+        <EditPostForm entryId={r._id} text={r.text} onDone={() => setEditing(false)} />
+      ) : (
+        <p className={`${s.text} ${long ? s.clamped : ""}`}>
+          <ReviewText r={r} />
+        </p>
+      )}
+      {long && !editing && (
+        <Link to={`/p/${r._id}`} className={s.more}>
           Read the full review
         </Link>
       )}
@@ -71,8 +87,11 @@ export function ReviewPost({ r }: { r: ReviewCardData }) {
       <AxisChips scores={r.scores} />
       <XImportNote r={r} />
       <footer className={s.postFoot}>
-        <Reactions reviewId={r._id} counts={r.reactionCounts} mine={r.myReactions} compact />
-        <DeleteReview reviewId={r._id} authorId={r.user?._id} />
+        <Reactions entryId={r._id} counts={r.reactionCounts} mine={r.myReactions} compact />
+        <span className={s.postActions}>
+          {!editing && <EditPostLink r={r} onEdit={() => setEditing(true)} />}
+          <DeletePost entryId={r._id} authorId={r.user?._id} />
+        </span>
       </footer>
     </article>
   );

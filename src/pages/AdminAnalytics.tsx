@@ -434,8 +434,8 @@ function TopLists({ top }: { top: Overview["top"] }) {
         </TopList>
         <TopList title="Most-reacted reviews" empty="No reactions on new reviews yet.">
           {top.reviews.map((r) => (
-            <li key={r.reviewId}>
-              <Link to={`/r/${r.reviewId}`}>
+            <li key={r.postId}>
+              <Link to={`/p/${r.postId}`}>
                 {r.user?.name ?? "Unknown"} on {r.model}
               </Link>
               <span className={s.topCount}>

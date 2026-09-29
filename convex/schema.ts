@@ -106,32 +106,46 @@ export default defineSchema({
     .index("by_slug", ["slug"])
     .index("by_creator", ["createdBy", "createdAt"]),
 
+  // A person's standing rating of a model: one per person per model. Their posts
+  // about it (reviewEntries) hang off it.
   reviews: defineTable({
     userId: v.id("users"),
     versionId: v.id("versions"),
     overall: v.optional(v.number()), // 1–5 stars, optional
-    reactionCount: v.number(),
+    reactionCount: v.optional(v.number()), // legacy: reactions are on posts now
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_user_version", ["userId", "versionId"])
     .index("by_user", ["userId"])
     .index("by_version", ["versionId"])
-    .index("by_version_reactions", ["versionId", "reactionCount"])
-    .index("by_version_overall_reactions", ["versionId", "overall", "reactionCount"])
     .index("by_updatedAt", ["updatedAt"]),
 
+  // Posts: each is a dated review of a model, with the ratings its author had when
+  // they wrote it. As many per person and model as they like.
+  // userId, versionId and reactionCount are optional only until existing posts are
+  // backfilled (migrations.postsBackfill).
   reviewEntries: defineTable({
     reviewId: v.id("reviews"),
+    userId: v.optional(v.id("users")), // the review's, copied for listing posts
+    versionId: v.optional(v.id("versions")),
     text: v.string(),
     image: v.optional(v.id("_storage")), // one screenshot per entry
     imageAlt: v.optional(v.string()), // the screenshot's caption, shown under it
     prompt: v.optional(v.string()), // legacy: the form no longer offers prompt/response
     response: v.optional(v.string()),
     overallAtTime: v.optional(v.number()),
+    scoresAtTime: v.optional(v.array(v.object({ axisId: v.id("axes"), score: v.number() }))),
     xUrl: v.optional(v.string()), // imported from this post on X
+    reactionCount: v.optional(v.number()),
     createdAt: v.number(),
-  }).index("by_review", ["reviewId", "createdAt"]),
+    editedAt: v.optional(v.number()), // last time its author edited the text
+  })
+    .index("by_review", ["reviewId", "createdAt"])
+    .index("by_user", ["userId", "createdAt"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_version_reactions", ["versionId", "reactionCount"])
+    .index("by_version_overall_reactions", ["versionId", "overallAtTime", "reactionCount"]),
 
   // Screenshots uploaded but not yet attached to a review entry. The row is
   // deleted when the image is posted; a cron deletes stale ones and their files.
@@ -167,14 +181,16 @@ export default defineSchema({
     .index("by_version_axis", ["versionId", "axisId"])
     .index("by_axis", ["axisId"]),
 
+  // Reactions are on posts. reviewId is legacy (entryId optional until backfilled).
   reactions: defineTable({
-    reviewId: v.id("reviews"),
+    entryId: v.optional(v.id("reviewEntries")),
+    reviewId: v.optional(v.id("reviews")),
     userId: v.id("users"),
     kind: reactionKind,
     createdAt: v.number(),
   })
-    .index("by_review_user_kind", ["reviewId", "userId", "kind"])
-    .index("by_review", ["reviewId"])
+    .index("by_entry_user_kind", ["entryId", "userId", "kind"])
+    .index("by_entry", ["entryId"])
     .index("by_user", ["userId"])
     .index("by_createdAt", ["createdAt"]),
 

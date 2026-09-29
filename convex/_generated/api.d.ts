@@ -18,6 +18,7 @@ import type * as home from "../home.js";
 import type * as http from "../http.js";
 import type * as lib from "../lib.js";
 import type * as magicLink from "../magicLink.js";
+import type * as migrations from "../migrations.js";
 import type * as models from "../models.js";
 import type * as moderation from "../moderation.js";
 import type * as og from "../og.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   lib: typeof lib;
   magicLink: typeof magicLink;
+  migrations: typeof migrations;
   models: typeof models;
   moderation: typeof moderation;
   og: typeof og;

@@ -4,7 +4,7 @@
 //
 // Needs CONVEX_SITE_URL (the deployment's .convex.site URL) in Vercel's env.
 
-export const config = { matcher: ["/", "/m/:path*", "/u/:path*", "/r/:path*"] };
+export const config = { matcher: ["/", "/m/:path*", "/u/:path*", "/r/:path*", "/p/:path*"] };
 
 const CRAWLERS =
   /bot|crawler|spider|preview|facebookexternalhit|slack|discord|whatsapp|telegram|embedly|iframely|linkedin|pinterest|skype|vkshare|mastodon|bluesky|applebot/i;

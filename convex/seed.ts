@@ -7,6 +7,8 @@ import {
   REACTION_KINDS,
   createVersion,
   replaceReviewScores,
+  insertPost,
+  currentScores,
 } from "./lib";
 
 const MIN = 60 * 1000;
@@ -245,7 +247,6 @@ export const run = internalMutation({
         userId: args.userId,
         versionId: args.versionId,
         overall: args.overall,
-        reactionCount: 0,
         createdAt: args.createdAt,
         updatedAt: args.updatedAt,
       });
@@ -260,7 +261,20 @@ export const run = internalMutation({
       return reviewId;
     };
 
-    const reviewIds: Id<"reviews">[] = [];
+    /** Adds a post; the latest one carries the review's current axis scores. */
+    const seedPost = async (
+      reviewId: Id<"reviews">,
+      post: { text: string; overallAtTime: number | undefined; createdAt: number },
+      latest: boolean,
+    ) => {
+      const review = (await ctx.db.get(reviewId))!;
+      return await insertPost(ctx, review, {
+        ...post,
+        scoresAtTime: latest ? await currentScores(ctx, reviewId) : undefined,
+      });
+    };
+
+    const postIds: Id<"reviewEntries">[] = [];
     for (const r of REVIEWS) {
       const [overall, ...core] = r.s.map((n) => n || undefined);
       const versionId = versions.get(r.v)!;
@@ -273,15 +287,11 @@ export const run = internalMutation({
         createdAt: now - r.entries[0].ago,
         updatedAt: now - r.entries[r.entries.length - 1].ago,
       });
-      for (const e of r.entries) {
-        await ctx.db.insert("reviewEntries", {
-          reviewId,
-          text: e.text,
-          overallAtTime: e.overall,
-          createdAt: now - e.ago,
-        });
+      for (const [k, e] of r.entries.entries()) {
+        const latest = k === r.entries.length - 1;
+        const postId = await seedPost(reviewId, { text: e.text, overallAtTime: e.overall, createdAt: now - e.ago }, latest);
+        if (latest) postIds.push(postId);
       }
-      reviewIds.push(reviewId);
     }
 
     // Background reviewers: user i skips version j when (i + j) % 5 === 0.
@@ -320,12 +330,7 @@ export const run = internalMutation({
           updatedAt: at,
         });
         const texts = BULK_TEXT[v];
-        await ctx.db.insert("reviewEntries", {
-          reviewId,
-          text: texts[(i + j) % texts.length],
-          overallAtTime: s[0],
-          createdAt: at,
-        });
+        await seedPost(reviewId, { text: texts[(i + j) % texts.length], overallAtTime: s[0], createdAt: at }, true);
       }
     }
 
@@ -333,24 +338,24 @@ export const run = internalMutation({
     const reviewers = new Set((await ctx.db.query("reviews").collect()).map((r) => r.userId));
     await ctx.db.insert("siteStats", { reviewerCount: reviewers.size });
 
-    // Reactions (curated reviews only): each other user reacts with some probability.
+    // Reactions (curated reviews' latest posts only): each other user reacts with some probability.
     const rand = rng(42);
     const handles = USERS.map((u) => u[1] as string);
-    for (const reviewId of reviewIds) {
-      const review = (await ctx.db.get(reviewId))!;
+    for (const entryId of postIds) {
+      const post = (await ctx.db.get(entryId))!;
       let count = 0;
       for (const h of handles) {
         const userId = users.get(h)!;
-        if (userId === review.userId) continue;
+        if (userId === post.userId) continue;
         for (const kind of REACTION_KINDS) {
           const p = kind === "agree" ? 0.45 : kind === "useful" ? 0.3 : 0.15;
           if (rand() > p) continue;
-          const age = Math.min(now - review.createdAt, 6 * DAY) * rand();
-          await ctx.db.insert("reactions", { reviewId, userId, kind, createdAt: now - age });
+          const age = Math.min(now - post.createdAt, 6 * DAY) * rand();
+          await ctx.db.insert("reactions", { entryId, userId, kind, createdAt: now - age });
           count++;
         }
       }
-      await ctx.db.patch(reviewId, { reactionCount: count });
+      await ctx.db.patch(entryId, { reactionCount: count });
     }
 
     for (const [by, w, l, reason, daysAgo] of TAKES) {

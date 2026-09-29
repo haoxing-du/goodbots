@@ -16,9 +16,6 @@ import { useTitle } from "../lib/useTitle";
 import { radioGroupKeys, radioTabIndex } from "../lib/radioGroup";
 import { axisVars } from "../lib/axes";
 
-/** Matches EDIT_WINDOW in convex/reviews.ts. */
-const EDIT_WINDOW_MS = 10 * 60 * 1000;
-
 export function WriteReview() {
   useTitle("Write a review");
   const [params, setParams] = useSearchParams();
@@ -33,6 +30,7 @@ export function WriteReview() {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [draftFor, setDraftFor] = useState<string | null>(null);
   const [posted, setPosted] = useState<string | null>(null); // versionId just posted
+  const [postId, setPostId] = useState<string | null>(null); // the review just posted (none if only ratings changed)
   const [changing, setChanging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -48,13 +46,20 @@ export function WriteReview() {
     return data.options.find((o) => o.versionId === want) ?? data.options[0] ?? null;
   }, [data, params]);
 
-  // Switching versions loads that version's draft.
+  // Switching versions loads that version's draft. Ratings start from your current
+  // ones for that model (a draft's own ratings win).
   const selectedId = selected?.versionId ?? null;
+  const priorFor = selectedId ? data?.prior[selectedId] : undefined;
   useEffect(() => {
     if (!selectedId) return;
-    setDraft(loadDraft(selectedId));
+    const saved = loadDraft(selectedId);
+    setDraft(
+      priorFor
+        ? { ...saved, overall: saved.overall || priorFor.overall || 0, scores: { ...priorFor.scores, ...saved.scores } }
+        : saved,
+    );
     setDraftFor(selectedId);
-  }, [selectedId]);
+  }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps -- only on switching models
 
   // "Add ratings" on a review imported from X: start from the post's text. Keeping it
   // unchanged saves just the ratings, without a new dated entry.
@@ -134,7 +139,9 @@ export function WriteReview() {
 
   const rated =
     data.axes.filter((a) => valueFor(a) > 0).length + pendingAxes.filter((a) => a.score > 0).length;
-  const canPost = draft.text.trim().length > 0 && !busy;
+  const hasText = draft.text.trim().length > 0;
+  // With no text, posting just updates the ratings of a model you've reviewed.
+  const canPost = (hasText || (!!prior && !draft.image)) && !busy;
   // Ignore a saved opponent that's no longer on the site (or is this model).
   const opponents = (allVersions ?? []).filter((m) => m.versionId !== selected.versionId);
   const versus =
@@ -146,7 +153,7 @@ export function WriteReview() {
       setBusy(true);
       setError(null);
       try {
-        await upsert({
+        const result = await upsert({
           versionId: selected.versionId,
           overall: draft.overall || undefined,
           scores: [
@@ -171,6 +178,7 @@ export function WriteReview() {
             : undefined,
         });
         setPosted(selected.versionId);
+        setPostId(result.postId);
         saveDraft(selected.versionId, null);
       } catch (e) {
         setError(e instanceof ConvexError ? String(e.data) : "Couldn’t post your review. Try again.");
@@ -215,27 +223,38 @@ export function WriteReview() {
           {prior && !done && (
             <div className={s.notice}>
               {prior.xText
-                ? "This review is your post from X. Keep the text as it is to just add ratings and a head-to-head, or change it to post a dated update."
-                : Date.now() - prior.lastPostAt < EDIT_WINDOW_MS
-                ? "You posted this a few minutes ago. Posting again replaces it (edits within 10 minutes don’t add an update)."
-                : `You reviewed this model on ${proseDate(prior.createdAt)}. Posting now adds a dated update to that review; the new scores replace the old ones.`}
+                ? "This is your post from X. Keep the text as it is to just add ratings and a head-to-head, or change it to post a new review."
+                : `You last reviewed this model on ${proseDate(prior.lastPostAt)}. Posting adds a new review. Your ratings below start from your current ones; change them and they replace those. Leave the text empty to only update your ratings.`}
             </div>
           )}
 
           {done && (
             <div className={s.posted} role="status">
-              <span>Posted. Community averages are now shown next to your scores.</span>
+              <span>
+                {postId ? "Posted." : "Ratings saved."} Community averages are now shown next to your scores.
+              </span>
               <span className={s.postedActions}>
-                <Link to={versionPath(selected.versionId)}>See it on the model page</Link>
+                {postId ? (
+                  <Link to={`/p/${postId}`}>See your review</Link>
+                ) : (
+                  <Link to={versionPath(selected.versionId)}>See the model page</Link>
+                )}
                 <button
                   type="button"
                   className={ui.btnGhost}
                   onClick={() => {
+                    // Start the next review from the ratings just saved.
+                    setDraft({
+                      ...EMPTY_DRAFT,
+                      overall: community?.mine.overall ?? draft.overall,
+                      scores: community ? community.mine.axes : draft.scores,
+                    });
                     setPosted(null);
+                    setPostId(null);
                     requestAnimationFrame(() => textRef.current?.focus());
                   }}
                 >
-                  Edit
+                  Write another
                 </button>
               </span>
             </div>
@@ -358,7 +377,7 @@ export function WriteReview() {
           {!done && (
             <div className={s.footer}>
               <span className={s.progress} id="post-status">
-                {draft.text.trim() ? "" : "Write a few words to post · "}
+                {hasText ? "" : prior ? "No text: only your ratings update · " : "Write a few words to post · "}
                 {rated} {rated === 1 ? "axis" : "axes"} rated · community scores appear after you post
               </span>
               <button
@@ -368,7 +387,7 @@ export function WriteReview() {
                 aria-describedby="post-status"
                 onClick={submit}
               >
-                {busy ? "Posting…" : "Post review"}
+                {busy ? "Saving…" : hasText || !prior ? "Post review" : "Save ratings"}
               </button>
             </div>
           )}

@@ -141,17 +141,90 @@ export function ReviewImage({
 }
 
 /** Small "Delete" link on a review, shown to its author (and admins). */
-export function DeleteReview({ reviewId, authorId }: { reviewId: Id<"reviews">; authorId?: string }) {
+export function DeletePost({ entryId, authorId }: { entryId: Id<"reviewEntries">; authorId?: string }) {
   const me = useQuery(api.users.me);
-  const remove = useMutation(api.reviews.remove);
+  const remove = useMutation(api.reviews.removePost);
   if (!me || (me._id !== authorId && !me.isAdmin)) return null;
   return (
     <ConfirmDelete
       title="Delete this review?"
-      body="Its update history goes too. This can’t be undone."
+      body="If it’s your only review of this model, your ratings of it go too. This can’t be undone."
       confirmLabel="Delete review"
-      run={() => remove({ reviewId })}
+      run={() => remove({ entryId })}
     />
+  );
+}
+
+/** Small "Edit" link on your own review (not on posts from X, which stay as posted). */
+export function EditPostLink({
+  r,
+  onEdit,
+}: {
+  r: { user: { _id: string } | null; xUrl?: string };
+  onEdit: () => void;
+}) {
+  const me = useQuery(api.users.me);
+  if (!me || me._id !== r.user?._id || r.xUrl) return null;
+  return (
+    <button type="button" className={s.editLink} onClick={onEdit}>
+      Edit
+    </button>
+  );
+}
+
+/** In place of a review's text while its author edits it. */
+export function EditPostForm({
+  entryId,
+  text,
+  onDone,
+}: {
+  entryId: Id<"reviewEntries">;
+  text: string;
+  onDone: () => void;
+}) {
+  const edit = useMutation(api.reviews.editPost);
+  const [value, setValue] = useState(text);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <form
+      className={s.editForm}
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setError(null);
+        try {
+          await edit({ entryId, text: value });
+          onDone();
+        } catch (err) {
+          setError(err instanceof ConvexError ? String(err.data) : "Couldn’t save that. Try again.");
+          setBusy(false);
+        }
+      }}
+    >
+      <textarea
+        className={s.editText}
+        aria-label="Your review"
+        rows={Math.min(12, Math.max(3, value.split("\n").length + 1))}
+        value={value}
+        autoFocus
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => e.key === "Escape" && onDone()}
+      />
+      <div className={s.editActions}>
+        <button type="submit" className={ui.btn} disabled={busy || !value.trim()}>
+          {busy ? "Saving…" : "Save"}
+        </button>
+        <button type="button" className={ui.btnGhost} onClick={onDone}>
+          Cancel
+        </button>
+        {error && (
+          <span className={s.deleteError} role="alert">
+            {error}
+          </span>
+        )}
+      </div>
+    </form>
   );
 }
 

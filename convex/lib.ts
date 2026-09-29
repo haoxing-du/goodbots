@@ -179,10 +179,14 @@ export async function scoresForReview(
   reviewId: Id<"reviews">,
   axes: Map<Id<"axes">, Doc<"axes">>,
 ) {
-  const rows = await ctx.db
-    .query("reviewScores")
-    .withIndex("by_review", (q) => q.eq("reviewId", reviewId))
-    .collect();
+  return namedScores(await currentScores(ctx, reviewId), axes);
+}
+
+/** Axis scores with axis names, in display order. Hidden axes are skipped. */
+export function namedScores(
+  rows: { axisId: Id<"axes">; score: number }[],
+  axes: Map<Id<"axes">, Doc<"axes">>,
+) {
   return rows
     .map((r) => ({ axis: axes.get(r.axisId), score: r.score }))
     .filter((x): x is { axis: Doc<"axes">; score: number } => x.axis?.status === "active")
@@ -288,7 +292,7 @@ export async function removeFromVersionStats(ctx: MutationCtx, review: Doc<"revi
   });
 }
 
-/** Deletes a review with its entries, scores and reactions, keeping every stat in sync. */
+/** Deletes a review with its posts, scores and reactions, keeping every stat in sync. */
 export async function deleteReviewCascade(ctx: MutationCtx, review: Doc<"reviews">) {
   await replaceReviewScores(ctx, review, new Map());
   await removeFromVersionStats(ctx, review);
@@ -297,22 +301,85 @@ export async function deleteReviewCascade(ctx: MutationCtx, review: Doc<"reviews
     .query("reviewEntries")
     .withIndex("by_review", (q) => q.eq("reviewId", review._id))
     .collect()) {
+    await deleteReactions(ctx, e._id);
     await ctx.db.delete(e._id);
     if (e.image) images.add(e.image);
   }
   for (const id of images) await ctx.storage.delete(id);
-  for (const r of await ctx.db
-    .query("reactions")
-    .withIndex("by_review", (q) => q.eq("reviewId", review._id))
-    .collect()) {
-    await ctx.db.delete(r._id);
-  }
   await ctx.db.delete(review._id);
   const another = await ctx.db
     .query("reviews")
     .withIndex("by_user", (q) => q.eq("userId", review.userId))
     .first();
   if (!another) await bumpReviewerCount(ctx, -1);
+}
+
+async function deleteReactions(ctx: MutationCtx, entryId: Id<"reviewEntries">) {
+  for (const r of await ctx.db
+    .query("reactions")
+    .withIndex("by_entry", (q) => q.eq("entryId", entryId))
+    .collect()) {
+    await ctx.db.delete(r._id);
+  }
+}
+
+// ---------- posts ----------
+
+/** A review's current axis scores, to keep on a post as the ratings it was written with. */
+export async function currentScores(ctx: QueryCtx, reviewId: Id<"reviews">) {
+  const rows = await ctx.db
+    .query("reviewScores")
+    .withIndex("by_review", (q) => q.eq("reviewId", reviewId))
+    .collect();
+  return rows.map((r) => ({ axisId: r.axisId, score: r.score }));
+}
+
+/** Adds a post to a review. */
+export async function insertPost(
+  ctx: MutationCtx,
+  review: Doc<"reviews">,
+  post: Omit<Doc<"reviewEntries">, "_id" | "_creationTime" | "reviewId" | "userId" | "versionId" | "reactionCount">,
+) {
+  return await ctx.db.insert("reviewEntries", {
+    ...post,
+    reviewId: review._id,
+    userId: review.userId,
+    versionId: review.versionId,
+    reactionCount: 0,
+  });
+}
+
+/**
+ * Deletes one post and its reactions (and its screenshot, unless another post of
+ * the review shows it). Deleting a review's last post deletes the review: every
+ * rating has at least one post.
+ */
+export async function deletePost(ctx: MutationCtx, entry: Doc<"reviewEntries">) {
+  const review = await ctx.db.get(entry.reviewId);
+  const rest = await ctx.db
+    .query("reviewEntries")
+    .withIndex("by_review", (q) => q.eq("reviewId", entry.reviewId))
+    .collect();
+  if (review && rest.every((e) => e._id === entry._id)) return await deleteReviewCascade(ctx, review);
+  await deleteReactions(ctx, entry._id);
+  await ctx.db.delete(entry._id);
+  if (entry.image && !rest.some((e) => e._id !== entry._id && e.image === entry.image)) {
+    await ctx.storage.delete(entry.image);
+  }
+  const latest = rest.filter((e) => e._id !== entry._id).at(-1);
+  if (review && latest) await ctx.db.patch(review._id, { updatedAt: Math.max(latest.createdAt, review.createdAt) });
+}
+
+/** Keeps a review's posts in step after the review changes author or model. */
+export async function retagPosts(ctx: MutationCtx, reviewId: Id<"reviews">) {
+  const review = await ctx.db.get(reviewId);
+  if (!review) return;
+  for (const e of await ctx.db
+    .query("reviewEntries")
+    .withIndex("by_review", (q) => q.eq("reviewId", reviewId))
+    .collect()) {
+    await ctx.db.patch(e._id, { reviewId, userId: review.userId, versionId: review.versionId });
+  }
 }
 
 /** Post an "A > B" take. Re-posting the same pair within `replaceWithin` ms replaces it. */

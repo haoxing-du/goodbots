@@ -12,6 +12,7 @@ import {
   removeFromVersionStats,
   replaceReviewScores,
   requireAdmin,
+  retagPosts,
 } from "./lib";
 import { Doc } from "./_generated/dataModel";
 import { releaseImage } from "./uploads";
@@ -41,7 +42,8 @@ export const addVersion = mutation({
 /**
  * Merge one model page into another (duplicates, e.g. a hand-added model that
  * later appears in the catalog). Reviews, scores and takes move over; where
- * someone reviewed both, their newer review wins. The old page redirects.
+ * someone reviewed both, their posts are combined and their newer rating wins.
+ * The old page redirects.
  */
 export const mergeVersion = mutation({
   args: { from: v.string(), into: v.string() },
@@ -69,6 +71,16 @@ export const mergeVersion = mutation({
       await ctx.db.patch(review._id, { versionId: into._id });
       await applyOverallToStats(ctx, into._id, null, review.overall);
       await replaceReviewScores(ctx, { ...review, versionId: into._id }, kept);
+      await retagPosts(ctx, review._id);
+    };
+    // Moves one review's posts to another before the first is deleted.
+    const movePosts = async (from: Doc<"reviews">, to: Doc<"reviews">) => {
+      for (const e of await ctx.db
+        .query("reviewEntries")
+        .withIndex("by_review", (q) => q.eq("reviewId", from._id))
+        .collect()) {
+        await ctx.db.patch(e._id, { reviewId: to._id });
+      }
     };
 
     let moved = 0;
@@ -82,11 +94,14 @@ export const mergeVersion = mutation({
         .withIndex("by_user_version", (q) => q.eq("userId", review.userId).eq("versionId", into._id))
         .unique();
       if (existing && existing.updatedAt >= review.updatedAt) {
+        await movePosts(review, existing);
         await deleteReviewCascade(ctx, review);
+        await retagPosts(ctx, existing._id);
         dropped++;
         continue;
       }
       if (existing) {
+        await movePosts(existing, review);
         await deleteReviewCascade(ctx, existing);
         dropped++;
       }

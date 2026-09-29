@@ -1,7 +1,8 @@
 import { v } from "convex/values";
 import { internalQuery } from "./_generated/server";
 import { featuredModels } from "./featured";
-import { avg, axisIndex, compareAxes, scoresForReview, statsFor, versionLabel } from "./lib";
+import { Doc } from "./_generated/dataModel";
+import { avg, axisIndex, compareAxes, namedScores, scoresForReview, statsFor, versionLabel } from "./lib";
 
 /** What a link preview (Open Graph card) shows for a page. */
 export type PageMeta = {
@@ -28,7 +29,10 @@ const SITE: PageMeta = {
   image: { kind: "site", title: "So what did you think?" },
 };
 
-/** Meta for a path: "/", "/m/<provider>/<model>", "/u/<handle>" or "/r/<reviewId>". Null if unknown. */
+/**
+ * Meta for a path: "/", "/m/<provider>/<model>", "/u/<handle>", "/r/<reviewId>" (someone's
+ * reviews of a model) or "/p/<postId>" (one review). Null if unknown.
+ */
 export const forPath = internalQuery({
   args: { path: v.string() },
   handler: async (ctx, { path }): Promise<PageMeta | null> => {
@@ -64,13 +68,13 @@ export const forPath = internalQuery({
       return {
         title: `${version.displayName} on GoodBots`,
         description: [
-          overall != null ? `${overall.toFixed(1)} overall from ${n} ${n === 1 ? "review" : "reviews"}` : `${n} reviews`,
+          overall != null ? `${overall.toFixed(1)} overall from ${n} ${n === 1 ? "reviewer" : "reviewers"}` : `${n} reviewers`,
           ...core,
         ].join(" · "),
         image: {
           kind: "model",
           title: version.displayName,
-          sub: `${provider?.name ?? ""} · ${n} ${n === 1 ? "review" : "reviews"}`,
+          sub: `${provider?.name ?? ""} · ${n} ${n === 1 ? "reviewer" : "reviewers"}`,
           stat: overall != null ? overall.toFixed(1) : undefined,
           stars: overall != null ? Math.round(overall) : undefined,
         },
@@ -129,24 +133,45 @@ export const forPath = internalQuery({
           .first(),
         scoresForReview(ctx, review._id, await axisIndex(ctx)),
       ]);
-      const name = user?.displayName ?? user?.name ?? user?.handle ?? "Someone";
-      const stars = review.overall ? `: ${"★".repeat(review.overall)}${"☆".repeat(5 - review.overall)}` : "";
-      return {
-        noindex: !!user?.importedXHandle,
-        title: `${name} on ${version?.displayName}${stars}`,
-        description: clip(
-          [entry?.text ?? "", scores.map((s) => `${s.name} ${s.score}`).join(" · ")].filter(Boolean).join(" — "),
-          280,
-        ),
-        image: {
-          kind: "review",
-          title: version?.displayName ?? "A model",
-          sub: `${name}${user?.handle ? ` (@${user.handle})` : ""}`,
-          stars: review.overall,
-          quote: clip(entry?.text ?? "", 220),
-        },
-      };
+      return reviewMeta(user, version, review.overall, entry?.text ?? "", scores);
+    }
+
+    if (kind === "p" && id) {
+      const entryId = ctx.db.normalizeId("reviewEntries", id);
+      const entry = entryId ? await ctx.db.get(entryId) : null;
+      const review = entry ? await ctx.db.get(entry.reviewId) : null;
+      if (!entry || !review) return null;
+      const [user, version, axes] = await Promise.all([
+        ctx.db.get(review.userId),
+        versionLabel(ctx, review.versionId),
+        axisIndex(ctx),
+      ]);
+      return reviewMeta(user, version, entry.overallAtTime, entry.text, namedScores(entry.scoresAtTime ?? [], axes));
     }
     return null;
   },
 });
+
+/** A review's link preview: who, which model, their stars, and the text. */
+function reviewMeta(
+  user: Doc<"users"> | null,
+  version: { displayName: string } | null,
+  overall: number | undefined,
+  text: string,
+  scores: { name: string; score: number }[],
+): PageMeta {
+  const name = user?.displayName ?? user?.name ?? user?.handle ?? "Someone";
+  const stars = overall ? `: ${"★".repeat(overall)}${"☆".repeat(5 - overall)}` : "";
+  return {
+    noindex: !!user?.importedXHandle,
+    title: `${name} on ${version?.displayName}${stars}`,
+    description: clip([text, scores.map((s) => `${s.name} ${s.score}`).join(" · ")].filter(Boolean).join(" — "), 280),
+    image: {
+      kind: "review",
+      title: version?.displayName ?? "A model",
+      sub: `${name}${user?.handle ? ` (@${user.handle})` : ""}`,
+      stars: overall,
+      quote: clip(text, 220),
+    },
+  };
+}

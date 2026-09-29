@@ -8,12 +8,12 @@ import { useSignIn } from "./SignIn";
 import s from "./Reactions.module.css";
 
 export function Reactions({
-  reviewId,
+  entryId,
   counts,
   mine,
   compact,
 }: {
-  reviewId: Id<"reviews">;
+  entryId: Id<"reviewEntries">;
   counts: Record<ReactionKind, number>;
   mine: ReactionKind[];
   /** Emoji + count only (the feed board); the label moves to the accessible name. */
@@ -35,7 +35,7 @@ export function Reactions({
         mine: on ? prev.mine.filter((k) => k !== kind) : [...prev.mine, kind],
       }));
       setFailed(null);
-      toggle({ reviewId, kind }).catch((e) => {
+      toggle({ entryId, kind }).catch((e) => {
         setLocal({ counts, mine });
         setFailed(e instanceof ConvexError ? String(e.data) : "Couldn’t save your reaction. Try again.");
       });

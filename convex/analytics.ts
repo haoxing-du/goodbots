@@ -320,12 +320,18 @@ export const overview = query({
       before: await countReturning(prevActive, prevStart),
     };
 
-    // Top lists, from reviews posted in the period.
-    const reviews = await ctx.db
-      .query("reviews")
-      .withIndex("by_creation_time", (q) => q.gte("_creationTime", start).lt("_creationTime", end))
-      .order("desc")
-      .take(TOP_SCAN);
+    // Top lists, from posts written in the period.
+    const reviews = (
+      await ctx.db
+        .query("reviewEntries")
+        .withIndex("by_createdAt", (q) => q.gte("createdAt", start).lt("createdAt", end))
+        .order("desc")
+        .take(TOP_SCAN)
+    ).flatMap((e) =>
+      e.userId && e.versionId
+        ? [{ _id: e._id, userId: e.userId, versionId: e.versionId, reactionCount: e.reactionCount ?? 0 }]
+        : [],
+    );
     const tally = <K extends string>(keys: K[]) => {
       const counts = new Map<K, number>();
       for (const k of keys) counts.set(k, (counts.get(k) ?? 0) + 1);
@@ -356,7 +362,7 @@ export const overview = query({
           .map(async (r) => {
             const [user, version] = await Promise.all([ctx.db.get(r.userId), ctx.db.get(r.versionId)]);
             return {
-              reviewId: r._id,
+              postId: r._id,
               reactionCount: r.reactionCount,
               user: user ? publicUser(user) : null,
               model: version?.displayName ?? "Unknown model",

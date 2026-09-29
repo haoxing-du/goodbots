@@ -157,7 +157,7 @@ function Grid({ versions }: { versions: Version[] }) {
             <span className={ui.monoLabel}>{v.provider}</span>
             <span className={ui.meta}>
               {fmtCount(v.reviewCount)}{" "}
-              {v.reviewCount === 1 ? "review" : "reviews"}
+              {v.reviewCount === 1 ? "reviewer" : "reviewers"}
             </span>
           </div>
           <div>

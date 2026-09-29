@@ -168,6 +168,52 @@ img.avatar {
   }
 }
 
+.editLink {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  position: relative;
+}
+.editLink::after {
+  content: "";
+  position: absolute;
+  inset: -6px -4px;
+}
+@media (hover: hover) {
+  .editLink:hover {
+    color: var(--ink);
+    text-decoration-thickness: 2px;
+  }
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+.editText {
+  font-family: var(--font-serif);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  background: var(--card);
+  border: 1px solid var(--control-border);
+  border-radius: var(--r-sm);
+  padding: var(--s-4) var(--s-5);
+  resize: vertical;
+  width: 100%;
+}
+.editActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+}
+
 .deleteError {
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
