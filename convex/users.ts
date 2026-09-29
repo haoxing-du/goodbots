@@ -210,8 +210,8 @@ export const deleteAccount = mutation({
       .query("reactions")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect()) {
-      const entry = reaction.entryId && (await ctx.db.get(reaction.entryId));
-      if (entry) await ctx.db.patch(entry._id, { reactionCount: Math.max(0, (entry.reactionCount ?? 0) - 1) });
+      const entry = await ctx.db.get(reaction.entryId);
+      if (entry) await ctx.db.patch(entry._id, { reactionCount: Math.max(0, entry.reactionCount - 1) });
       await ctx.db.delete(reaction._id);
     }
     for (const req of await ctx.db

@@ -321,17 +321,11 @@ export const overview = query({
     };
 
     // Top lists, from posts written in the period.
-    const reviews = (
-      await ctx.db
-        .query("reviewEntries")
-        .withIndex("by_createdAt", (q) => q.gte("createdAt", start).lt("createdAt", end))
-        .order("desc")
-        .take(TOP_SCAN)
-    ).flatMap((e) =>
-      e.userId && e.versionId
-        ? [{ _id: e._id, userId: e.userId, versionId: e.versionId, reactionCount: e.reactionCount ?? 0 }]
-        : [],
-    );
+    const reviews = await ctx.db
+      .query("reviewEntries")
+      .withIndex("by_createdAt", (q) => q.gte("createdAt", start).lt("createdAt", end))
+      .order("desc")
+      .take(TOP_SCAN);
     const tally = <K extends string>(keys: K[]) => {
       const counts = new Map<K, number>();
       for (const k of keys) counts.set(k, (counts.get(k) ?? 0) + 1);

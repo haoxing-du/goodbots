@@ -112,7 +112,6 @@ export default defineSchema({
     userId: v.id("users"),
     versionId: v.id("versions"),
     overall: v.optional(v.number()), // 1–5 stars, optional
-    reactionCount: v.optional(v.number()), // legacy: reactions are on posts now
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -123,12 +122,10 @@ export default defineSchema({
 
   // Posts: each is a dated review of a model, with the ratings its author had when
   // they wrote it. As many per person and model as they like.
-  // userId, versionId and reactionCount are optional only until existing posts are
-  // backfilled (migrations.postsBackfill).
   reviewEntries: defineTable({
     reviewId: v.id("reviews"),
-    userId: v.optional(v.id("users")), // the review's, copied for listing posts
-    versionId: v.optional(v.id("versions")),
+    userId: v.id("users"), // the review's, copied for listing posts
+    versionId: v.id("versions"),
     text: v.string(),
     image: v.optional(v.id("_storage")), // one screenshot per entry
     imageAlt: v.optional(v.string()), // the screenshot's caption, shown under it
@@ -137,7 +134,7 @@ export default defineSchema({
     overallAtTime: v.optional(v.number()),
     scoresAtTime: v.optional(v.array(v.object({ axisId: v.id("axes"), score: v.number() }))),
     xUrl: v.optional(v.string()), // imported from this post on X
-    reactionCount: v.optional(v.number()),
+    reactionCount: v.number(),
     createdAt: v.number(),
     editedAt: v.optional(v.number()), // last time its author edited the text
   })
@@ -181,10 +178,9 @@ export default defineSchema({
     .index("by_version_axis", ["versionId", "axisId"])
     .index("by_axis", ["axisId"]),
 
-  // Reactions are on posts. reviewId is legacy (entryId optional until backfilled).
+  // Reactions are on posts.
   reactions: defineTable({
-    entryId: v.optional(v.id("reviewEntries")),
-    reviewId: v.optional(v.id("reviews")),
+    entryId: v.id("reviewEntries"),
     userId: v.id("users"),
     kind: reactionKind,
     createdAt: v.number(),

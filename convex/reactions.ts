@@ -9,7 +9,7 @@ export const toggle = mutation({
     const user = await requireMember(ctx);
     const entry = await ctx.db.get(entryId);
     if (!entry) return;
-    const count = entry.reactionCount ?? 0;
+    const count = entry.reactionCount;
     const existing = await ctx.db
       .query("reactions")
       .withIndex("by_entry_user_kind", (q) =>

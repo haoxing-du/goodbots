@@ -47,14 +47,9 @@ export async function hydratePost(
   match: Matcher,
   axes: AxisMap,
 ) {
-  // Posts carry their author and model; older ones get them from the review until backfilled.
-  const owner =
-    entry.userId && entry.versionId
-      ? { userId: entry.userId, versionId: entry.versionId }
-      : await ctx.db.get(entry.reviewId);
   const [user, version, reactions] = await Promise.all([
-    owner ? ctx.db.get(owner.userId) : null,
-    owner ? versionLabel(ctx, owner.versionId) : null,
+    ctx.db.get(entry.userId),
+    versionLabel(ctx, entry.versionId),
     ctx.db
       .query("reactions")
       .withIndex("by_entry", (q) => q.eq("entryId", entry._id))
@@ -88,7 +83,7 @@ export async function hydratePost(
     editedAt: entry.editedAt,
     reactionCounts: counts,
     myReactions: mine,
-    match: owner ? await match(owner.userId) : null,
+    match: await match(entry.userId),
   };
 }
 
@@ -347,7 +342,7 @@ export const feedTop = query({
       .withIndex("by_createdAt", (q) => q.gte("createdAt", since))
       .collect();
     const tally = new Map<Id<"reviewEntries">, number>();
-    for (const r of recent) if (r.entryId) tally.set(r.entryId, (tally.get(r.entryId) ?? 0) + 1);
+    for (const r of recent) tally.set(r.entryId, (tally.get(r.entryId) ?? 0) + 1);
     const top = [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, 50);
     const entries = (await Promise.all(top.map(([id]) => ctx.db.get(id)))).filter(
       (e): e is Doc<"reviewEntries"> => e !== null,
@@ -367,7 +362,7 @@ export const feedSummary = query({
       .collect();
     const today = week.filter((e) => e.createdAt >= now - DAY).length;
     const perVersion = new Map<Id<"versions">, number>();
-    for (const e of week) if (e.versionId) perVersion.set(e.versionId, (perVersion.get(e.versionId) ?? 0) + 1);
+    for (const e of week) perVersion.set(e.versionId, (perVersion.get(e.versionId) ?? 0) + 1);
     const [mostId] = [...perVersion.entries()].sort((a, b) => b[1] - a[1])[0] ?? [];
     const most = mostId ? await versionLabel(ctx, mostId) : null;
     return { today, mostReviewed: most?.displayName ?? null };

@@ -87,7 +87,7 @@ export const homeStats = query({
       .withIndex("by_createdAt", (q) => q.gte("createdAt", Date.now() - WEEK))
       .collect();
     const weekly = new Map<Id<"versions">, number>();
-    for (const e of recent) if (e.versionId) weekly.set(e.versionId, (weekly.get(e.versionId) ?? 0) + 1);
+    for (const e of recent) weekly.set(e.versionId, (weekly.get(e.versionId) ?? 0) + 1);
     const topWeekly = rows
       .map((row) => ({ row, n: weekly.get(row.version._id) ?? 0 }))
       .filter((x) => x.n > 0)
