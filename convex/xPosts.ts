@@ -81,21 +81,31 @@ async function fetchPost(tweetId: string): Promise<FetchedPost | null> {
 
 // ---------- importing ----------
 
-/** The placeholder user for an X account, created on its first imported post. */
-async function placeholderFor(ctx: MutationCtx, authorName: string, authorHandle: string) {
+/**
+ * Who an imported post is by: the member who signed in with that X account if there
+ * is one, else a placeholder for it (created on its first imported post).
+ */
+async function authorFor(ctx: MutationCtx, authorName: string, authorHandle: string) {
+  const member = (
+    await ctx.db
+      .query("users")
+      .withIndex("by_xHandle", (q) => q.eq("xHandle", authorHandle))
+      .collect()
+  ).find((u) => !u.importedXHandle);
+  if (member) return member;
   const importedXHandle = authorHandle.toLowerCase();
   const existing = await ctx.db
     .query("users")
     .withIndex("by_importedXHandle", (q) => q.eq("importedXHandle", importedXHandle))
     .first();
-  if (existing) return existing._id;
+  if (existing) return existing;
   const userId = await ctx.db.insert("users", {
     name: authorName,
     xHandle: authorHandle,
     importedXHandle,
   });
   await ensureHandle(ctx, userId); // their X username, like an X sign-in gets
-  return userId;
+  return (await ctx.db.get(userId))!;
 }
 
 /** Adds a post from X to a model as a review by its author (admin). */
@@ -156,9 +166,11 @@ export const insert = internalMutation({
 /**
  * Makes a post an entry on its author's review of the model: a new review, or a
  * dated update if they already have one there (several posts about one model).
+ * If the author is already a member, it's theirs from the start.
  */
 async function importAsReview(ctx: MutationCtx, post: Doc<"xPosts">, versionId: Id<"versions">) {
-  const userId = await placeholderFor(ctx, post.authorName, post.authorHandle);
+  const author = await authorFor(ctx, post.authorName, post.authorHandle);
+  const userId = author._id;
   let review = await ctx.db
     .query("reviews")
     .withIndex("by_user_version", (q) => q.eq("userId", userId).eq("versionId", versionId))
@@ -187,7 +199,11 @@ async function importAsReview(ctx: MutationCtx, post: Doc<"xPosts">, versionId: 
     xUrl: post.url,
     createdAt: post.postedAt,
   });
-  await ctx.db.patch(post._id, { reviewId: review._id, entryId });
+  await ctx.db.patch(post._id, {
+    reviewId: review._id,
+    entryId,
+    ...(author.importedXHandle ? {} : { status: "claimed" as const }),
+  });
 }
 
 /**
@@ -270,7 +286,8 @@ export const convertLegacy = internalMutation({
 /**
  * Called on every sign-in: if this user signed in with an X account that has a
  * placeholder, their imported reviews become theirs and the placeholder goes away.
- * Where they already reviewed the same model, their own review wins.
+ * Where they already reviewed the same model, the imported posts become dated
+ * entries on their own review (its ratings stay).
  */
 export async function claimImports(ctx: MutationCtx, userId: Id<"users">) {
   const user = await ctx.db.get(userId);
@@ -290,14 +307,14 @@ export async function claimImports(ctx: MutationCtx, userId: Id<"users">) {
     .query("reviews")
     .withIndex("by_user", (q) => q.eq("userId", placeholder._id))
     .collect();
-  const conflicts = [];
+  const conflicts: { review: Doc<"reviews">; own: Doc<"reviews"> }[] = [];
   for (const review of theirs) {
     const own = await ctx.db
       .query("reviews")
       .withIndex("by_user_version", (q) => q.eq("userId", userId).eq("versionId", review.versionId))
       .unique();
     if (own) {
-      conflicts.push(review);
+      conflicts.push({ review, own });
       continue;
     }
     await ctx.db.patch(review._id, { userId });
@@ -308,9 +325,23 @@ export async function claimImports(ctx: MutationCtx, userId: Id<"users">) {
       await ctx.db.patch(score._id, { userId });
     }
   }
-  // Deleting the last placeholder review drops them from the reviewer count; if nothing
+  // Move the posts onto their own review, then drop the emptied placeholder review.
+  // Deleting the last one drops the placeholder from the reviewer count; if nothing
   // was deleted, they still leave it when two reviewers become one.
-  for (const review of conflicts) await deleteReviewCascade(ctx, review);
+  const movedTo = new Map<Id<"reviews">, Id<"reviews">>();
+  for (const { review, own } of conflicts) {
+    let updatedAt = own.updatedAt;
+    for (const entry of await ctx.db
+      .query("reviewEntries")
+      .withIndex("by_review", (q) => q.eq("reviewId", review._id))
+      .collect()) {
+      await ctx.db.patch(entry._id, { reviewId: own._id });
+      updatedAt = Math.max(updatedAt, entry.createdAt);
+    }
+    await ctx.db.patch(own._id, { updatedAt });
+    await deleteReviewCascade(ctx, review);
+    movedTo.set(review._id, own._id);
+  }
   if (conflicts.length === 0 && hadReviews && theirs.length > 0) await bumpReviewerCount(ctx, -1);
 
   const now = Date.now();
@@ -318,6 +349,8 @@ export async function claimImports(ctx: MutationCtx, userId: Id<"users">) {
     .query("xPosts")
     .withIndex("by_authorHandleLower", (q) => q.eq("authorHandleLower", placeholder.importedXHandle!))
     .collect()) {
+    const reviewId = post.reviewId && movedTo.get(post.reviewId);
+    if (reviewId) await ctx.db.patch(post._id, { reviewId });
     if (post.status === "active") await ctx.db.patch(post._id, { status: "claimed", claimedAt: now });
   }
   await ctx.db.delete(placeholder._id);

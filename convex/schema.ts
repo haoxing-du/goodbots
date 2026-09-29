@@ -51,6 +51,7 @@ export default defineSchema({
   })
     .index("email", ["email"])
     .index("by_importedXHandle", ["importedXHandle"])
+    .index("by_xHandle", ["xHandle"])
     .index("by_handle", ["handleLower"])
     .index("by_name", ["nameLower"]),
 
