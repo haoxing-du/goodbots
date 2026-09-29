@@ -194,9 +194,9 @@ export const upsert = mutation({
       : null;
     let postId: Id<"reviewEntries"> | null = null;
     if (!text || (latest && latest.text === text && !args.image && !latest.image)) {
-      // Only the rating changed. A post that was written without ratings (one from X)
-      // takes these as its own; others keep the ratings they were written with.
-      if (latest && !latest.overallAtTime && !latest.scoresAtTime?.length) {
+      // Only the rating changed; posts keep the ratings they were written with. Except:
+      // re-posting the text of your post from X adds these ratings to it.
+      if (text && latest?.xUrl && !latest.overallAtTime && !latest.scoresAtTime?.length) {
         await ctx.db.patch(latest._id, ratings);
       }
     } else {

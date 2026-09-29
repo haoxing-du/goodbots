@@ -5,8 +5,8 @@ import { currentScores } from "./lib";
 
 /**
  * One-off, for reviews becoming posts: gives every post its author, model and
- * reaction count, gives each review's latest post the ratings it was left with,
- * and moves each reaction to the post that was newest when it was left.
+ * reaction count, gives the review's current ratings to the post they were set
+ * with, and moves each reaction to the post that was newest when it was left.
  * Safe to run again. Small tables, so one transaction.
  */
 export const postsBackfill = internalMutation({
@@ -24,8 +24,11 @@ export const postsBackfill = internalMutation({
         .query("reviewEntries")
         .withIndex("by_review", (q) => q.eq("reviewId", review._id))
         .collect();
-      for (const [i, e] of entries.entries()) {
-        const latest = i === entries.length - 1;
+      // The current ratings were set with the latest post written here; posts from X
+      // came without ratings. Only if every post is from X were they added to the latest.
+      const rated = entries.filter((e) => !e.xUrl).at(-1) ?? entries.at(-1);
+      for (const e of entries) {
+        const latest = e._id === rated?._id;
         if (!dryRun) {
           await ctx.db.patch(e._id, {
             userId: review.userId,
