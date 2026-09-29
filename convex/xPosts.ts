@@ -265,6 +265,23 @@ export const remove = mutation({
   },
 });
 
+/**
+ * One-off: re-import a post whose review was deleted when its author claimed it
+ * (before claiming merged into their existing review). It lands on their review.
+ */
+export const restoreLost = internalMutation({
+  args: { postId: v.id("xPosts") },
+  handler: async (ctx, { postId }) => {
+    const post = await ctx.db.get(postId);
+    if (!post) throw new ConvexError("No such post.");
+    if (post.entryId && (await ctx.db.get(post.entryId))) return "still there";
+    const version = await findOrActivateVersion(ctx, post.versionId);
+    if (!version) throw new ConvexError("Unknown model.");
+    await importAsReview(ctx, post, version._id);
+    return "restored";
+  },
+});
+
 /** One-off: turn posts added before imports became reviews into reviews. */
 export const convertLegacy = internalMutation({
   args: {},
