@@ -8,9 +8,9 @@ export const DEFAULT_FEATURED = [
   "anthropic/claude-opus-5.5",
   "anthropic/claude-fable-5.1",
   "openai/gpt-6-astra",
+  "openai/gpt-6-sol",
   "openai/gpt-6-luna",
   "x-ai/grok-4.7",
-  "deepseek/deepseek-v4-pro-0813",
 ];
 
 export type FeaturedModel = { versionId: string; displayName: string; provider: string };
