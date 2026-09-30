@@ -4,6 +4,7 @@ import { requireAdmin } from "./lib";
 
 /** Used until an admin saves a list (e.g. on a fresh production deployment). */
 export const DEFAULT_FEATURED = [
+  "google/gemini-4-argon",
   "openai/gpt-6.1-sol",
   "anthropic/claude-opus-5.5",
   "anthropic/claude-fable-5.1",

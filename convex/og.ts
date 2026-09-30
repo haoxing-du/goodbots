@@ -29,6 +29,9 @@ const SITE: PageMeta = {
   image: { kind: "site", title: "So what do you think?" },
 };
 
+// A one-off headline for the home card (e.g. for a launch). Null asks about the lead model.
+const HOME_CARD: string | null = "Gemini 4 Argon:\nbenchmaxxed or actually good?";
+
 /**
  * Meta for a path: "/", "/m/<provider>/<model>", "/u/<handle>", "/r/<reviewId>" (someone's
  * reviews of a model) or "/p/<postId>" (one review). Null if unknown.
@@ -39,6 +42,7 @@ export const forPath = internalQuery({
     const [, kind, ...rest] = path.split("/");
     const id = rest.map(decodeURIComponent).join("/");
     if (!kind) {
+      if (HOME_CARD) return { ...SITE, image: { ...SITE.image, title: HOME_CARD } };
       // Same model the homepage headline defaults to: the first featured one.
       const [lead] = await featuredModels(ctx);
       if (!lead) return SITE;
