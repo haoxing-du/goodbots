@@ -4,10 +4,10 @@ import { requireAdmin } from "./lib";
 
 /** Used until an admin saves a list (e.g. on a fresh production deployment). */
 export const DEFAULT_FEATURED = [
+  "openai/gpt-6.1-sol",
   "anthropic/claude-opus-5.5",
   "anthropic/claude-fable-5.1",
   "openai/gpt-6-astra",
-  "openai/gpt-6-sol",
   "openai/gpt-6-luna",
   "x-ai/grok-4.7",
   "deepseek/deepseek-v4-pro-0813",
